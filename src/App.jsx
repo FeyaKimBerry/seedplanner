@@ -80,7 +80,7 @@ const STR = {
     col_person: "Person", col_item: "Item", col_category: "Category", col_what: "What", col_cost: "Cost",
     col_when: "When", col_goal: "Goal", col_target: "Target", col_byWhen: "By when", col_asset: "Asset",
     col_value: "Value", col_debt: "Debt", col_balance: "Balance", col_rate: "Rate %", col_monthlyPay: "Monthly pay",
-    freq_monthly: "Monthly", freq_annual: "Annual", freq_oneoff: "One-off",
+    freq_monthly: "Monthly", freq_annual: "Annual", freq_weekly: "Weekly", freq_daily: "Daily", freq_oneoff: "One-off",
     new_income: "New income", new_expense: "New expense", new_goal: "New goal",
     new_asset: "New asset", new_debt: "New debt", new_person: "New person",
 
@@ -152,7 +152,7 @@ const STR = {
     col_person: "บุคคล", col_item: "รายการ", col_category: "หมวดหมู่", col_what: "รายการ", col_cost: "จำนวนเงิน",
     col_when: "เมื่อไร", col_goal: "เป้าหมาย", col_target: "ยอดเป้าหมาย", col_byWhen: "ภายในเมื่อ", col_asset: "สินทรัพย์",
     col_value: "มูลค่า", col_debt: "หนี้", col_balance: "ยอดคงเหลือ", col_rate: "ดอกเบี้ย %", col_monthlyPay: "ผ่อนต่อเดือน",
-    freq_monthly: "รายเดือน", freq_annual: "รายปี", freq_oneoff: "ครั้งเดียว",
+    freq_monthly: "รายเดือน", freq_annual: "รายปี", freq_weekly: "รายสัปดาห์", freq_daily: "รายวัน", freq_oneoff: "ครั้งเดียว",
     new_income: "รายได้ใหม่", new_expense: "รายจ่ายใหม่", new_goal: "เป้าหมายใหม่",
     new_asset: "สินทรัพย์ใหม่", new_debt: "หนี้ใหม่", new_person: "บุคคลใหม่",
 
@@ -217,7 +217,7 @@ const STR = {
     col_person: "Person", col_item: "Posten", col_category: "Kategorie", col_what: "Was", col_cost: "Kosten",
     col_when: "Wann", col_goal: "Ziel", col_target: "Zielbetrag", col_byWhen: "Bis wann", col_asset: "Vermögenswert",
     col_value: "Wert", col_debt: "Schuld", col_balance: "Saldo", col_rate: "Zins %", col_monthlyPay: "Monatl. Rate",
-    freq_monthly: "Monatlich", freq_annual: "Jährlich", freq_oneoff: "Einmalig",
+    freq_monthly: "Monatlich", freq_annual: "Jährlich", freq_weekly: "Wöchentlich", freq_daily: "Täglich", freq_oneoff: "Einmalig",
     new_income: "Neues Einkommen", new_expense: "Neue Ausgabe", new_goal: "Neues Ziel",
     new_asset: "Neuer Vermögenswert", new_debt: "Neue Schuld", new_person: "Neue Person",
 
@@ -282,7 +282,7 @@ const STR = {
     col_person: "Personne", col_item: "Poste", col_category: "Catégorie", col_what: "Quoi", col_cost: "Coût",
     col_when: "Quand", col_goal: "Objectif", col_target: "Cible", col_byWhen: "Pour quand", col_asset: "Actif",
     col_value: "Valeur", col_debt: "Dette", col_balance: "Solde", col_rate: "Taux %", col_monthlyPay: "Paiement mensuel",
-    freq_monthly: "Mensuel", freq_annual: "Annuel", freq_oneoff: "Ponctuel",
+    freq_monthly: "Mensuel", freq_annual: "Annuel", freq_weekly: "Hebdomadaire", freq_daily: "Quotidien", freq_oneoff: "Ponctuel",
     new_income: "Nouveau revenu", new_expense: "Nouvelle dépense", new_goal: "Nouvel objectif",
     new_asset: "Nouvel actif", new_debt: "Nouvelle dette", new_person: "Nouvelle personne",
 
@@ -459,6 +459,8 @@ function monthsFromNow(iso) {
  * ------------------------------------------------------------------ */
 function monthlyOf(amount, frequency) {
   if (frequency === "annual") return amount / 12;
+  if (frequency === "weekly") return (amount * 52) / 12;
+  if (frequency === "daily") return (amount * 365) / 12;
   return amount; // monthly
 }
 
@@ -708,7 +710,7 @@ export default function App() {
   const set = (patch) => setState((s) => ({ ...s, ...patch }));
   const setSettings = (patch) =>
     setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
-  const addItem = (key, item) => setState((s) => ({ ...s, [key]: [...s[key], item] }));
+  const addItem = (key, item) => setState((s) => ({ ...s, [key]: [item, ...s[key]] }));
   const updItem = (key, id, patch) =>
     setState((s) => ({ ...s, [key]: s[key].map((i) => (i.id === id ? { ...i, ...patch } : i)) }));
   const delItem = (key, id) =>
@@ -1169,7 +1171,7 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
   const [openId, setOpenId] = useState(null);
   const prevLen = useRef(items.length);
   useEffect(() => {
-    if (items.length > prevLen.current) setOpenId(items[items.length - 1].id);
+    if (items.length > prevLen.current) setOpenId(items[0].id);
     prevLen.current = items.length;
   }, [items]);
   return (
@@ -1286,8 +1288,11 @@ const memberOpts = (members) => members.map((m) => ({ value: m.id, label: m.name
 const freqOpts = () => [
   { value: "monthly", label: t("freq_monthly") },
   { value: "annual", label: t("freq_annual") },
+  { value: "weekly", label: t("freq_weekly") },
+  { value: "daily", label: t("freq_daily") },
   { value: "oneoff", label: t("freq_oneoff") },
 ];
+const recurringFreqOpts = () => freqOpts().filter((o) => o.value !== "oneoff");
 
 const incomeCols = (members) => [
   { key: "label", label: t("col_source"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
@@ -1299,7 +1304,7 @@ const incomeCols = (members) => [
 const expenseCols = (members) => [
   { key: "label", label: t("col_item"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
   { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
-  { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), freqOpts().slice(0, 2)) },
+  { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), recurringFreqOpts()) },
   { key: "category", label: t("col_category"), render: (it, u) => inputCell(it.category, (v) => u({ category: v }), { w: 120 }) },
   { key: "member", label: t("col_person"), render: (it, u) => selectCell(it.memberId, (v) => u({ memberId: v }), memberOpts(members)) },
 ];
