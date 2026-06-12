@@ -467,19 +467,18 @@ function monthlyOf(amount, frequency) {
 function buildProjection({ settings, income, expenses, oneOffs, debts, assets, whatIf }) {
   const months = settings.projectionYears * 12;
 
-  let monthlyIncome = income
+  const wi = !!whatIf?.active;
+
+  const monthlyIncome = income
     .filter((i) => i.frequency !== "oneoff")
     .reduce((s, i) => s + monthlyOf(i.amount, i.frequency), 0);
-  let monthlyExpense = expenses.reduce((s, e) => s + monthlyOf(e.amount, e.frequency), 0);
+  const monthlyExpense = expenses.reduce((s, e) => s + monthlyOf(e.amount, e.frequency), 0);
   const monthlyDebtPay = debts.reduce((s, d) => s + (d.monthlyPayment || 0), 0);
 
-  // What-if adjustments (deltas applied on top of baseline)
-  if (whatIf?.active) {
-    monthlyIncome += whatIf.incomeDelta || 0;
-    monthlyExpense += whatIf.expenseDelta || 0;
-  }
-
+  // Baseline monthly surplus — what-if deltas must NOT change this.
   const baseNet = monthlyIncome - monthlyExpense - monthlyDebtPay;
+  // What-if surplus = baseline plus the income/expense deltas. Drives only the what-if series.
+  const whatIfNet = baseNet + (wi ? (whatIf.incomeDelta || 0) - (whatIf.expenseDelta || 0) : 0);
 
   // one-off events keyed by month index
   const oneOffByMonth = {};
@@ -492,18 +491,22 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
     const m = monthsFromNow(i.date);
     if (m >= 0 && m <= months) oneOffByMonth[m] = (oneOffByMonth[m] || 0) - i.amount;
   });
-  if (whatIf?.active && whatIf.oneOffAmount) {
+  // What-if one-offs live in their own map so they don't dip the baseline bars.
+  const whatIfOneOffByMonth = { ...oneOffByMonth };
+  if (wi && whatIf.oneOffAmount) {
     const m = whatIf.oneOffMonth || 0;
-    oneOffByMonth[m] = (oneOffByMonth[m] || 0) + whatIf.oneOffAmount;
+    whatIfOneOffByMonth[m] = (whatIfOneOffByMonth[m] || 0) + whatIf.oneOffAmount;
   }
 
   const assetTotal = assets.reduce((s, a) => s + (a.value || 0), 0);
 
   const rates = {
     conservative: settings.returnConservative / 100,
-    expected: (whatIf?.active && whatIf.returnRate != null ? whatIf.returnRate : settings.returnExpected) / 100,
+    expected: settings.returnExpected / 100,
     optimistic: settings.returnOptimistic / 100,
   };
+  // What-if uses its own return rate when set, otherwise the baseline expected rate.
+  const whatIfRate = (wi && whatIf.returnRate != null ? whatIf.returnRate : settings.returnExpected) / 100;
 
   // run three scenarios + track debt amortisation (shared across rates)
   const bal = {
@@ -522,8 +525,8 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
       for (const k of ["conservative", "expected", "optimistic"]) {
         bal[k] = bal[k] * (1 + rates[k] / 12) + baseNet - (oneOffByMonth[m] || 0);
       }
-      if (whatIf?.active) {
-        bal.whatif = bal.whatif * (1 + rates.expected / 12) + baseNet - (oneOffByMonth[m] || 0);
+      if (wi) {
+        bal.whatif = bal.whatif * (1 + whatIfRate / 12) + whatIfNet - (whatIfOneOffByMonth[m] || 0);
       }
       // amortise debt
       let totalRem = 0;
@@ -547,7 +550,7 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
       optimistic: Math.round(bal.optimistic / deflator),
       netWorth: Math.round((bal.expected + assetTotal - debtRem) / deflator),
     };
-    if (whatIf?.active) row.whatif = Math.round(bal.whatif / deflator);
+    if (wi) row.whatif = Math.round(bal.whatif / deflator);
     data.push(row);
   }
 
