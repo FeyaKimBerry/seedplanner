@@ -48,7 +48,7 @@ const STR = {
     everyone: "Everyone", export: "Export", import: "Import",
     tab_dashboard: "Overview", tab_income: "Income", tab_expenses: "Expenses",
     tab_oneOffs: "Upcoming", tab_goals: "Goals", tab_balance: "Assets & debts", tab_settings: "Settings",
-    footer: "Data is saved locally on this device and exportable as JSON. The storage layer mirrors the Planourdays local-first pattern — in the full build it syncs to your private Google Drive appDataFolder. Projections are estimates, not financial advice.",
+    footer: "Projections are estimates, not financial advice.",
 
     stat_surplus: "Monthly surplus", stat_retireNum: "Retirement number",
     stat_retireOn: "On track to retire", stat_balanceIn: "Balance in {n} yrs",
@@ -106,7 +106,7 @@ const STR = {
     importBad: "That file isn't valid Seedplanner data.",
 
     login_title: "Sign in to Seedplanner",
-    login_subtitle: "Plan your savings and see when you can retire. Sign in to sync your data privately to your Google Drive.",
+    login_subtitle: "Plan your savings and see when you can retire.",
     login_google: "Sign in with Google",
     login_note: "Placeholder sign-in — no account is created and nothing leaves your device yet. Real Google sign-in is wired up in the full build.",
     signOut: "Sign out",
@@ -120,7 +120,7 @@ const STR = {
     everyone: "ทั้งหมด", export: "ส่งออก", import: "นำเข้า",
     tab_dashboard: "ภาพรวม", tab_income: "รายได้", tab_expenses: "รายจ่าย",
     tab_oneOffs: "ที่จะถึง", tab_goals: "เป้าหมาย", tab_balance: "สินทรัพย์และหนี้สิน", tab_settings: "ตั้งค่า",
-    footer: "ข้อมูลถูกบันทึกในเครื่องนี้และส่งออกเป็น JSON ได้ ชั้นจัดเก็บข้อมูลใช้รูปแบบ local-first เหมือน Planourdays — ในเวอร์ชันเต็มจะซิงก์กับ Google Drive ส่วนตัวของคุณ การคาดการณ์เป็นเพียงการประมาณ ไม่ใช่คำแนะนำทางการเงิน",
+    footer: "การคาดการณ์เป็นเพียงการประมาณ ไม่ใช่คำแนะนำทางการเงิน",
 
     stat_surplus: "เงินเหลือต่อเดือน", stat_retireNum: "เงินเกษียณที่ต้องมี",
     stat_retireOn: "คาดว่าจะเกษียณ", stat_balanceIn: "ยอดเงินใน {n} ปี",
@@ -185,7 +185,7 @@ const STR = {
     everyone: "Alle", export: "Export", import: "Import",
     tab_dashboard: "Übersicht", tab_income: "Einkommen", tab_expenses: "Ausgaben",
     tab_oneOffs: "Anstehend", tab_goals: "Ziele", tab_balance: "Vermögen & Schulden", tab_settings: "Einstellungen",
-    footer: "Die Daten werden lokal auf diesem Gerät gespeichert und können als JSON exportiert werden. Die Speicherebene nutzt dasselbe local-first-Muster wie Planourdays – in der vollständigen Version synchronisiert sie mit deinem privaten Google Drive appDataFolder. Prognosen sind Schätzungen, keine Finanzberatung.",
+    footer: "Prognosen sind Schätzungen, keine Finanzberatung.",
 
     stat_surplus: "Monatlicher Überschuss", stat_retireNum: "Rentenbetrag",
     stat_retireOn: "Rente voraussichtlich", stat_balanceIn: "Stand in {n} Jahren",
@@ -250,7 +250,7 @@ const STR = {
     everyone: "Tout le monde", export: "Exporter", import: "Importer",
     tab_dashboard: "Aperçu", tab_income: "Revenus", tab_expenses: "Dépenses",
     tab_oneOffs: "À venir", tab_goals: "Objectifs", tab_balance: "Actifs et dettes", tab_settings: "Réglages",
-    footer: "Les données sont enregistrées localement sur cet appareil et exportables en JSON. La couche de stockage reprend le modèle local-first de Planourdays – dans la version complète, elle se synchronise avec votre dossier privé Google Drive appDataFolder. Les projections sont des estimations, pas des conseils financiers.",
+    footer: "Les projections sont des estimations, pas des conseils financiers.",
 
     stat_surplus: "Excédent mensuel", stat_retireNum: "Montant retraite",
     stat_retireOn: "Retraite prévue", stat_balanceIn: "Solde dans {n} ans",
