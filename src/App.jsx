@@ -6,7 +6,7 @@ import {
 import {
   Wallet, TrendingDown, CalendarClock, Target, Landmark, Settings as Cog,
   LayoutDashboard, Plus, Trash2, Download, Upload, Users, ShieldCheck,
-  PiggyBank, GitCompare, Check, FileText, LogOut,
+  PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ *
@@ -1166,6 +1166,12 @@ function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
  * Generic list section (income / expenses / one-offs / goals / etc.)
  * ================================================================== */
 function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelete, fmt }) {
+  const [openId, setOpenId] = useState(null);
+  const prevLen = useRef(items.length);
+  useEffect(() => {
+    if (items.length > prevLen.current) setOpenId(items[items.length - 1].id);
+    prevLen.current = items.length;
+  }, [items]);
   return (
     <Card>
       <div className="mb-1 flex items-start justify-between">
@@ -1180,7 +1186,8 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
         </button>
       </div>
 
-      <div className="mt-3 overflow-x-auto">
+      {/* Desktop / tablet: table */}
+      <div className="mt-3 hidden overflow-x-auto sm:block">
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ color: C.faint, textAlign: "left" }}>
@@ -1212,6 +1219,48 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: compact list — tap a row to expand its fields */}
+      <div className="mt-3 sm:hidden" style={{ borderTop: `1px solid ${C.line}` }}>
+        {items.length === 0 && (
+          <p style={{ padding: "12px 2px", color: C.faint, fontSize: 13 }}>{t("empty")}</p>
+        )}
+        {items.map((it) => {
+          const open = openId === it.id;
+          const amount = it.amount ?? it.target ?? it.value ?? it.balance;
+          return (
+            <div key={it.id} style={{ borderBottom: `1px solid ${C.line}` }}>
+              <button onClick={() => setOpenId(open ? null : it.id)}
+                className="flex w-full items-center justify-between gap-2 py-3 text-left">
+                <span style={{ fontWeight: 500, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {it.label || "—"}
+                </span>
+                <span className="flex shrink-0 items-center gap-2" style={{ color: C.sub, fontSize: 13 }}>
+                  {amount != null && <span style={num}>{fmt.format(amount)}</span>}
+                  <ChevronDown size={16}
+                    style={{ color: C.faint, transition: "transform .15s", transform: open ? "rotate(180deg)" : "none" }} />
+                </span>
+              </button>
+              {open && (
+                <div className="pb-3">
+                  {columns.map((c) => (
+                    <div key={c.key} className="mb-2.5 flex flex-col gap-1">
+                      <span style={{ color: C.faint, fontSize: 12 }}>{c.label}</span>
+                      <div className="mfield">{c.render(it, (patch) => onUpdate(it.id, patch))}</div>
+                    </div>
+                  ))}
+                  <div className="flex justify-end">
+                    <button onClick={() => onDelete(it.id)} className="flex items-center gap-1 text-sm"
+                      style={{ color: C.faint }} title={t("delete")}>
+                      <Trash2 size={15} /> {t("delete")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </Card>
   );
