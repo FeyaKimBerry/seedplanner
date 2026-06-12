@@ -6,7 +6,7 @@ import {
 import {
   Wallet, TrendingDown, CalendarClock, Target, Landmark, Settings as Cog,
   LayoutDashboard, Plus, Trash2, Download, Upload, Users, ShieldCheck,
-  PiggyBank, GitCompare, Check, FileText,
+  PiggyBank, GitCompare, Check, FileText, LogOut,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ *
@@ -104,6 +104,12 @@ const STR = {
     previewNote: "Preview — screenshot this to save it on your phone",
     blockedNote: "In the Claude preview only Copy works reliably. Share, Print and Download need the app running in a normal browser — they'll work once it's deployed.",
     importBad: "That file isn't valid Horizon data.",
+
+    login_title: "Sign in to Horizon",
+    login_subtitle: "Plan your savings and see when you can retire. Sign in to sync your data privately to your Google Drive.",
+    login_google: "Sign in with Google",
+    login_note: "Placeholder sign-in — no account is created and nothing leaves your device yet. Real Google sign-in is wired up in the full build.",
+    signOut: "Sign out",
 
     rep_title: "Horizon — financial projection", rep_generated: "generated", rep_byYear: "Projection by year",
     rep_now: "Now", rep_year: "Year", rep_emergency: "Emergency fund",
@@ -553,6 +559,44 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
 }
 
 /* ------------------------------------------------------------------ *
+ * Auth gate — placeholder Google sign-in. No real OAuth yet: the full
+ * build swaps onSignIn for the Google Identity flow that unlocks the
+ * Drive appDataFolder sync. Until then it just sets a local flag.
+ * ------------------------------------------------------------------ */
+const AUTH_KEY = "horizon_authed_v1";
+
+function GoogleG({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
+
+function LoginScreen({ onSignIn }) {
+  return (
+    <div style={{ background: C.sky, backgroundColor: C.bg, minHeight: "100vh", display: "grid", placeItems: "center", color: C.ink, fontFamily: FONT, padding: 20 }}>
+      <div style={{ background: C.card, borderRadius: 20, boxShadow: shadow, padding: "36px 30px", width: "100%", maxWidth: 380, textAlign: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 9, marginBottom: 22 }}>
+          <span style={{ width: 26, height: 26, borderRadius: 9, background: C.green, display: "inline-block" }} />
+          <span style={{ fontWeight: 600, fontSize: 20, letterSpacing: "-0.01em" }}>Horizon</span>
+        </div>
+        <h1 style={{ fontSize: 19, fontWeight: 600, margin: "0 0 6px" }}>{t("login_title")}</h1>
+        <p style={{ color: C.sub, fontSize: 14, lineHeight: 1.5, margin: "0 0 26px" }}>{t("login_subtitle")}</p>
+        <button onClick={onSignIn} type="button"
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, background: "#fff", color: C.ink, fontFamily: FONT, fontSize: 15, fontWeight: 600, cursor: "pointer", boxShadow: shadowSoft }}>
+          <GoogleG size={18} /> {t("login_google")}
+        </button>
+        <p style={{ color: C.faint, fontSize: 12, lineHeight: 1.5, margin: "20px 0 0" }}>{t("login_note")}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
  * App
  * ------------------------------------------------------------------ */
 export default function App() {
@@ -565,6 +609,9 @@ export default function App() {
     oneOffAmount: 0, oneOffMonth: 12,
   });
   const [sheet, setSheet] = useState(null);
+  const [authed, setAuthed] = useState(() => {
+    try { return localStorage.getItem(AUTH_KEY) === "1"; } catch { return false; }
+  });
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -616,6 +663,19 @@ export default function App() {
     });
   }, [state, filtered, whatIf]);
 
+  /* ---- placeholder auth gate: show login until signed in ---- */
+  LANG = state?.settings?.lang || "en";
+  if (!authed) {
+    return (
+      <LoginScreen
+        onSignIn={() => {
+          try { localStorage.setItem(AUTH_KEY, "1"); } catch {}
+          setAuthed(true);
+        }}
+      />
+    );
+  }
+
   if (!state || !projection) {
     return (
       <div style={{ background: C.bg, minHeight: "100vh", display: "grid", placeItems: "center", color: C.sub, fontFamily: "ui-sans-serif, system-ui" }}>
@@ -645,6 +705,12 @@ export default function App() {
     setState((s) => ({ ...s, [key]: s[key].map((i) => (i.id === id ? { ...i, ...patch } : i)) }));
   const delItem = (key, id) =>
     setState((s) => ({ ...s, [key]: s[key].filter((i) => i.id !== id) }));
+
+  /* ---- placeholder sign-out: clears the auth flag, returns to login ---- */
+  const signOut = () => {
+    try { localStorage.removeItem(AUTH_KEY); } catch {}
+    setAuthed(false);
+  };
 
   /* ---- export / import ---- */
   const exportJSON = () => {
@@ -809,6 +875,11 @@ export default function App() {
               <Upload size={15} /> {t("import")}
               <input type="file" accept="application/json" onChange={importJSON} className="hidden" />
             </label>
+            <button onClick={signOut} title={t("signOut")}
+              className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm"
+              style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
+              <LogOut size={15} /> {t("signOut")}
+            </button>
           </div>
         </div>
         {/* tabs */}
