@@ -1,4 +1,4 @@
-# Horizon
+# Seedplanner
 
 A local-first personal finance and retirement projection app.
 Multi-currency, multi-language (EN / TH / DE / FR), reactive bar-chart

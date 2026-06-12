@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seedplanner — Plan your savings, see when you can retire</title>
+  <meta name="description" content="Seedplanner is a private, local-first financial planner. Project your savings, set goals, and see when you can retire. Your data syncs only to your own Google Drive." />
+  <style>
+    :root {
+      --bg:#F4F9F7; --card:#FFFFFF; --ink:#23323C; --sub:#5C6E76;
+      --faint:#93A4AA; --line:#E4ECEC; --green:#2E8C8C; --greenSoft:#DBEDEB;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; background:linear-gradient(180deg,#E7F0F1 0%, #F4F9F7 460px); background-color:var(--bg);
+      color:var(--ink); font-family:ui-rounded,'SF Pro Rounded',ui-sans-serif,system-ui,-apple-system,sans-serif;
+      line-height:1.55; min-height:100vh;
+    }
+    .wrap { max-width:980px; margin:0 auto; padding:0 20px; }
+    header { display:flex; align-items:center; justify-content:space-between; padding:20px 0; }
+    .brand { display:flex; align-items:center; gap:9px; font-weight:600; font-size:18px; letter-spacing:-0.01em; }
+    .dot { width:22px; height:22px; border-radius:8px; background:var(--green); display:inline-block; }
+    .nav a { color:var(--sub); text-decoration:none; font-size:14px; margin-left:18px; }
+    .nav a:hover { color:var(--ink); }
+    .hero { text-align:center; padding:56px 0 40px; }
+    .hero h1 { font-size:40px; line-height:1.12; margin:0 0 16px; letter-spacing:-0.02em; }
+    .hero p { font-size:18px; color:var(--sub); max-width:620px; margin:0 auto 28px; }
+    .cta {
+      display:inline-flex; align-items:center; gap:10px; background:#fff; color:var(--ink);
+      border:1px solid var(--line); border-radius:12px; padding:12px 20px; font-size:16px; font-weight:600;
+      text-decoration:none; box-shadow:0 4px 14px rgba(40,90,90,0.06);
+    }
+    .cta:hover { box-shadow:0 8px 24px rgba(40,90,90,0.10); }
+    .features { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:48px 0; }
+    .feature { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:0 4px 14px rgba(40,90,90,0.05); }
+    .feature h3 { margin:0 0 8px; font-size:16px; }
+    .feature p { margin:0; color:var(--sub); font-size:14px; }
+    .privacy-note { background:var(--greenSoft); border-radius:16px; padding:24px 26px; margin:40px 0; color:#23323C; }
+    .privacy-note h2 { margin:0 0 8px; font-size:18px; }
+    .privacy-note p { margin:0; color:#3c5a58; font-size:15px; }
+    footer { border-top:1px solid var(--line); margin-top:56px; padding:26px 0 50px; color:var(--faint); font-size:13px; text-align:center; }
+    footer a { color:var(--sub); text-decoration:none; margin:0 10px; }
+    footer a:hover { color:var(--ink); }
+    @media (max-width:600px){ .hero h1{font-size:30px;} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><span class="dot"></span> Seedplanner</div>
+      <nav class="nav">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/">Open app</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <h1>See when you can actually retire.</h1>
+      <p>Seedplanner is a private, local-first financial planner. Add your income, expenses, goals and debts — watch your savings projection and find the year you reach financial independence.</p>
+      <a class="cta" href="/">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Sign in with Google
+      </a>
+    </section>
+
+    <section class="features">
+      <div class="feature"><h3>Savings projection</h3><p>A clear month-by-month and year-by-year forecast across conservative, expected and optimistic returns.</p></div>
+      <div class="feature"><h3>Goals &amp; one-offs</h3><p>Track named savings goals and dated one-off costs — see each one bend your curve on the chart.</p></div>
+      <div class="feature"><h3>Retirement number</h3><p>Auto-calculated from your spending using the 4% rule, or set your own target.</p></div>
+      <div class="feature"><h3>Household view</h3><p>Tag income and expenses to people and switch between everyone and one person.</p></div>
+    </section>
+
+    <section class="privacy-note">
+      <h2>Your data stays yours</h2>
+      <p>Seedplanner is local-first: your information is stored on your own device and, when you sign in, synced privately to your personal Google Drive app-data folder. We never sell your data or use it for advertising. Read our <a href="/privacy.html">Privacy Policy</a> for details.</p>
+    </section>
+
+    <footer>
+      <div>
+        <a href="/privacy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms of Service</a>
+        <a href="/">Open app</a>
+      </div>
+      <p style="margin-top:14px;">© 2026 Seedplanner. Projections are estimates, not financial advice.</p>
+    </footer>
+  </div>
+</body>
+</html>

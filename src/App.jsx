@@ -103,15 +103,16 @@ const STR = {
     downloadHtml: "Download .html", close: "Close",
     previewNote: "Preview — screenshot this to save it on your phone",
     blockedNote: "In the Claude preview only Copy works reliably. Share, Print and Download need the app running in a normal browser — they'll work once it's deployed.",
-    importBad: "That file isn't valid Horizon data.",
+    importBad: "That file isn't valid Seedplanner data.",
 
-    login_title: "Sign in to Horizon",
+    login_title: "Sign in to Seedplanner",
     login_subtitle: "Plan your savings and see when you can retire. Sign in to sync your data privately to your Google Drive.",
     login_google: "Sign in with Google",
     login_note: "Placeholder sign-in — no account is created and nothing leaves your device yet. Real Google sign-in is wired up in the full build.",
     signOut: "Sign out",
+    nav_home: "Home", nav_privacy: "Privacy Policy", nav_terms: "Terms of Service",
 
-    rep_title: "Horizon — financial projection", rep_generated: "generated", rep_byYear: "Projection by year",
+    rep_title: "Seedplanner — financial projection", rep_generated: "generated", rep_byYear: "Projection by year",
     rep_now: "Now", rep_year: "Year", rep_emergency: "Emergency fund",
     rep_foot: "Projections are estimates based on your inputs and assumed returns — not financial advice.",
   },
@@ -174,9 +175,9 @@ const STR = {
     downloadHtml: "ดาวน์โหลด .html", close: "ปิด",
     previewNote: "ตัวอย่าง — ถ่ายภาพหน้าจอเพื่อบันทึกบนมือถือ",
     blockedNote: "ในตัวอย่างของ Claude ใช้ได้เฉพาะคัดลอก ส่วนแชร์ พิมพ์ และดาวน์โหลดต้องเปิดในเบราว์เซอร์ปกติ — จะใช้งานได้เมื่อนำไปติดตั้งจริง",
-    importBad: "ไฟล์นี้ไม่ใช่ข้อมูล Horizon ที่ถูกต้อง",
+    importBad: "ไฟล์นี้ไม่ใช่ข้อมูล Seedplanner ที่ถูกต้อง",
 
-    rep_title: "Horizon — การคาดการณ์ทางการเงิน", rep_generated: "สร้างเมื่อ", rep_byYear: "การคาดการณ์รายปี",
+    rep_title: "Seedplanner — การคาดการณ์ทางการเงิน", rep_generated: "สร้างเมื่อ", rep_byYear: "การคาดการณ์รายปี",
     rep_now: "ปัจจุบัน", rep_year: "ปีที่", rep_emergency: "เงินสำรองฉุกเฉิน",
     rep_foot: "การคาดการณ์เป็นการประมาณจากข้อมูลและผลตอบแทนที่สมมติ ไม่ใช่คำแนะนำทางการเงิน",
   },
@@ -239,9 +240,9 @@ const STR = {
     downloadHtml: "HTML herunterladen", close: "Schließen",
     previewNote: "Vorschau – mache einen Screenshot, um sie auf dem Handy zu speichern",
     blockedNote: "In der Claude-Vorschau funktioniert nur Kopieren zuverlässig. Teilen, Drucken und Herunterladen benötigen die App in einem normalen Browser – sie funktionieren nach der Veröffentlichung.",
-    importBad: "Diese Datei enthält keine gültigen Horizon-Daten.",
+    importBad: "Diese Datei enthält keine gültigen Seedplanner-Daten.",
 
-    rep_title: "Horizon – Finanzprognose", rep_generated: "erstellt", rep_byYear: "Prognose nach Jahr",
+    rep_title: "Seedplanner – Finanzprognose", rep_generated: "erstellt", rep_byYear: "Prognose nach Jahr",
     rep_now: "Jetzt", rep_year: "Jahr", rep_emergency: "Notgroschen",
     rep_foot: "Prognosen sind Schätzungen basierend auf deinen Eingaben und angenommenen Renditen – keine Finanzberatung.",
   },
@@ -304,9 +305,9 @@ const STR = {
     downloadHtml: "Télécharger .html", close: "Fermer",
     previewNote: "Aperçu – faites une capture d'écran pour l'enregistrer sur votre téléphone",
     blockedNote: "Dans l'aperçu Claude, seul Copier fonctionne de façon fiable. Partager, Imprimer et Télécharger nécessitent l'app dans un navigateur normal – ils fonctionneront une fois déployée.",
-    importBad: "Ce fichier ne contient pas de données Horizon valides.",
+    importBad: "Ce fichier ne contient pas de données Seedplanner valides.",
 
-    rep_title: "Horizon – projection financière", rep_generated: "généré", rep_byYear: "Projection par année",
+    rep_title: "Seedplanner – projection financière", rep_generated: "généré", rep_byYear: "Projection par année",
     rep_now: "Maintenant", rep_year: "Année", rep_emergency: "Fonds d'urgence",
     rep_foot: "Les projections sont des estimations basées sur vos données et des rendements supposés – pas des conseils financiers.",
   },
@@ -582,7 +583,7 @@ function LoginScreen({ onSignIn }) {
       <div style={{ background: C.card, borderRadius: 20, boxShadow: shadow, padding: "36px 30px", width: "100%", maxWidth: 380, textAlign: "center" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 9, marginBottom: 22 }}>
           <span style={{ width: 26, height: 26, borderRadius: 9, background: C.green, display: "inline-block" }} />
-          <span style={{ fontWeight: 600, fontSize: 20, letterSpacing: "-0.01em" }}>Horizon</span>
+          <span style={{ fontWeight: 600, fontSize: 20, letterSpacing: "-0.01em" }}>Seedplanner</span>
         </div>
         <h1 style={{ fontSize: 19, fontWeight: 600, margin: "0 0 6px" }}>{t("login_title")}</h1>
         <p style={{ color: C.sub, fontSize: 14, lineHeight: 1.5, margin: "0 0 26px" }}>{t("login_subtitle")}</p>
@@ -591,6 +592,13 @@ function LoginScreen({ onSignIn }) {
           <GoogleG size={18} /> {t("login_google")}
         </button>
         <p style={{ color: C.faint, fontSize: 12, lineHeight: 1.5, margin: "20px 0 0" }}>{t("login_note")}</p>
+        <p style={{ fontSize: 12, margin: "16px 0 0" }}>
+          <a href="/home.html" style={{ color: C.sub, textDecoration: "none" }}>{t("nav_home")}</a>
+          <span style={{ color: C.faint }}> · </span>
+          <a href="/privacy.html" style={{ color: C.sub, textDecoration: "none" }}>{t("nav_privacy")}</a>
+          <span style={{ color: C.faint }}> · </span>
+          <a href="/terms.html" style={{ color: C.sub, textDecoration: "none" }}>{t("nav_terms")}</a>
+        </p>
       </div>
     </div>
   );
@@ -719,7 +727,7 @@ export default function App() {
       title: t("exData_title"),
       desc: t("exData_desc"),
       content: JSON.stringify(state, null, 2),
-      filename: `horizon-backup-${new Date().toISOString().slice(0, 10)}.json`,
+      filename: `seedplanner-backup-${new Date().toISOString().slice(0, 10)}.json`,
       mime: "application/json",
     });
   };
@@ -778,7 +786,7 @@ export default function App() {
       if (svg) chartHTML = `<div class="chart">${svg.outerHTML}</div>`;
     } catch { /* no chart available */ }
 
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Horizon report</title>
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Seedplanner report</title>
 <style>
   @page { margin: 18mm; }
   * { box-sizing: border-box; }
@@ -828,7 +836,7 @@ export default function App() {
       title: t("exRep_title"),
       desc: t("exRep_desc"),
       content: html,
-      filename: `horizon-report-${new Date().toISOString().slice(0, 10)}.html`,
+      filename: `seedplanner-report-${new Date().toISOString().slice(0, 10)}.html`,
       mime: "text/html",
     });
   };
@@ -850,7 +858,7 @@ export default function App() {
         <div className="mx-auto flex flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-5" style={{ maxWidth: 1100 }}>
           <div className="flex items-center gap-2">
             <span style={{ width: 22, height: 22, borderRadius: 8, background: C.green, display: "inline-block" }} />
-            <span style={{ fontWeight: 600, letterSpacing: "-0.01em" }}>Horizon</span>
+            <span style={{ fontWeight: 600, letterSpacing: "-0.01em" }}>Seedplanner</span>
           </div>
           <div className="flex items-center gap-2">
             <select value={state.settings.lang || "en"} onChange={(e) => setSettings({ lang: e.target.value })}
@@ -859,26 +867,26 @@ export default function App() {
               {LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
             <ViewSwitcher members={state.members} view={view} setView={setView} />
-            <button onClick={exportJSON} title={t("export")}
-              className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm"
+            <button onClick={exportJSON} title={t("export")} aria-label={t("export")}
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm sm:px-2.5"
               style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <Download size={15} /> {t("export")}
+              <Download size={15} /> <span className="hidden sm:inline">{t("export")}</span>
             </button>
-            <button onClick={exportPDF} title="PDF"
-              className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm"
+            <button onClick={exportPDF} title="PDF" aria-label="PDF"
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm sm:px-2.5"
               style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <FileText size={15} /> PDF
+              <FileText size={15} /> <span className="hidden sm:inline">PDF</span>
             </button>
-            <label title={t("import")}
-              className="flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1.5 text-sm"
+            <label title={t("import")} aria-label={t("import")}
+              className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm sm:px-2.5"
               style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <Upload size={15} /> {t("import")}
+              <Upload size={15} /> <span className="hidden sm:inline">{t("import")}</span>
               <input type="file" accept="application/json" onChange={importJSON} className="hidden" />
             </label>
-            <button onClick={signOut} title={t("signOut")}
-              className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm"
+            <button onClick={signOut} title={t("signOut")} aria-label={t("signOut")}
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm sm:px-2.5"
               style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <LogOut size={15} /> {t("signOut")}
+              <LogOut size={15} /> <span className="hidden sm:inline">{t("signOut")}</span>
             </button>
           </div>
         </div>
@@ -971,6 +979,13 @@ export default function App() {
       <footer className="mx-auto px-3 pb-10 pt-2 sm:px-5" style={{ maxWidth: 1100 }}>
         <p style={{ color: C.faint, fontSize: 12, lineHeight: 1.6 }}>
           {t("footer")}
+        </p>
+        <p style={{ color: C.faint, fontSize: 12, marginTop: 8 }}>
+          <a href="/home.html" style={{ color: C.sub, textDecoration: "none" }}>{t("nav_home")}</a>
+          <span style={{ color: C.faint }}> · </span>
+          <a href="/privacy.html" style={{ color: C.sub, textDecoration: "none" }}>{t("nav_privacy")}</a>
+          <span style={{ color: C.faint }}> · </span>
+          <a href="/terms.html" style={{ color: C.sub, textDecoration: "none" }}>{t("nav_terms")}</a>
         </p>
       </footer>
     </div>
