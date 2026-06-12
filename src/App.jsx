@@ -628,6 +628,19 @@ export default function App() {
     store.load().then((s) => setState(s || seed));
   }, []);
 
+  // Highlight the whole value when a number field is focused, so the user can
+  // type over it (e.g. the default 0) instead of deleting it first.
+  useEffect(() => {
+    const onFocusIn = (e) => {
+      const el = e.target;
+      if (el && el.tagName === "INPUT" && el.type === "number") {
+        setTimeout(() => { try { el.select(); } catch {} }, 0);
+      }
+    };
+    document.addEventListener("focusin", onFocusIn);
+    return () => document.removeEventListener("focusin", onFocusIn);
+  }, []);
+
   useEffect(() => {
     if (!state) return;
     clearTimeout(saveTimer.current);
