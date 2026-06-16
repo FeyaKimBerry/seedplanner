@@ -1335,7 +1335,7 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
     grouped[g].push(p);
   }
   const addBlank = () => { setShowAdd(false); onAdd(); };
-  const addPreset = (p) => { onAddPreset(p); };
+  const addPreset = (p) => { setShowAdd(false); onAddPreset(p); };
   return (
     <Card>
       <div className="mb-1 flex items-start justify-between">
