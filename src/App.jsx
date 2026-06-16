@@ -85,6 +85,21 @@ const STR = {
     new_income: "New income", new_expense: "New expense", new_goal: "New goal",
     new_asset: "New asset", new_debt: "New debt", new_person: "New person",
 
+    presetTitle: "Suggestions", presetHint: "Not sure what to record? Tap to add a common item, then fill in the amount.",
+    cat_housing: "Housing", cat_food: "Food", cat_transport: "Transport",
+    cat_debt: "Debt & loans", cat_health: "Health", cat_lifestyle: "Lifestyle", cat_utilities: "Bills & utilities",
+    p_salary: "Salary", p_freelance: "Freelance / side hustle", p_business: "Business income",
+    p_rental: "Rental income", p_dividends: "Dividends", p_interest: "Interest", p_benefit: "Government benefit",
+    p_pension: "Pension", p_bonus: "Bonus", p_childsupport: "Child support",
+    p_rent: "Rent", p_mortgage: "Mortgage", p_utilities: "Electricity & gas", p_water: "Water",
+    p_internet: "Internet", p_phone: "Phone", p_homeins: "Home insurance",
+    p_groceries: "Groceries", p_dining: "Dining out",
+    p_fuel: "Fuel", p_transit: "Public transport", p_carins: "Car insurance", p_rego: "Car registration",
+    p_creditcard: "Credit card payment", p_personalloan: "Personal loan", p_studentloan: "Student loan",
+    p_carloan: "Car loan", p_homeloan: "Home loan / mortgage", p_bnpl: "Buy now, pay later",
+    p_healthins: "Health insurance", p_gym: "Gym & fitness", p_subs: "Subscriptions", p_childcare: "Childcare",
+    p_savings: "Savings / investing", p_insurance: "Life insurance",
+
     whereGoes: "Where it goes", perMo: "/mo",
     totalSpend: "Total spending", perDay: "/day", perWk: "/wk", perYr: "/yr",
     unit_day: "Day", unit_week: "Week", unit_month: "Month", unit_year: "Year",
@@ -162,6 +177,21 @@ const STR = {
     new_income: "รายได้ใหม่", new_expense: "รายจ่ายใหม่", new_goal: "เป้าหมายใหม่",
     new_asset: "สินทรัพย์ใหม่", new_debt: "หนี้ใหม่", new_person: "บุคคลใหม่",
 
+    presetTitle: "รายการแนะนำ", presetHint: "ไม่รู้จะบันทึกอะไร? แตะเพื่อเพิ่มรายการที่พบบ่อย แล้วกรอกจำนวนเงิน",
+    cat_housing: "ที่อยู่อาศัย", cat_food: "อาหาร", cat_transport: "การเดินทาง",
+    cat_debt: "หนี้และเงินกู้", cat_health: "สุขภาพ", cat_lifestyle: "ไลฟ์สไตล์", cat_utilities: "บิลและสาธารณูปโภค",
+    p_salary: "เงินเดือน", p_freelance: "ฟรีแลนซ์ / งานเสริม", p_business: "รายได้จากธุรกิจ",
+    p_rental: "รายได้ค่าเช่า", p_dividends: "เงินปันผล", p_interest: "ดอกเบี้ย", p_benefit: "สวัสดิการรัฐ",
+    p_pension: "บำนาญ", p_bonus: "โบนัส", p_childsupport: "ค่าเลี้ยงดูบุตร",
+    p_rent: "ค่าเช่า", p_mortgage: "ผ่อนบ้าน", p_utilities: "ค่าไฟ-แก๊ส", p_water: "ค่าน้ำ",
+    p_internet: "อินเทอร์เน็ต", p_phone: "ค่าโทรศัพท์", p_homeins: "ประกันบ้าน",
+    p_groceries: "ของใช้-ของกิน", p_dining: "ทานข้าวนอกบ้าน",
+    p_fuel: "ค่าน้ำมัน", p_transit: "ขนส่งสาธารณะ", p_carins: "ประกันรถ", p_rego: "ทะเบียนรถ",
+    p_creditcard: "จ่ายบัตรเครดิต", p_personalloan: "สินเชื่อส่วนบุคคล", p_studentloan: "เงินกู้การศึกษา",
+    p_carloan: "ผ่อนรถ", p_homeloan: "สินเชื่อบ้าน", p_bnpl: "ซื้อก่อนจ่ายทีหลัง",
+    p_healthins: "ประกันสุขภาพ", p_gym: "ฟิตเนส", p_subs: "ค่าสมาชิกรายเดือน", p_childcare: "ค่าเลี้ยงเด็ก",
+    p_savings: "ออม / ลงทุน", p_insurance: "ประกันชีวิต",
+
     whereGoes: "เงินไปไหนบ้าง", perMo: "/เดือน",
     totalSpend: "รายจ่ายรวม", perDay: "/วัน", perWk: "/สัปดาห์", perYr: "/ปี",
     unit_day: "วัน", unit_week: "สัปดาห์", unit_month: "เดือน", unit_year: "ปี",
@@ -232,6 +262,21 @@ const STR = {
     new_income: "Neues Einkommen", new_expense: "Neue Ausgabe", new_goal: "Neues Ziel",
     new_asset: "Neuer Vermögenswert", new_debt: "Neue Schuld", new_person: "Neue Person",
 
+    presetTitle: "Vorschläge", presetHint: "Unsicher, was du erfassen sollst? Tippe, um einen üblichen Posten hinzuzufügen, und trage den Betrag ein.",
+    cat_housing: "Wohnen", cat_food: "Essen", cat_transport: "Transport",
+    cat_debt: "Schulden & Kredite", cat_health: "Gesundheit", cat_lifestyle: "Lifestyle", cat_utilities: "Rechnungen & Nebenkosten",
+    p_salary: "Gehalt", p_freelance: "Freiberuflich / Nebenjob", p_business: "Geschäftseinkommen",
+    p_rental: "Mieteinnahmen", p_dividends: "Dividenden", p_interest: "Zinsen", p_benefit: "Staatliche Leistung",
+    p_pension: "Rente", p_bonus: "Bonus", p_childsupport: "Unterhalt",
+    p_rent: "Miete", p_mortgage: "Hypothek", p_utilities: "Strom & Gas", p_water: "Wasser",
+    p_internet: "Internet", p_phone: "Telefon", p_homeins: "Hausratversicherung",
+    p_groceries: "Lebensmittel", p_dining: "Auswärts essen",
+    p_fuel: "Kraftstoff", p_transit: "Öffentlicher Verkehr", p_carins: "Kfz-Versicherung", p_rego: "Kfz-Zulassung",
+    p_creditcard: "Kreditkartenzahlung", p_personalloan: "Privatkredit", p_studentloan: "Studienkredit",
+    p_carloan: "Autokredit", p_homeloan: "Immobilienkredit", p_bnpl: "Jetzt kaufen, später zahlen",
+    p_healthins: "Krankenversicherung", p_gym: "Fitnessstudio", p_subs: "Abonnements", p_childcare: "Kinderbetreuung",
+    p_savings: "Sparen / Anlegen", p_insurance: "Lebensversicherung",
+
     whereGoes: "Wohin es geht", perMo: "/Mon.",
     totalSpend: "Gesamtausgaben", perDay: "/Tag", perWk: "/Wo.", perYr: "/Jahr",
     unit_day: "Tag", unit_week: "Woche", unit_month: "Monat", unit_year: "Jahr",
@@ -301,6 +346,21 @@ const STR = {
     freq_monthly: "Mensuel", freq_fortnightly: "Bimensuel", freq_annual: "Annuel", freq_weekly: "Hebdomadaire", freq_daily: "Quotidien", freq_oneoff: "Ponctuel",
     new_income: "Nouveau revenu", new_expense: "Nouvelle dépense", new_goal: "Nouvel objectif",
     new_asset: "Nouvel actif", new_debt: "Nouvelle dette", new_person: "Nouvelle personne",
+
+    presetTitle: "Suggestions", presetHint: "Vous ne savez pas quoi enregistrer ? Touchez pour ajouter un poste courant, puis saisissez le montant.",
+    cat_housing: "Logement", cat_food: "Alimentation", cat_transport: "Transport",
+    cat_debt: "Dettes & prêts", cat_health: "Santé", cat_lifestyle: "Style de vie", cat_utilities: "Factures & charges",
+    p_salary: "Salaire", p_freelance: "Freelance / activité annexe", p_business: "Revenu d'entreprise",
+    p_rental: "Revenu locatif", p_dividends: "Dividendes", p_interest: "Intérêts", p_benefit: "Aide de l'État",
+    p_pension: "Pension", p_bonus: "Prime", p_childsupport: "Pension alimentaire",
+    p_rent: "Loyer", p_mortgage: "Prêt immobilier", p_utilities: "Électricité & gaz", p_water: "Eau",
+    p_internet: "Internet", p_phone: "Téléphone", p_homeins: "Assurance habitation",
+    p_groceries: "Courses", p_dining: "Restaurants",
+    p_fuel: "Carburant", p_transit: "Transports en commun", p_carins: "Assurance auto", p_rego: "Carte grise",
+    p_creditcard: "Paiement carte de crédit", p_personalloan: "Prêt personnel", p_studentloan: "Prêt étudiant",
+    p_carloan: "Prêt auto", p_homeloan: "Crédit immobilier", p_bnpl: "Paiement différé",
+    p_healthins: "Assurance santé", p_gym: "Sport & fitness", p_subs: "Abonnements", p_childcare: "Garde d'enfants",
+    p_savings: "Épargne / investissement", p_insurance: "Assurance vie",
 
     whereGoes: "Où va l'argent", perMo: "/mois",
     totalSpend: "Dépenses totales", perDay: "/jour", perWk: "/sem.", perYr: "/an",
@@ -957,7 +1017,9 @@ export default function App() {
               items={filtered.income} columns={incomeCols(state.members)}
               onAdd={() => addItem("income", { id: uid(), label: t("new_income"), amount: 0, frequency: "monthly", memberId: state.members[0].id })}
               onUpdate={(id, p) => updItem("income", id, p)}
-              onDelete={(id) => delItem("income", id)} fmt={fmt} />
+              onDelete={(id) => delItem("income", id)} fmt={fmt}
+              presets={INCOME_PRESETS}
+              onAddPreset={(p) => addItem("income", { id: uid(), label: t(p.key), amount: 0, frequency: p.frequency, memberId: state.members[0].id })} />
             <Breakdown items={filtered.income} groupBy={bySource}
               title={t("incomeSources")} totalLabel={t("totalIncome")} fmt={fmt} />
           </>
@@ -970,7 +1032,9 @@ export default function App() {
               items={filtered.expenses} columns={expenseCols(state.members)}
               onAdd={() => addItem("expenses", { id: uid(), label: t("new_expense"), amount: 0, frequency: "monthly", category: "Other", memberId: state.members[0].id })}
               onUpdate={(id, p) => updItem("expenses", id, p)}
-              onDelete={(id) => delItem("expenses", id)} fmt={fmt} />
+              onDelete={(id) => delItem("expenses", id)} fmt={fmt}
+              presets={EXPENSE_PRESETS}
+              onAddPreset={(p) => addItem("expenses", { id: uid(), label: t(p.key), amount: 0, frequency: p.frequency, category: t(p.catKey), memberId: state.members[0].id })} />
             <Breakdown items={filtered.expenses} groupBy={byCategory}
               title={t("whereGoes")} totalLabel={t("totalSpend")} fmt={fmt} />
           </>
@@ -1225,13 +1289,16 @@ function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
 /* ================================================================== *
  * Generic list section (income / expenses / one-offs / goals / etc.)
  * ================================================================== */
-function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelete, fmt }) {
+function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelete, fmt, presets, onAddPreset }) {
   const [openId, setOpenId] = useState(null);
   const prevLen = useRef(items.length);
   useEffect(() => {
     if (items.length > prevLen.current) setOpenId(items[0].id);
     prevLen.current = items.length;
   }, [items]);
+  // hide a suggestion once an item with that name already exists
+  const have = new Set(items.map((it) => (it.label || "").trim().toLowerCase()));
+  const suggestions = (presets || []).filter((p) => !have.has(t(p.key).trim().toLowerCase()));
   return (
     <Card>
       <div className="mb-1 flex items-start justify-between">
@@ -1245,6 +1312,23 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
           <Plus size={15} /> {t("add")}
         </button>
       </div>
+
+      {/* Suggestions — tap to add a common item, then fill in the amount */}
+      {suggestions.length > 0 && (
+        <div className="mt-3" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
+          <p style={{ fontSize: 11.5, color: C.faint, marginBottom: 6 }}>{t("presetHint")}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {suggestions.map((p) => (
+              <button key={p.key} onClick={() => onAddPreset(p)}
+                className="flex items-center gap-1 rounded-full"
+                style={{ border: `1px solid ${C.line}`, background: C.greenSoft, color: C.ink,
+                  fontSize: 12, padding: "4px 10px" }}>
+                <Plus size={12} color={C.green} /> {t(p.key)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Desktop / tablet: table */}
       <div className="mt-3 hidden overflow-x-auto sm:block">
@@ -1352,6 +1436,54 @@ const freqOpts = () => [
   { value: "oneoff", label: t("freq_oneoff") },
 ];
 const recurringFreqOpts = () => freqOpts().filter((o) => o.value !== "oneoff");
+
+/* ---- preset suggestions ---- */
+// Common items grouped so new users can tap to add instead of starting blank.
+// `amount: 0` on purpose — the user fills in their own number.
+const INCOME_PRESETS = [
+  { key: "p_salary", frequency: "monthly" },
+  { key: "p_freelance", frequency: "monthly" },
+  { key: "p_business", frequency: "monthly" },
+  { key: "p_rental", frequency: "monthly" },
+  { key: "p_dividends", frequency: "monthly" },
+  { key: "p_interest", frequency: "monthly" },
+  { key: "p_benefit", frequency: "monthly" },
+  { key: "p_pension", frequency: "monthly" },
+  { key: "p_childsupport", frequency: "monthly" },
+  { key: "p_bonus", frequency: "annual" },
+];
+const EXPENSE_PRESETS = [
+  // Housing & bills
+  { key: "p_rent", catKey: "cat_housing", frequency: "monthly" },
+  { key: "p_utilities", catKey: "cat_utilities", frequency: "monthly" },
+  { key: "p_water", catKey: "cat_utilities", frequency: "monthly" },
+  { key: "p_internet", catKey: "cat_utilities", frequency: "monthly" },
+  { key: "p_phone", catKey: "cat_utilities", frequency: "monthly" },
+  { key: "p_homeins", catKey: "cat_housing", frequency: "annual" },
+  // Food
+  { key: "p_groceries", catKey: "cat_food", frequency: "monthly" },
+  { key: "p_dining", catKey: "cat_food", frequency: "monthly" },
+  // Transport
+  { key: "p_fuel", catKey: "cat_transport", frequency: "monthly" },
+  { key: "p_transit", catKey: "cat_transport", frequency: "monthly" },
+  { key: "p_carins", catKey: "cat_transport", frequency: "monthly" },
+  { key: "p_rego", catKey: "cat_transport", frequency: "annual" },
+  // Debt & loans
+  { key: "p_homeloan", catKey: "cat_debt", frequency: "monthly" },
+  { key: "p_carloan", catKey: "cat_debt", frequency: "monthly" },
+  { key: "p_personalloan", catKey: "cat_debt", frequency: "monthly" },
+  { key: "p_studentloan", catKey: "cat_debt", frequency: "monthly" },
+  { key: "p_creditcard", catKey: "cat_debt", frequency: "monthly" },
+  { key: "p_bnpl", catKey: "cat_debt", frequency: "fortnightly" },
+  // Health
+  { key: "p_healthins", catKey: "cat_health", frequency: "monthly" },
+  { key: "p_gym", catKey: "cat_health", frequency: "monthly" },
+  // Lifestyle
+  { key: "p_subs", catKey: "cat_lifestyle", frequency: "monthly" },
+  { key: "p_childcare", catKey: "cat_lifestyle", frequency: "monthly" },
+  { key: "p_insurance", catKey: "cat_health", frequency: "monthly" },
+  { key: "p_savings", catKey: "cat_lifestyle", frequency: "monthly" },
+];
 
 const incomeCols = (members) => [
   { key: "label", label: t("col_source"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
