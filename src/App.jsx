@@ -101,7 +101,7 @@ const STR = {
     p_savings: "Savings / investing", p_insurance: "Life insurance",
 
     whereGoes: "Where it goes", perMo: "/mo",
-    totalSpend: "Total spending", perDay: "/day", perWk: "/wk", perYr: "/yr",
+    totalSpend: "Total spending", perDay: "/day", perWk: "/wk", perYr: "/yr", perFn: "/fortnight", perOnce: "one-off",
     unit_day: "Day", unit_week: "Week", unit_month: "Month", unit_year: "Year",
     incomeSources: "Where it comes from", totalIncome: "Total income",
     emTitle: "Emergency fund", emDesc: "Kept separate from your goals — your buffer before anything else.",
@@ -193,7 +193,7 @@ const STR = {
     p_savings: "ออม / ลงทุน", p_insurance: "ประกันชีวิต",
 
     whereGoes: "เงินไปไหนบ้าง", perMo: "/เดือน",
-    totalSpend: "รายจ่ายรวม", perDay: "/วัน", perWk: "/สัปดาห์", perYr: "/ปี",
+    totalSpend: "รายจ่ายรวม", perDay: "/วัน", perWk: "/สัปดาห์", perYr: "/ปี", perFn: "/สองสัปดาห์", perOnce: "ครั้งเดียว",
     unit_day: "วัน", unit_week: "สัปดาห์", unit_month: "เดือน", unit_year: "ปี",
     incomeSources: "รายได้มาจากไหน", totalIncome: "รายได้รวม",
     emTitle: "เงินสำรองฉุกเฉิน", emDesc: "แยกจากเป้าหมายอื่น — กันชนก่อนเรื่องอื่น",
@@ -278,7 +278,7 @@ const STR = {
     p_savings: "Sparen / Anlegen", p_insurance: "Lebensversicherung",
 
     whereGoes: "Wohin es geht", perMo: "/Mon.",
-    totalSpend: "Gesamtausgaben", perDay: "/Tag", perWk: "/Wo.", perYr: "/Jahr",
+    totalSpend: "Gesamtausgaben", perDay: "/Tag", perWk: "/Wo.", perYr: "/Jahr", perFn: "/2 Wo.", perOnce: "einmalig",
     unit_day: "Tag", unit_week: "Woche", unit_month: "Monat", unit_year: "Jahr",
     incomeSources: "Woher es kommt", totalIncome: "Gesamteinkommen",
     emTitle: "Notgroschen", emDesc: "Getrennt von deinen Zielen – dein Puffer vor allem anderen.",
@@ -363,7 +363,7 @@ const STR = {
     p_savings: "Épargne / investissement", p_insurance: "Assurance vie",
 
     whereGoes: "Où va l'argent", perMo: "/mois",
-    totalSpend: "Dépenses totales", perDay: "/jour", perWk: "/sem.", perYr: "/an",
+    totalSpend: "Dépenses totales", perDay: "/jour", perWk: "/sem.", perYr: "/an", perFn: "/quinzaine", perOnce: "ponctuel",
     unit_day: "Jour", unit_week: "Semaine", unit_month: "Mois", unit_year: "Année",
     incomeSources: "D'où ça vient", totalIncome: "Revenu total",
     emTitle: "Fonds d'urgence", emDesc: "Séparé de vos objectifs – votre coussin avant tout le reste.",
@@ -1381,7 +1381,12 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
                   {it.label || "—"}
                 </span>
                 <span className="flex shrink-0 items-center gap-2" style={{ color: C.sub, fontSize: 13 }}>
-                  {amount != null && <span style={num}>{fmt.format(amount)}</span>}
+                  {amount != null && (
+                    <span style={num}>
+                      {fmt.format(amount)}
+                      {it.frequency && <span style={{ color: C.faint }}>{freqSuffix(it.frequency)}</span>}
+                    </span>
+                  )}
                   <ChevronDown size={16}
                     style={{ color: C.faint, transition: "transform .15s", transform: open ? "rotate(180deg)" : "none" }} />
                 </span>
@@ -1413,6 +1418,10 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
     </Card>
   );
 }
+
+// Short period label shown after an amount, e.g. "/mo", "/wk".
+const FREQ_SUFFIX = { monthly: "perMo", weekly: "perWk", annual: "perYr", daily: "perDay", fortnightly: "perFn", oneoff: "perOnce" };
+const freqSuffix = (frequency) => (FREQ_SUFFIX[frequency] ? t(FREQ_SUFFIX[frequency]) : "");
 
 /* ---- column definitions ---- */
 const inputCell = (val, onChange, props = {}) => (
