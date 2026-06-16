@@ -1194,7 +1194,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
   }, [projection, chartKey, state.settings.projectionYears, paceGoals, startBal]);
 
   // monthly drill-down for a chosen year (12 bars)
-  const [grain, setGrain] = useState("yearly"); // yearly | monthly
+  const [grain, setGrain] = useState("monthly"); // yearly | monthly
   const [scaleMode, setScaleMode] = useState("log"); // log | linear — log keeps small goals readable
   const logScale = scaleMode === "log";
   const [pickYear, setPickYear] = useState(1);
