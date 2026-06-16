@@ -216,6 +216,13 @@ const STR = {
     blockedNote: "ในตัวอย่างของ Claude ใช้ได้เฉพาะคัดลอก ส่วนแชร์ พิมพ์ และดาวน์โหลดต้องเปิดในเบราว์เซอร์ปกติ — จะใช้งานได้เมื่อนำไปติดตั้งจริง",
     importBad: "ไฟล์นี้ไม่ใช่ข้อมูล Seedplanner ที่ถูกต้อง",
 
+    login_title: "เข้าสู่ระบบ Seedplanner",
+    login_subtitle: "วางแผนการออมและดูว่าคุณจะเกษียณได้เมื่อไหร่",
+    login_google: "เข้าสู่ระบบด้วย Google",
+    login_note: "การเข้าสู่ระบบนี้เป็นเพียงตัวอย่าง — ยังไม่มีการสร้างบัญชีและไม่มีข้อมูลออกจากอุปกรณ์ของคุณ การเข้าสู่ระบบ Google จริงจะมีในเวอร์ชันเต็ม",
+    signOut: "ออกจากระบบ",
+    nav_home: "หน้าแรก", nav_privacy: "นโยบายความเป็นส่วนตัว", nav_terms: "ข้อกำหนดการใช้งาน",
+
     rep_title: "Seedplanner — การคาดการณ์ทางการเงิน", rep_generated: "สร้างเมื่อ", rep_byYear: "การคาดการณ์รายปี",
     rep_now: "ปัจจุบัน", rep_year: "ปีที่", rep_emergency: "เงินสำรองฉุกเฉิน",
     rep_foot: "การคาดการณ์เป็นการประมาณจากข้อมูลและผลตอบแทนที่สมมติ ไม่ใช่คำแนะนำทางการเงิน",
@@ -301,6 +308,13 @@ const STR = {
     blockedNote: "In der Claude-Vorschau funktioniert nur Kopieren zuverlässig. Teilen, Drucken und Herunterladen benötigen die App in einem normalen Browser – sie funktionieren nach der Veröffentlichung.",
     importBad: "Diese Datei enthält keine gültigen Seedplanner-Daten.",
 
+    login_title: "Bei Seedplanner anmelden",
+    login_subtitle: "Plane dein Sparen und sieh, wann du in Rente gehen kannst.",
+    login_google: "Mit Google anmelden",
+    login_note: "Platzhalter-Anmeldung – es wird kein Konto erstellt und nichts verlässt dein Gerät. Die echte Google-Anmeldung ist in der vollständigen Version eingebaut.",
+    signOut: "Abmelden",
+    nav_home: "Startseite", nav_privacy: "Datenschutz", nav_terms: "Nutzungsbedingungen",
+
     rep_title: "Seedplanner – Finanzprognose", rep_generated: "erstellt", rep_byYear: "Prognose nach Jahr",
     rep_now: "Jetzt", rep_year: "Jahr", rep_emergency: "Notgroschen",
     rep_foot: "Prognosen sind Schätzungen basierend auf deinen Eingaben und angenommenen Renditen – keine Finanzberatung.",
@@ -385,6 +399,13 @@ const STR = {
     previewNote: "Aperçu – faites une capture d'écran pour l'enregistrer sur votre téléphone",
     blockedNote: "Dans l'aperçu Claude, seul Copier fonctionne de façon fiable. Partager, Imprimer et Télécharger nécessitent l'app dans un navigateur normal – ils fonctionneront une fois déployée.",
     importBad: "Ce fichier ne contient pas de données Seedplanner valides.",
+
+    login_title: "Se connecter à Seedplanner",
+    login_subtitle: "Planifiez votre épargne et voyez quand vous pourrez prendre votre retraite.",
+    login_google: "Se connecter avec Google",
+    login_note: "Connexion fictive — aucun compte n'est créé et rien ne quitte votre appareil pour l'instant. La vraie connexion Google est intégrée dans la version complète.",
+    signOut: "Se déconnecter",
+    nav_home: "Accueil", nav_privacy: "Politique de confidentialité", nav_terms: "Conditions d'utilisation",
 
     rep_title: "Seedplanner – projection financière", rep_generated: "généré", rep_byYear: "Projection par année",
     rep_now: "Maintenant", rep_year: "Année", rep_emergency: "Fonds d'urgence",
