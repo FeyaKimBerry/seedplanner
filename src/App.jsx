@@ -51,7 +51,8 @@ const STR = {
     footer: "Projections are estimates, not financial advice.",
 
     stat_surplus: "Monthly surplus", stat_retireNum: "Retirement number",
-    stat_income: "Monthly income", stat_expense: "Monthly expenses",
+    stat_income: "Monthly income", stat_expense: "Monthly expenses", stat_savingsNow: "Savings now",
+    ov_now: "Right now", ov_retire: "Retirement outlook",
     stat_retireOn: "On track to retire", stat_balanceIn: "Balance in {n} yrs",
     inout: "{in} in · {out} out", setManually: "set manually", xAnnual: "{n}× annual expenses",
     inYrs: "in {n} yrs", beyond: "beyond horizon — adjust inputs",
@@ -146,7 +147,8 @@ const STR = {
     footer: "การคาดการณ์เป็นเพียงการประมาณ ไม่ใช่คำแนะนำทางการเงิน",
 
     stat_surplus: "เงินเหลือต่อเดือน", stat_retireNum: "เงินเกษียณที่ต้องมี",
-    stat_income: "รายได้ต่อเดือน", stat_expense: "รายจ่ายต่อเดือน",
+    stat_income: "รายได้ต่อเดือน", stat_expense: "รายจ่ายต่อเดือน", stat_savingsNow: "เงินออมตอนนี้",
+    ov_now: "ตอนนี้", ov_retire: "แนวโน้มการเกษียณ",
     stat_retireOn: "คาดว่าจะเกษียณ", stat_balanceIn: "ยอดเงินใน {n} ปี",
     inout: "{in} เข้า · {out} ออก", setManually: "ตั้งเอง", xAnnual: "{n}× ค่าใช้จ่ายต่อปี",
     inYrs: "อีก {n} ปี", beyond: "เกินช่วงที่คำนวณ — ปรับข้อมูล",
@@ -242,7 +244,8 @@ const STR = {
     footer: "Prognosen sind Schätzungen, keine Finanzberatung.",
 
     stat_surplus: "Monatlicher Überschuss", stat_retireNum: "Rentenbetrag",
-    stat_income: "Monatliches Einkommen", stat_expense: "Monatliche Ausgaben",
+    stat_income: "Monatliches Einkommen", stat_expense: "Monatliche Ausgaben", stat_savingsNow: "Aktuelle Ersparnisse",
+    ov_now: "Aktuell", ov_retire: "Renten-Ausblick",
     stat_retireOn: "Rente voraussichtlich", stat_balanceIn: "Stand in {n} Jahren",
     inout: "{in} ein · {out} aus", setManually: "manuell gesetzt", xAnnual: "{n}× Jahresausgaben",
     inYrs: "in {n} Jahren", beyond: "außerhalb des Zeitraums – Eingaben anpassen",
@@ -338,7 +341,8 @@ const STR = {
     footer: "Les projections sont des estimations, pas des conseils financiers.",
 
     stat_surplus: "Excédent mensuel", stat_retireNum: "Montant retraite",
-    stat_income: "Revenu mensuel", stat_expense: "Dépenses mensuelles",
+    stat_income: "Revenu mensuel", stat_expense: "Dépenses mensuelles", stat_savingsNow: "Épargne actuelle",
+    ov_now: "En ce moment", ov_retire: "Perspective retraite",
     stat_retireOn: "Retraite prévue", stat_balanceIn: "Solde dans {n} ans",
     inout: "{in} entrée · {out} sortie", setManually: "défini manuellement", xAnnual: "{n}× dépenses annuelles",
     inYrs: "dans {n} ans", beyond: "au-delà de la période – ajustez les données",
@@ -1184,28 +1188,41 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
 
   return (
     <div className="flex flex-col gap-5">
-      {/* headline cards */}
-      <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))" }}>
-        <Stat label={t("stat_income")}
-          value={fmt.format(projection.monthlyIncome)}
-          tone={C.green} />
-        <Stat label={t("stat_expense")}
-          value={fmt.format(projection.monthlyExpense)}
-          tone={C.clay} />
-        <Stat label={t("stat_surplus")}
-          value={fmt.format(projection.monthlyNet)}
-          tone={projection.monthlyNet >= 0 ? C.green : C.clay}
-          sub={t("inout", { in: fmt.format(projection.monthlyIncome), out: fmt.format(projection.monthlyExpense) })} />
-        <Stat label={t("stat_retireNum")}
-          value={fmt.format(retireTarget)}
-          sub={state.settings.retirementTarget ? t("setManually") : t("xAnnual", { n: state.settings.retireMultiple })} />
-        <Stat label={t("stat_retireOn")}
-          value={retireDate ? new Date(retireDate).getFullYear() : "—"}
-          tone={C.green}
-          sub={retireMonths != null ? t("inYrs", { n: (retireMonths / 12).toFixed(1) }) : t("beyond")} />
-        <Stat label={t("stat_balanceIn", { n: state.settings.projectionYears })}
-          value={fmt.format(projection.data[projection.data.length - 1][chartKey])}
-          sub={state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars")} />
+      {/* headline cards — grouped: cashflow now vs retirement outlook */}
+      <div className="flex flex-col gap-4">
+        <div>
+          <h3 style={{ fontSize: 11, fontWeight: 600, color: C.faint, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 7 }}>{t("ov_now")}</h3>
+          <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))" }}>
+            <Stat label={t("stat_savingsNow")}
+              value={fmt.format(state.settings.startingSavings)}
+              tone={C.green} />
+            <Stat label={t("stat_income")}
+              value={fmt.format(projection.monthlyIncome)}
+              tone={C.green} />
+            <Stat label={t("stat_expense")}
+              value={fmt.format(projection.monthlyExpense)}
+              tone={C.clay} />
+            <Stat label={t("stat_surplus")}
+              value={fmt.format(projection.monthlyNet)}
+              tone={projection.monthlyNet >= 0 ? C.green : C.clay}
+              sub={t("inout", { in: fmt.format(projection.monthlyIncome), out: fmt.format(projection.monthlyExpense) })} />
+          </div>
+        </div>
+        <div>
+          <h3 style={{ fontSize: 11, fontWeight: 600, color: C.faint, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 7 }}>{t("ov_retire")}</h3>
+          <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))" }}>
+            <Stat label={t("stat_retireNum")}
+              value={fmt.format(retireTarget)}
+              sub={state.settings.retirementTarget ? t("setManually") : t("xAnnual", { n: state.settings.retireMultiple })} />
+            <Stat label={t("stat_retireOn")}
+              value={retireDate ? new Date(retireDate).getFullYear() : "—"}
+              tone={C.green}
+              sub={retireMonths != null ? t("inYrs", { n: (retireMonths / 12).toFixed(1) }) : t("beyond")} />
+            <Stat label={t("stat_balanceIn", { n: state.settings.projectionYears })}
+              value={fmt.format(projection.data[projection.data.length - 1][chartKey])}
+              sub={state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars")} />
+          </div>
+        </div>
       </div>
 
       {/* chart */}
@@ -1973,10 +1990,10 @@ function Field({ label, children }) {
 }
 function Stat({ label, value, sub, tone }) {
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 18, padding: 16, boxShadow: shadowSoft }}>
-      <div style={{ fontSize: 12, color: C.faint }}>{label}</div>
-      <div style={{ fontWeight: 700, fontSize: 22, color: tone || C.ink, marginTop: 4, letterSpacing: "-0.02em", ...num }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: C.faint, marginTop: 3 }}>{sub}</div>}
+    <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "11px 13px", boxShadow: shadowSoft }}>
+      <div style={{ fontSize: 11.5, color: C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</div>
+      <div style={{ fontWeight: 700, fontSize: 18, color: tone || C.ink, marginTop: 2, letterSpacing: "-0.02em", ...num }}>{value}</div>
+      {sub && <div style={{ fontSize: 10.5, color: C.faint, marginTop: 2 }}>{sub}</div>}
     </div>
   );
 }
