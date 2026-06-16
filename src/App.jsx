@@ -94,6 +94,10 @@ const STR = {
     new_asset: "New asset", new_debt: "New debt", new_person: "New person",
 
     presetTitle: "Suggestions", presetHint: "Not sure what to record? Tap to add a common item, then fill in the amount.",
+    welcome_title: "Welcome to Seedplanner", welcome_body: "Add your income and expenses to see your savings projection and when you could retire. Start from scratch, or explore with sample data first.",
+    welcome_start: "Add my income", loadSample: "Try with sample data",
+    data_title: "Data", data_desc: "Load an example to explore, or wipe everything and start fresh.", clearData: "Clear all data",
+    clearConfirm: "Clear all your data? This can't be undone.",
     cat_housing: "Housing", cat_food: "Food", cat_transport: "Transport",
     cat_debt: "Debt & loans", cat_health: "Health", cat_lifestyle: "Lifestyle", cat_utilities: "Bills & utilities",
     ig_work: "Employment", ig_invest: "Investments", ig_other: "Other income", presetBlank: "Blank entry",
@@ -194,6 +198,10 @@ const STR = {
     new_asset: "สินทรัพย์ใหม่", new_debt: "หนี้ใหม่", new_person: "บุคคลใหม่",
 
     presetTitle: "รายการแนะนำ", presetHint: "ไม่รู้จะบันทึกอะไร? แตะเพื่อเพิ่มรายการที่พบบ่อย แล้วกรอกจำนวนเงิน",
+    welcome_title: "ยินดีต้อนรับสู่ Seedplanner", welcome_body: "เพิ่มรายได้และรายจ่ายเพื่อดูการคาดการณ์เงินออมและว่าคุณจะเกษียณได้เมื่อไหร่ เริ่มจากศูนย์ หรือลองใช้ข้อมูลตัวอย่างก่อนก็ได้",
+    welcome_start: "เพิ่มรายได้ของฉัน", loadSample: "ลองใช้ข้อมูลตัวอย่าง",
+    data_title: "ข้อมูล", data_desc: "โหลดตัวอย่างเพื่อลองใช้ หรือล้างทั้งหมดเพื่อเริ่มใหม่", clearData: "ล้างข้อมูลทั้งหมด",
+    clearConfirm: "ล้างข้อมูลทั้งหมด? ไม่สามารถย้อนกลับได้",
     cat_housing: "ที่อยู่อาศัย", cat_food: "อาหาร", cat_transport: "การเดินทาง",
     cat_debt: "หนี้และเงินกู้", cat_health: "สุขภาพ", cat_lifestyle: "ไลฟ์สไตล์", cat_utilities: "บิลและสาธารณูปโภค",
     ig_work: "งานประจำ", ig_invest: "การลงทุน", ig_other: "รายได้อื่นๆ", presetBlank: "รายการเปล่า",
@@ -294,6 +302,10 @@ const STR = {
     new_asset: "Neuer Vermögenswert", new_debt: "Neue Schuld", new_person: "Neue Person",
 
     presetTitle: "Vorschläge", presetHint: "Unsicher, was du erfassen sollst? Tippe, um einen üblichen Posten hinzuzufügen, und trage den Betrag ein.",
+    welcome_title: "Willkommen bei Seedplanner", welcome_body: "Füge dein Einkommen und deine Ausgaben hinzu, um deine Sparprognose zu sehen und wann du in Rente gehen könntest. Beginne bei null oder erkunde zuerst mit Beispieldaten.",
+    welcome_start: "Mein Einkommen hinzufügen", loadSample: "Mit Beispieldaten testen",
+    data_title: "Daten", data_desc: "Lade ein Beispiel zum Erkunden oder lösche alles und beginne neu.", clearData: "Alle Daten löschen",
+    clearConfirm: "Alle deine Daten löschen? Das kann nicht rückgängig gemacht werden.",
     cat_housing: "Wohnen", cat_food: "Essen", cat_transport: "Transport",
     cat_debt: "Schulden & Kredite", cat_health: "Gesundheit", cat_lifestyle: "Lifestyle", cat_utilities: "Rechnungen & Nebenkosten",
     ig_work: "Beschäftigung", ig_invest: "Investitionen", ig_other: "Sonstiges Einkommen", presetBlank: "Leerer Eintrag",
@@ -394,6 +406,10 @@ const STR = {
     new_asset: "Nouvel actif", new_debt: "Nouvelle dette", new_person: "Nouvelle personne",
 
     presetTitle: "Suggestions", presetHint: "Vous ne savez pas quoi enregistrer ? Touchez pour ajouter un poste courant, puis saisissez le montant.",
+    welcome_title: "Bienvenue sur Seedplanner", welcome_body: "Ajoutez vos revenus et dépenses pour voir votre projection d'épargne et quand vous pourrez prendre votre retraite. Partez de zéro, ou explorez d'abord avec des données d'exemple.",
+    welcome_start: "Ajouter mes revenus", loadSample: "Essayer avec des données d'exemple",
+    data_title: "Données", data_desc: "Chargez un exemple pour explorer, ou effacez tout pour repartir à zéro.", clearData: "Effacer toutes les données",
+    clearConfirm: "Effacer toutes vos données ? Action irréversible.",
     cat_housing: "Logement", cat_food: "Alimentation", cat_transport: "Transport",
     cat_debt: "Dettes & prêts", cat_health: "Santé", cat_lifestyle: "Style de vie", cat_utilities: "Factures & charges",
     ig_work: "Emploi", ig_invest: "Investissements", ig_other: "Autres revenus", presetBlank: "Entrée vierge",
@@ -574,6 +590,16 @@ const seed = {
   ],
   emergency: { target: 20000, current: 12000 },
 };
+
+// Fresh, honest start for a new user — nothing pre-filled. The sample set above
+// is opt-in (via "Try with sample data"), never the silent default.
+const emptyState = {
+  settings: { ...seed.settings, startingSavings: 0 },
+  members: [{ id: "me", name: "Me" }],
+  income: [], expenses: [], oneOffs: [], goals: [], debts: [], assets: [],
+  emergency: { target: 0, current: 0 },
+};
+const clone = (o) => JSON.parse(JSON.stringify(o));
 
 function isoIn(months) {
   const d = new Date();
@@ -762,8 +788,11 @@ export default function App() {
   const saveTimer = useRef(null);
 
   useEffect(() => {
-    store.load().then((s) => setState(s || seed));
+    store.load().then((s) => setState(s || clone(emptyState)));
   }, []);
+
+  const loadSample = () => setState(clone(seed));
+  const clearData = () => { if (window.confirm(t("clearConfirm"))) setState(clone(emptyState)); };
 
   // Highlight the whole value when a number field is focused, so the user can
   // type over it (e.g. the default 0) instead of deleting it first.
@@ -1060,8 +1089,10 @@ export default function App() {
 
       <main className="mx-auto px-3 py-5 sm:px-5 sm:py-6" style={{ maxWidth: 1100 }}>
         {tab === "dashboard" && (
-          <Dashboard {...{ state, projection, fmt, retireTarget, retireDate, retireMonths,
-            metric, setMetric, whatIf, setWhatIf, chartKey, filtered }} />
+          (state.income.length === 0 && state.expenses.length === 0)
+            ? <WelcomeCard onLoadSample={loadSample} onStart={() => setTab("income")} />
+            : <Dashboard {...{ state, projection, fmt, retireTarget, retireDate, retireMonths,
+                metric, setMetric, whatIf, setWhatIf, chartKey, filtered }} />
         )}
 
         {tab === "income" && (
@@ -1134,7 +1165,7 @@ export default function App() {
         )}
 
         {tab === "settings" && (
-          <SettingsPanel state={state} setSettings={setSettings} setState={setState} />
+          <SettingsPanel state={state} setSettings={setSettings} setState={setState} onLoadSample={loadSample} onClearData={clearData} />
         )}
       </main>
 
@@ -1153,6 +1184,33 @@ export default function App() {
         </p>
       </footer>
     </div>
+  );
+}
+
+/* ================================================================== *
+ * Welcome / empty state — shown until the user has any income or expenses
+ * ================================================================== */
+function WelcomeCard({ onLoadSample, onStart }) {
+  return (
+    <Card>
+      <div className="flex items-center gap-2">
+        <span style={{ width: 22, height: 22, borderRadius: 8, background: C.green, display: "inline-block" }} />
+        <h2 style={{ fontWeight: 600, fontSize: 17 }}>{t("welcome_title")}</h2>
+      </div>
+      <p style={{ color: C.sub, fontSize: 13.5, marginTop: 8, lineHeight: 1.6, maxWidth: 560 }}>{t("welcome_body")}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button onClick={onStart}
+          className="flex items-center gap-1 rounded-md px-3 py-2 text-sm"
+          style={{ background: C.green, color: "#fff", fontWeight: 600 }}>
+          <Plus size={15} /> {t("welcome_start")}
+        </button>
+        <button onClick={onLoadSample}
+          className="flex items-center gap-1 rounded-md px-3 py-2 text-sm"
+          style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card, fontWeight: 500 }}>
+          {t("loadSample")}
+        </button>
+      </div>
+    </Card>
   );
 }
 
@@ -1845,7 +1903,7 @@ function EmergencyCard({ emergency, setEmergency, fmt }) {
 /* ================================================================== *
  * Settings
  * ================================================================== */
-function SettingsPanel({ state, setSettings, setState }) {
+function SettingsPanel({ state, setSettings, setState, onLoadSample, onClearData }) {
   const s = state.settings;
   const addMember = () => setState((st) => ({ ...st, members: [...st.members, { id: uid(), name: t("new_person") }] }));
   const updMember = (id, name) => setState((st) => ({ ...st, members: st.members.map((m) => m.id === id ? { ...m, name } : m) }));
@@ -1927,6 +1985,23 @@ function SettingsPanel({ state, setSettings, setState }) {
               )}
             </div>
           ))}
+        </div>
+      </Card>
+
+      <Card>
+        <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("data_title")}</h2>
+        <p style={{ color: C.faint, fontSize: 12, marginTop: 2 }}>{t("data_desc")}</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button onClick={onLoadSample}
+            className="flex items-center gap-1 rounded-md px-3 py-2 text-sm"
+            style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card, fontWeight: 500 }}>
+            {t("loadSample")}
+          </button>
+          <button onClick={onClearData}
+            className="flex items-center gap-1 rounded-md px-3 py-2 text-sm"
+            style={{ border: `1px solid ${C.line}`, color: C.clay, background: C.card, fontWeight: 500 }}>
+            <Trash2 size={15} /> {t("clearData")}
+          </button>
         </div>
       </Card>
     </div>
