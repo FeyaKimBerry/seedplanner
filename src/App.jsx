@@ -6,7 +6,7 @@ import {
 import {
   Wallet, TrendingDown, CalendarClock, Target, Landmark, Settings as Cog,
   LayoutDashboard, Plus, Trash2, Download, Upload, Users, ShieldCheck,
-  PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw, Sparkles,
+  PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ *
@@ -88,6 +88,7 @@ const STR = {
     presetTitle: "Suggestions", presetHint: "Not sure what to record? Tap to add a common item, then fill in the amount.",
     cat_housing: "Housing", cat_food: "Food", cat_transport: "Transport",
     cat_debt: "Debt & loans", cat_health: "Health", cat_lifestyle: "Lifestyle", cat_utilities: "Bills & utilities",
+    ig_work: "Employment", ig_invest: "Investments", ig_other: "Other income", presetBlank: "Blank entry",
     p_salary: "Salary", p_freelance: "Freelance / side hustle", p_business: "Business income",
     p_rental: "Rental income", p_dividends: "Dividends", p_interest: "Interest", p_benefit: "Government benefit",
     p_pension: "Pension", p_bonus: "Bonus", p_childsupport: "Child support",
@@ -180,6 +181,7 @@ const STR = {
     presetTitle: "รายการแนะนำ", presetHint: "ไม่รู้จะบันทึกอะไร? แตะเพื่อเพิ่มรายการที่พบบ่อย แล้วกรอกจำนวนเงิน",
     cat_housing: "ที่อยู่อาศัย", cat_food: "อาหาร", cat_transport: "การเดินทาง",
     cat_debt: "หนี้และเงินกู้", cat_health: "สุขภาพ", cat_lifestyle: "ไลฟ์สไตล์", cat_utilities: "บิลและสาธารณูปโภค",
+    ig_work: "งานประจำ", ig_invest: "การลงทุน", ig_other: "รายได้อื่นๆ", presetBlank: "รายการเปล่า",
     p_salary: "เงินเดือน", p_freelance: "ฟรีแลนซ์ / งานเสริม", p_business: "รายได้จากธุรกิจ",
     p_rental: "รายได้ค่าเช่า", p_dividends: "เงินปันผล", p_interest: "ดอกเบี้ย", p_benefit: "สวัสดิการรัฐ",
     p_pension: "บำนาญ", p_bonus: "โบนัส", p_childsupport: "ค่าเลี้ยงดูบุตร",
@@ -272,6 +274,7 @@ const STR = {
     presetTitle: "Vorschläge", presetHint: "Unsicher, was du erfassen sollst? Tippe, um einen üblichen Posten hinzuzufügen, und trage den Betrag ein.",
     cat_housing: "Wohnen", cat_food: "Essen", cat_transport: "Transport",
     cat_debt: "Schulden & Kredite", cat_health: "Gesundheit", cat_lifestyle: "Lifestyle", cat_utilities: "Rechnungen & Nebenkosten",
+    ig_work: "Beschäftigung", ig_invest: "Investitionen", ig_other: "Sonstiges Einkommen", presetBlank: "Leerer Eintrag",
     p_salary: "Gehalt", p_freelance: "Freiberuflich / Nebenjob", p_business: "Geschäftseinkommen",
     p_rental: "Mieteinnahmen", p_dividends: "Dividenden", p_interest: "Zinsen", p_benefit: "Staatliche Leistung",
     p_pension: "Rente", p_bonus: "Bonus", p_childsupport: "Unterhalt",
@@ -364,6 +367,7 @@ const STR = {
     presetTitle: "Suggestions", presetHint: "Vous ne savez pas quoi enregistrer ? Touchez pour ajouter un poste courant, puis saisissez le montant.",
     cat_housing: "Logement", cat_food: "Alimentation", cat_transport: "Transport",
     cat_debt: "Dettes & prêts", cat_health: "Santé", cat_lifestyle: "Style de vie", cat_utilities: "Factures & charges",
+    ig_work: "Emploi", ig_invest: "Investissements", ig_other: "Autres revenus", presetBlank: "Entrée vierge",
     p_salary: "Salaire", p_freelance: "Freelance / activité annexe", p_business: "Revenu d'entreprise",
     p_rental: "Revenu locatif", p_dividends: "Dividendes", p_interest: "Intérêts", p_benefit: "Aide de l'État",
     p_pension: "Pension", p_bonus: "Prime", p_childsupport: "Pension alimentaire",
@@ -1312,15 +1316,26 @@ function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
  * ================================================================== */
 function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelete, fmt, presets, onAddPreset }) {
   const [openId, setOpenId] = useState(null);
-  const [showPresets, setShowPresets] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
   const prevLen = useRef(items.length);
   useEffect(() => {
     if (items.length > prevLen.current) setOpenId(items[0].id);
     prevLen.current = items.length;
   }, [items]);
+  const hasPresets = (presets || []).length > 0;
   // hide a suggestion once an item with that name already exists
   const have = new Set(items.map((it) => (it.label || "").trim().toLowerCase()));
   const suggestions = (presets || []).filter((p) => !have.has(t(p.key).trim().toLowerCase()));
+  // group suggestions by category (expenses) or income group, keeping first-seen order
+  const groupOrder = [];
+  const grouped = {};
+  for (const p of suggestions) {
+    const g = p.group || p.catKey || "";
+    if (!grouped[g]) { grouped[g] = []; groupOrder.push(g); }
+    grouped[g].push(p);
+  }
+  const addBlank = () => { setShowAdd(false); onAdd(); };
+  const addPreset = (p) => { onAddPreset(p); };
   return (
     <Card>
       <div className="mb-1 flex items-start justify-between">
@@ -1328,31 +1343,31 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
           <h2 style={{ fontWeight: 600, fontSize: 15 }}>{title}</h2>
           <p style={{ color: C.faint, fontSize: 12, marginTop: 2, maxWidth: 560 }}>{subtitle}</p>
         </div>
-        <button onClick={onAdd}
+        <button onClick={() => (hasPresets ? setShowAdd((v) => !v) : onAdd())}
           className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm"
           style={{ background: C.green, color: "#fff" }}>
           <Plus size={15} /> {t("add")}
+          {hasPresets && <ChevronDown size={14} style={{ transition: "transform .15s", transform: showAdd ? "rotate(180deg)" : "none" }} />}
         </button>
       </div>
 
-      {/* Suggestions — collapsed by default so they don't fill the screen */}
-      {suggestions.length > 0 && (
-        <div className="mt-3" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
-          <button onClick={() => setShowPresets((v) => !v)}
-            className="flex items-center gap-1.5 text-sm"
-            style={{ color: C.sub, fontWeight: 500 }}>
-            <Sparkles size={14} color={C.green} />
-            {t("presetTitle")}
-            <span style={{ color: C.faint, fontWeight: 400 }}>({suggestions.length})</span>
-            <ChevronDown size={15}
-              style={{ color: C.faint, transition: "transform .15s", transform: showPresets ? "rotate(180deg)" : "none" }} />
+      {/* Add menu — blank entry + presets grouped by category */}
+      {hasPresets && showAdd && (
+        <div className="mt-3" style={{ border: `1px solid ${C.line}`, borderRadius: 12, padding: 12, background: C.bg }}>
+          <button onClick={addBlank}
+            className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-2 text-sm"
+            style={{ border: `1px dashed ${C.line}`, color: C.sub, background: C.card }}>
+            <Plus size={14} /> {t("presetBlank")}
           </button>
-          {showPresets && (
-            <>
-              <p style={{ fontSize: 11.5, color: C.faint, margin: "8px 0 6px" }}>{t("presetHint")}</p>
+          {suggestions.length > 0 && (
+            <p style={{ fontSize: 11.5, color: C.faint, margin: "10px 0 2px" }}>{t("presetHint")}</p>
+          )}
+          {groupOrder.map((g) => (
+            <div key={g} className="mt-2.5">
+              {g && <div style={{ fontSize: 11, fontWeight: 600, color: C.faint, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 5 }}>{t(g)}</div>}
               <div className="flex flex-wrap gap-1.5">
-                {suggestions.map((p) => (
-                  <button key={p.key} onClick={() => onAddPreset(p)}
+                {grouped[g].map((p) => (
+                  <button key={p.key} onClick={() => addPreset(p)}
                     className="flex items-center gap-1 rounded-full"
                     style={{ border: `1px solid ${C.line}`, background: C.greenSoft, color: C.ink,
                       fontSize: 12, padding: "4px 10px" }}>
@@ -1360,8 +1375,8 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
                   </button>
                 ))}
               </div>
-            </>
-          )}
+            </div>
+          ))}
         </div>
       )}
 
@@ -1489,16 +1504,19 @@ const recurringFreqOpts = () => freqOpts().filter((o) => o.value !== "oneoff");
 // Common items grouped so new users can tap to add instead of starting blank.
 // `amount: 0` on purpose — the user fills in their own number.
 const INCOME_PRESETS = [
-  { key: "p_salary", frequency: "monthly" },
-  { key: "p_freelance", frequency: "monthly" },
-  { key: "p_business", frequency: "monthly" },
-  { key: "p_rental", frequency: "monthly" },
-  { key: "p_dividends", frequency: "monthly" },
-  { key: "p_interest", frequency: "monthly" },
-  { key: "p_benefit", frequency: "monthly" },
-  { key: "p_pension", frequency: "monthly" },
-  { key: "p_childsupport", frequency: "monthly" },
-  { key: "p_bonus", frequency: "annual" },
+  // Employment
+  { key: "p_salary", group: "ig_work", frequency: "monthly" },
+  { key: "p_freelance", group: "ig_work", frequency: "monthly" },
+  { key: "p_business", group: "ig_work", frequency: "monthly" },
+  { key: "p_bonus", group: "ig_work", frequency: "annual" },
+  // Investments
+  { key: "p_rental", group: "ig_invest", frequency: "monthly" },
+  { key: "p_dividends", group: "ig_invest", frequency: "monthly" },
+  { key: "p_interest", group: "ig_invest", frequency: "monthly" },
+  // Other
+  { key: "p_benefit", group: "ig_other", frequency: "monthly" },
+  { key: "p_pension", group: "ig_other", frequency: "monthly" },
+  { key: "p_childsupport", group: "ig_other", frequency: "monthly" },
 ];
 const EXPENSE_PRESETS = [
   // Housing & bills
