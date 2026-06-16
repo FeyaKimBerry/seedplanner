@@ -69,7 +69,7 @@ const STR = {
     wiIncome: "Monthly income change", wiExpense: "Monthly expense change",
     wiReturn: "Expected return", wiOneOff: "One-off cost", wiReset: "Reset",
 
-    add: "Add", empty: "Nothing here yet — add your first entry.", delete: "Delete",
+    add: "Add", empty: "Nothing here yet — add your first entry.", delete: "Delete", done: "Done",
     title_income: "Income", sub_income: "Recurring and one-off. Tag each to a person for the household toggle.",
     title_expenses: "Expenses", sub_expenses: "Your recurring outgoings. These set your monthly surplus.",
     title_oneOffs: "Upcoming expenses", sub_oneOffs: "Dated one-off costs — travel, gifts, a car. Each one dips your curve on its month.",
@@ -161,7 +161,7 @@ const STR = {
     wiReset: "รีเซ็ต",
     wiReturn: "ผลตอบแทนคาดหวัง", wiOneOff: "ค่าใช้จ่ายครั้งเดียว",
 
-    add: "เพิ่ม", empty: "ยังไม่มีรายการ — เพิ่มรายการแรกของคุณ", delete: "ลบ",
+    add: "เพิ่ม", empty: "ยังไม่มีรายการ — เพิ่มรายการแรกของคุณ", delete: "ลบ", done: "เสร็จ",
     title_income: "รายได้", sub_income: "ทั้งแบบประจำและครั้งเดียว ระบุบุคคลเพื่อใช้สลับมุมมองครัวเรือน",
     title_expenses: "รายจ่าย", sub_expenses: "รายจ่ายประจำของคุณ ใช้คำนวณเงินเหลือต่อเดือน",
     title_oneOffs: "ค่าใช้จ่ายที่จะถึง", sub_oneOffs: "ค่าใช้จ่ายครั้งเดียวที่มีกำหนด — ท่องเที่ยว ของขวัญ รถ แต่ละรายการจะทำให้กราฟลดในเดือนนั้น",
@@ -246,7 +246,7 @@ const STR = {
     wiReset: "Zurücksetzen",
     wiReturn: "Erwartete Rendite", wiOneOff: "Einmalige Kosten",
 
-    add: "Hinzufügen", empty: "Noch nichts hier – füge deinen ersten Eintrag hinzu.", delete: "Löschen",
+    add: "Hinzufügen", empty: "Noch nichts hier – füge deinen ersten Eintrag hinzu.", delete: "Löschen", done: "Fertig",
     title_income: "Einkommen", sub_income: "Wiederkehrend und einmalig. Ordne jedem Eintrag eine Person für die Haushaltsansicht zu.",
     title_expenses: "Ausgaben", sub_expenses: "Deine wiederkehrenden Ausgaben. Sie bestimmen deinen monatlichen Überschuss.",
     title_oneOffs: "Anstehende Ausgaben", sub_oneOffs: "Datierte einmalige Kosten – Reisen, Geschenke, ein Auto. Jede senkt deine Kurve in ihrem Monat.",
@@ -331,7 +331,7 @@ const STR = {
     wiReset: "Réinitialiser",
     wiReturn: "Rendement attendu", wiOneOff: "Coût ponctuel",
 
-    add: "Ajouter", empty: "Rien ici pour l'instant – ajoutez votre première entrée.", delete: "Supprimer",
+    add: "Ajouter", empty: "Rien ici pour l'instant – ajoutez votre première entrée.", delete: "Supprimer", done: "Terminé",
     title_income: "Revenus", sub_income: "Récurrents et ponctuels. Associez chacun à une personne pour la vue foyer.",
     title_expenses: "Dépenses", sub_expenses: "Vos dépenses récurrentes. Elles déterminent votre excédent mensuel.",
     title_oneOffs: "Dépenses à venir", sub_oneOffs: "Coûts ponctuels datés – voyages, cadeaux, une voiture. Chacun fait baisser votre courbe le mois venu.",
@@ -1394,10 +1394,14 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
                       <div className="mfield">{c.render(it, (patch) => onUpdate(it.id, patch))}</div>
                     </div>
                   ))}
-                  <div className="flex justify-end">
+                  <div className="flex items-center justify-between">
                     <button onClick={() => onDelete(it.id)} className="flex items-center gap-1 text-sm"
                       style={{ color: C.faint }} title={t("delete")}>
                       <Trash2 size={15} /> {t("delete")}
+                    </button>
+                    <button onClick={() => setOpenId(null)} className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm"
+                      style={{ background: C.greenSoft, color: C.green, fontWeight: 600 }}>
+                      <Check size={15} /> {t("done")}
                     </button>
                   </div>
                 </div>
