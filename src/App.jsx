@@ -6,7 +6,7 @@ import {
 import {
   Wallet, TrendingDown, CalendarClock, Target, Landmark, Settings as Cog,
   LayoutDashboard, Plus, Trash2, Download, Upload, Users, ShieldCheck,
-  PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw,
+  PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw, Sparkles,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ *
@@ -1291,6 +1291,7 @@ function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
  * ================================================================== */
 function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelete, fmt, presets, onAddPreset }) {
   const [openId, setOpenId] = useState(null);
+  const [showPresets, setShowPresets] = useState(false);
   const prevLen = useRef(items.length);
   useEffect(() => {
     if (items.length > prevLen.current) setOpenId(items[0].id);
@@ -1313,20 +1314,33 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
         </button>
       </div>
 
-      {/* Suggestions — tap to add a common item, then fill in the amount */}
+      {/* Suggestions — collapsed by default so they don't fill the screen */}
       {suggestions.length > 0 && (
         <div className="mt-3" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
-          <p style={{ fontSize: 11.5, color: C.faint, marginBottom: 6 }}>{t("presetHint")}</p>
-          <div className="flex flex-wrap gap-1.5">
-            {suggestions.map((p) => (
-              <button key={p.key} onClick={() => onAddPreset(p)}
-                className="flex items-center gap-1 rounded-full"
-                style={{ border: `1px solid ${C.line}`, background: C.greenSoft, color: C.ink,
-                  fontSize: 12, padding: "4px 10px" }}>
-                <Plus size={12} color={C.green} /> {t(p.key)}
-              </button>
-            ))}
-          </div>
+          <button onClick={() => setShowPresets((v) => !v)}
+            className="flex items-center gap-1.5 text-sm"
+            style={{ color: C.sub, fontWeight: 500 }}>
+            <Sparkles size={14} color={C.green} />
+            {t("presetTitle")}
+            <span style={{ color: C.faint, fontWeight: 400 }}>({suggestions.length})</span>
+            <ChevronDown size={15}
+              style={{ color: C.faint, transition: "transform .15s", transform: showPresets ? "rotate(180deg)" : "none" }} />
+          </button>
+          {showPresets && (
+            <>
+              <p style={{ fontSize: 11.5, color: C.faint, margin: "8px 0 6px" }}>{t("presetHint")}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {suggestions.map((p) => (
+                  <button key={p.key} onClick={() => onAddPreset(p)}
+                    className="flex items-center gap-1 rounded-full"
+                    style={{ border: `1px solid ${C.line}`, background: C.greenSoft, color: C.ink,
+                      fontSize: 12, padding: "4px 10px" }}>
+                    <Plus size={12} color={C.green} /> {t(p.key)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
