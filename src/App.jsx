@@ -80,6 +80,7 @@ const STR = {
     title_goals: "Savings goals", sub_goals: "Named targets, drawn as lines on the chart. Watch the curve cross them.",
     col_saved: "Saved",
     goalsRankTitle: "Goal tracker", goalsRankSub: "Sorted by date — the goal due soonest is on top.",
+    goalAutoHint: "Your savings now ({a}) applied to the soonest-due goal first.",
     g_focus: "Focus next", g_done: "Reached", g_overdue: "Overdue", g_need: "Save {a}/mo", g_needNoDate: "Add a date to track pace",
     title_assets: "Assets", sub_assets: "What you own — super, investments, property. Feeds the net-worth view.",
     title_debts: "Debts", sub_debts: "Loans amortise over the projection. Payments reduce your monthly surplus until they're cleared.",
@@ -179,6 +180,7 @@ const STR = {
     title_goals: "เป้าหมายการออม", sub_goals: "เป้าหมายที่ตั้งชื่อ แสดงเป็นเส้นบนกราฟ ดูกราฟตัดผ่านเป้าหมาย",
     col_saved: "ออมแล้ว",
     goalsRankTitle: "ตัวติดตามเป้าหมาย", goalsRankSub: "เรียงตามวันที่ — เป้าหมายที่ถึงกำหนดก่อนจะอยู่บนสุด",
+    goalAutoHint: "เงินออมตอนนี้ ({a}) นำไปใส่เป้าหมายที่ถึงกำหนดก่อน",
     g_focus: "โฟกัสต่อไป", g_done: "สำเร็จแล้ว", g_overdue: "เลยกำหนด", g_need: "ออม {a}/เดือน", g_needNoDate: "เพิ่มวันที่เพื่อติดตามจังหวะ",
     title_assets: "สินทรัพย์", sub_assets: "สิ่งที่คุณมี — กองทุนเลี้ยงชีพ การลงทุน อสังหาฯ ใช้ในมุมมองมูลค่าสุทธิ",
     title_debts: "หนี้สิน", sub_debts: "เงินกู้จะถูกผ่อนตามช่วงเวลา การผ่อนจะลดเงินเหลือต่อเดือนจนกว่าจะหมด",
@@ -278,6 +280,7 @@ const STR = {
     title_goals: "Sparziele", sub_goals: "Benannte Ziele, als Linien im Diagramm dargestellt. Sieh zu, wie die Kurve sie kreuzt.",
     col_saved: "Gespart",
     goalsRankTitle: "Ziel-Tracker", goalsRankSub: "Nach Datum sortiert — das früheste Ziel steht oben.",
+    goalAutoHint: "Deine aktuellen Ersparnisse ({a}) zuerst auf das früheste Ziel angewandt.",
     g_focus: "Als Nächstes", g_done: "Erreicht", g_overdue: "Überfällig", g_need: "{a}/Mon. sparen", g_needNoDate: "Datum hinzufügen, um das Tempo zu verfolgen",
     title_assets: "Vermögen", sub_assets: "Was du besitzt – Altersvorsorge, Investitionen, Immobilien. Fließt in die Nettovermögensansicht ein.",
     title_debts: "Schulden", sub_debts: "Kredite werden über den Zeitraum getilgt. Zahlungen senken deinen monatlichen Überschuss, bis sie abbezahlt sind.",
@@ -377,6 +380,7 @@ const STR = {
     title_goals: "Objectifs d'épargne", sub_goals: "Objectifs nommés, tracés en lignes sur le graphique. Regardez la courbe les franchir.",
     col_saved: "Épargné",
     goalsRankTitle: "Suivi des objectifs", goalsRankSub: "Trié par date — l'objectif le plus proche est en haut.",
+    goalAutoHint: "Votre épargne actuelle ({a}) appliquée d'abord à l'objectif le plus proche.",
     g_focus: "Priorité", g_done: "Atteint", g_overdue: "En retard", g_need: "Épargner {a}/mois", g_needNoDate: "Ajoutez une date pour suivre le rythme",
     title_assets: "Actifs", sub_assets: "Ce que vous possédez – retraite, placements, immobilier. Alimente la vue valeur nette.",
     title_debts: "Dettes", sub_debts: "Les prêts s'amortissent sur la période. Les paiements réduisent votre excédent mensuel jusqu'à leur remboursement.",
@@ -1104,10 +1108,10 @@ export default function App() {
             <ListSection
               title={t("title_goals")} subtitle={t("sub_goals")}
               items={filtered.goals} columns={goalCols(state.members)}
-              onAdd={() => addItem("goals", { id: uid(), label: t("new_goal"), target: 10000, current: 0, date: isoIn(24), memberId: state.members[0].id })}
+              onAdd={() => addItem("goals", { id: uid(), label: t("new_goal"), target: 10000, date: isoIn(24), memberId: state.members[0].id })}
               onUpdate={(id, p) => updItem("goals", id, p)}
               onDelete={(id) => delItem("goals", id)} fmt={fmt} sortByDate />
-            <GoalProgress goals={filtered.goals} fmt={fmt} />
+            <GoalProgress goals={filtered.goals} fmt={fmt} pool={state.settings.startingSavings} />
           </>
         )}
 
@@ -1677,7 +1681,6 @@ const oneOffCols = (members) => [
 const goalCols = (members) => [
   { key: "label", label: t("col_goal"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
   { key: "target", label: t("col_target"), render: (it, u) => moneyCell(it.target, (v) => u({ target: v })) },
-  { key: "current", label: t("col_saved"), render: (it, u) => moneyCell(it.current || 0, (v) => u({ current: v })) },
   { key: "date", label: t("col_byWhen"), render: (it, u) => inputCell(it.date, (v) => u({ date: v }), { type: "date", w: 140 }) },
   { key: "member", label: t("col_person"), render: (it, u) => selectCell(it.memberId, (v) => u({ memberId: v }), memberOpts(members)) },
 ];
@@ -1759,19 +1762,27 @@ function Breakdown({ items, groupBy, title, totalLabel, fmt }) {
 /* ================================================================== *
  * Goal progress — tracking + "what to tackle first" (urgency ranking)
  * ================================================================== */
-function GoalProgress({ goals, fmt }) {
+function GoalProgress({ goals, fmt, pool }) {
   if (!goals.length) return null;
   const now = new Date();
   // soonest target date on top; undated goals go last
   const sorted = [...goals].sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999"));
+  // auto-fund: pour current savings into goals, soonest-due first
+  let remaining = pool || 0;
+  const allocated = {};
+  for (const g of sorted) {
+    const a = Math.max(0, Math.min(remaining, g.target || 0));
+    allocated[g.id] = a;
+    remaining -= a;
+  }
   return (
     <Card>
       <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("goalsRankTitle")}</h2>
-      <p style={{ color: C.faint, fontSize: 12, marginTop: 2 }}>{t("goalsRankSub")}</p>
+      <p style={{ color: C.faint, fontSize: 12, marginTop: 2 }}>{t("goalAutoHint", { a: fmt.format(pool || 0) })}</p>
       <div className="mt-3 flex flex-col">
         {sorted.map((g, i) => {
           const target = g.target || 0;
-          const current = g.current || 0;
+          const current = allocated[g.id] || 0;
           const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
           const done = target > 0 && current >= target;
           const overdue = !done && g.date && new Date(g.date) < now;
