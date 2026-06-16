@@ -746,9 +746,8 @@ function LoginScreen({ onSignIn }) {
   return (
     <div style={{ background: C.sky, backgroundColor: C.bg, minHeight: "100vh", display: "grid", placeItems: "center", color: C.ink, fontFamily: FONT, padding: 20 }}>
       <div style={{ background: C.card, borderRadius: 20, boxShadow: shadow, padding: "36px 30px", width: "100%", maxWidth: 380, textAlign: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 9, marginBottom: 22 }}>
-          <span style={{ width: 26, height: 26, borderRadius: 9, background: C.green, display: "inline-block" }} />
-          <span style={{ fontWeight: 600, fontSize: 20, letterSpacing: "-0.01em" }}>Seedplanner</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22 }}>
+          <img src="/logo.png" alt="Seedplanner" style={{ height: 48, width: "auto" }} />
         </div>
         <h1 style={{ fontSize: 19, fontWeight: 600, margin: "0 0 6px" }}>{t("login_title")}</h1>
         <p style={{ color: C.sub, fontSize: 14, lineHeight: 1.5, margin: "0 0 26px" }}>{t("login_subtitle")}</p>
@@ -1038,8 +1037,7 @@ export default function App() {
       <header style={{ borderBottom: `1px solid ${C.line}`, background: "rgba(255,255,255,0.78)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 20 }}>
         <div className="mx-auto flex flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-5" style={{ maxWidth: 1100 }}>
           <div className="flex items-center gap-2">
-            <span style={{ width: 22, height: 22, borderRadius: 8, background: C.green, display: "inline-block" }} />
-            <span style={{ fontWeight: 600, letterSpacing: "-0.01em" }}>Seedplanner</span>
+            <img src="/logo.png" alt="Seedplanner" style={{ height: 30, width: "auto", display: "block" }} />
           </div>
           <div className="flex items-center gap-2">
             <select value={state.settings.lang || "en"} onChange={(e) => setSettings({ lang: e.target.value })}
@@ -1194,7 +1192,7 @@ function WelcomeCard({ onLoadSample, onStart }) {
   return (
     <Card>
       <div className="flex items-center gap-2">
-        <span style={{ width: 22, height: 22, borderRadius: 8, background: C.green, display: "inline-block" }} />
+        <img src="/logo.png" alt="" style={{ height: 26, width: "auto" }} />
         <h2 style={{ fontWeight: 600, fontSize: 17 }}>{t("welcome_title")}</h2>
       </div>
       <p style={{ color: C.sub, fontSize: 13.5, marginTop: 8, lineHeight: 1.6, maxWidth: 560 }}>{t("welcome_body")}</p>
