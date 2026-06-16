@@ -1192,7 +1192,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       <div className="flex flex-col gap-4">
         <div>
           <h3 style={{ fontSize: 11, fontWeight: 600, color: C.faint, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 7 }}>{t("ov_now")}</h3>
-          <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))" }}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Stat label={t("stat_savingsNow")}
               value={fmt.format(state.settings.startingSavings)}
               tone={C.green} />
@@ -1210,18 +1210,14 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
         </div>
         <div>
           <h3 style={{ fontSize: 11, fontWeight: 600, color: C.faint, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 7 }}>{t("ov_retire")}</h3>
-          <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))" }}>
-            <Stat label={t("stat_retireNum")}
-              value={fmt.format(retireTarget)}
-              sub={state.settings.retirementTarget ? t("setManually") : t("xAnnual", { n: state.settings.retireMultiple })} />
-            <Stat label={t("stat_retireOn")}
-              value={retireDate ? new Date(retireDate).getFullYear() : "—"}
-              tone={C.green}
-              sub={retireMonths != null ? t("inYrs", { n: (retireMonths / 12).toFixed(1) }) : t("beyond")} />
-            <Stat label={t("stat_balanceIn", { n: state.settings.projectionYears })}
-              value={fmt.format(projection.data[projection.data.length - 1][chartKey])}
-              sub={state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars")} />
-          </div>
+          <StatGroup items={[
+            { label: t("stat_retireNum"), value: fmt.format(retireTarget),
+              sub: state.settings.retirementTarget ? t("setManually") : t("xAnnual", { n: state.settings.retireMultiple }) },
+            { label: t("stat_retireOn"), value: retireDate ? new Date(retireDate).getFullYear() : "—", tone: C.green,
+              sub: retireMonths != null ? t("inYrs", { n: (retireMonths / 12).toFixed(1) }) : t("beyond") },
+            { label: t("stat_balanceIn", { n: state.settings.projectionYears }), value: fmt.format(projection.data[projection.data.length - 1][chartKey]),
+              sub: state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars") },
+          ]} />
         </div>
       </div>
 
@@ -1989,11 +1985,36 @@ function Field({ label, children }) {
   );
 }
 function Stat({ label, value, sub, tone }) {
+  // shrink the value font for long numbers so they never overflow / get clipped
+  const len = String(value).length;
+  const valueFont = len > 13 ? 15 : len > 10 ? 16.5 : 18;
   return (
     <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "11px 13px", boxShadow: shadowSoft }}>
       <div style={{ fontSize: 11.5, color: C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</div>
-      <div style={{ fontWeight: 700, fontSize: 18, color: tone || C.ink, marginTop: 2, letterSpacing: "-0.02em", ...num }}>{value}</div>
+      <div style={{ fontWeight: 700, fontSize: valueFont, color: tone || C.ink, marginTop: 2, letterSpacing: "-0.02em",
+        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", ...num }}>{value}</div>
       {sub && <div style={{ fontSize: 10.5, color: C.faint, marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
+}
+// Several related stats grouped into one card as rows (label/sub left, value right).
+function StatGroup({ items }) {
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "4px 13px", boxShadow: shadowSoft }}>
+      {items.map((it, i) => {
+        const len = String(it.value).length;
+        const valueFont = len > 13 ? 17 : len > 10 ? 18.5 : 20;
+        return (
+          <div key={i} className="flex items-center justify-between gap-3"
+            style={{ padding: "10px 0", borderTop: i ? `1px solid ${C.line}` : "none" }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12.5, color: C.sub, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label}</div>
+              {it.sub && <div style={{ fontSize: 11, color: C.faint, marginTop: 1 }}>{it.sub}</div>}
+            </div>
+            <div style={{ flexShrink: 0, fontWeight: 700, fontSize: valueFont, color: it.tone || C.ink, letterSpacing: "-0.02em", whiteSpace: "nowrap", ...num }}>{it.value}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }
