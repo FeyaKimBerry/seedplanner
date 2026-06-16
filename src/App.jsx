@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ReferenceLine, ResponsiveContainer, PieChart, Pie, Cell,
+  ReferenceLine, ReferenceDot, ResponsiveContainer, PieChart, Pie, Cell,
+  ComposedChart, Line,
 } from "recharts";
 import {
   Wallet, TrendingDown, CalendarClock, Target, Landmark, Settings as Cog,
@@ -53,6 +54,7 @@ const STR = {
     stat_surplus: "Monthly surplus", stat_retireNum: "Retirement number",
     stat_income: "Monthly income", stat_expense: "Monthly expenses", stat_savingsNow: "Savings now",
     ov_now: "Right now", ov_retire: "Retirement outlook",
+    goalPaceAll: "All goals · pace needed", goalPaceHint: "The dashed curve is the savings pace needed to fund all your goals on time. Stay above it and you're on track.",
     stat_retireOn: "On track to retire", stat_balanceIn: "Balance in {n} yrs",
     inout: "{in} in · {out} out", setManually: "set manually", xAnnual: "{n}× annual expenses",
     inYrs: "in {n} yrs", beyond: "beyond horizon — adjust inputs",
@@ -60,6 +62,7 @@ const STR = {
 
     projSavings: "Projected savings", projNetWorth: "Projected net worth",
     savings: "Savings", netWorth: "Net worth", yearly: "Yearly", monthly: "Monthly",
+    scale_log: "Log", scale_linear: "Linear",
     descMonthly: "Month-by-month balance for the chosen year",
     descYearly: "One bar per year · solid green once you pass your retirement number",
     yearN: "Year {n}", projected: "Projected", whatif: "What-if", retirement: "Retirement",
@@ -149,6 +152,7 @@ const STR = {
     stat_surplus: "เงินเหลือต่อเดือน", stat_retireNum: "เงินเกษียณที่ต้องมี",
     stat_income: "รายได้ต่อเดือน", stat_expense: "รายจ่ายต่อเดือน", stat_savingsNow: "เงินออมตอนนี้",
     ov_now: "ตอนนี้", ov_retire: "แนวโน้มการเกษียณ",
+    goalPaceAll: "ทุกเป้าหมาย · จังหวะที่ต้องการ", goalPaceHint: "เส้นโค้งประคือจังหวะการออมที่ต้องทำเพื่อให้ถึงทุกเป้าหมายตามกำหนด ถ้าอยู่เหนือเส้นแสดงว่าตามแผน",
     stat_retireOn: "คาดว่าจะเกษียณ", stat_balanceIn: "ยอดเงินใน {n} ปี",
     inout: "{in} เข้า · {out} ออก", setManually: "ตั้งเอง", xAnnual: "{n}× ค่าใช้จ่ายต่อปี",
     inYrs: "อีก {n} ปี", beyond: "เกินช่วงที่คำนวณ — ปรับข้อมูล",
@@ -156,6 +160,7 @@ const STR = {
 
     projSavings: "เงินออมที่คาดการณ์", projNetWorth: "มูลค่าสุทธิที่คาดการณ์",
     savings: "เงินออม", netWorth: "มูลค่าสุทธิ", yearly: "รายปี", monthly: "รายเดือน",
+    scale_log: "ลอการิทึม", scale_linear: "เชิงเส้น",
     descMonthly: "ยอดเงินรายเดือนของปีที่เลือก",
     descYearly: "หนึ่งแท่งต่อปี · เป็นสีเขียวเข้มเมื่อถึงเงินเกษียณ",
     yearN: "ปีที่ {n}", projected: "คาดการณ์", whatif: "สมมติ", retirement: "เกษียณ",
@@ -246,6 +251,7 @@ const STR = {
     stat_surplus: "Monatlicher Überschuss", stat_retireNum: "Rentenbetrag",
     stat_income: "Monatliches Einkommen", stat_expense: "Monatliche Ausgaben", stat_savingsNow: "Aktuelle Ersparnisse",
     ov_now: "Aktuell", ov_retire: "Renten-Ausblick",
+    goalPaceAll: "Alle Ziele · nötiges Tempo", goalPaceHint: "Die gestrichelte Kurve ist das Spartempo, um alle Ziele rechtzeitig zu finanzieren. Bleib darüber, dann bist du im Plan.",
     stat_retireOn: "Rente voraussichtlich", stat_balanceIn: "Stand in {n} Jahren",
     inout: "{in} ein · {out} aus", setManually: "manuell gesetzt", xAnnual: "{n}× Jahresausgaben",
     inYrs: "in {n} Jahren", beyond: "außerhalb des Zeitraums – Eingaben anpassen",
@@ -253,6 +259,7 @@ const STR = {
 
     projSavings: "Prognostizierte Ersparnisse", projNetWorth: "Prognostiziertes Nettovermögen",
     savings: "Ersparnisse", netWorth: "Nettovermögen", yearly: "Jährlich", monthly: "Monatlich",
+    scale_log: "Log", scale_linear: "Linear",
     descMonthly: "Monatlicher Kontostand für das gewählte Jahr",
     descYearly: "Ein Balken pro Jahr · grün, sobald du deinen Rentenbetrag erreichst",
     yearN: "Jahr {n}", projected: "Prognose", whatif: "Was-wäre-wenn", retirement: "Rente",
@@ -343,6 +350,7 @@ const STR = {
     stat_surplus: "Excédent mensuel", stat_retireNum: "Montant retraite",
     stat_income: "Revenu mensuel", stat_expense: "Dépenses mensuelles", stat_savingsNow: "Épargne actuelle",
     ov_now: "En ce moment", ov_retire: "Perspective retraite",
+    goalPaceAll: "Tous les objectifs · rythme requis", goalPaceHint: "La courbe pointillée est le rythme d'épargne nécessaire pour financer tous vos objectifs à temps. Restez au-dessus pour être dans les temps.",
     stat_retireOn: "Retraite prévue", stat_balanceIn: "Solde dans {n} ans",
     inout: "{in} entrée · {out} sortie", setManually: "défini manuellement", xAnnual: "{n}× dépenses annuelles",
     inYrs: "dans {n} ans", beyond: "au-delà de la période – ajustez les données",
@@ -350,6 +358,7 @@ const STR = {
 
     projSavings: "Épargne projetée", projNetWorth: "Valeur nette projetée",
     savings: "Épargne", netWorth: "Valeur nette", yearly: "Annuel", monthly: "Mensuel",
+    scale_log: "Log", scale_linear: "Linéaire",
     descMonthly: "Solde mois par mois pour l'année choisie",
     descYearly: "Une barre par an · vert dès que vous dépassez votre montant retraite",
     yearN: "Année {n}", projected: "Projeté", whatif: "Hypothèse", retirement: "Retraite",
@@ -1152,18 +1161,42 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
 
   const goalLines = filtered.goals;
 
+  // Each goal's "required pace": a straight line from today's balance to the goal
+  // amount by its target date. Compared against the actual projection, it shows
+  // whether you're ahead of or behind schedule for that goal.
+  const startBal = projection.data[0][chartKey];
+  const paceGoals = useMemo(() => {
+    const now = new Date();
+    const projMonths = state.settings.projectionYears * 12;
+    return goalLines
+      .filter((g) => (g.target || 0) > 0 && g.date)
+      .map((g) => ({ id: g.id, label: g.label, target: g.target,
+        months: Math.round((new Date(g.date) - now) / (1000 * 60 * 60 * 24 * 30.44)) }))
+      .filter((g) => g.months > 0 && g.months <= projMonths);
+  }, [goalLines, state.settings.projectionYears]);
+  // Combined pace across ALL goals: today's balance plus each goal's funding
+  // ramped in linearly up to its own deadline. One curve to stay above.
+  const combinedPace = (month) => {
+    if (!paceGoals.length) return {};
+    let v = startBal;
+    paceGoals.forEach((g) => { v += g.target * Math.min(month, g.months) / g.months; });
+    return { goalPaceAll: Math.round(v) };
+  };
+
   // one bar per year (end-of-year balance), easier to scan than a curve
   const yearly = useMemo(() => {
     const out = [];
     for (let y = 1; y <= state.settings.projectionYears; y++) {
       const p = projection.data[Math.min(y * 12, projection.data.length - 1)];
-      out.push({ year: y, value: p[chartKey], whatif: p.whatif });
+      out.push({ year: y, value: p[chartKey], whatif: p.whatif, ...combinedPace(y * 12) });
     }
     return out;
-  }, [projection, chartKey, state.settings.projectionYears]);
+  }, [projection, chartKey, state.settings.projectionYears, paceGoals, startBal]);
 
   // monthly drill-down for a chosen year (12 bars)
   const [grain, setGrain] = useState("yearly"); // yearly | monthly
+  const [scaleMode, setScaleMode] = useState("log"); // log | linear — log keeps small goals readable
+  const logScale = scaleMode === "log";
   const [pickYear, setPickYear] = useState(1);
   const year = Math.min(Math.max(1, pickYear), state.settings.projectionYears);
 
@@ -1175,16 +1208,28 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       const p = projection.data[Math.min(m, projection.data.length - 1)];
       const d = new Date();
       d.setMonth(d.getMonth() + m);
-      out.push({ label: d.toLocaleString(undefined, { month: "short" }), value: p[chartKey], whatif: p.whatif });
+      out.push({ label: d.toLocaleString(undefined, { month: "short" }), value: p[chartKey], whatif: p.whatif, ...combinedPace(m) });
     }
     return out;
-  }, [projection, chartKey, year]);
+  }, [projection, chartKey, year, paceGoals, startBal]);
 
   const isMonthly = grain === "monthly";
   const chartData = isMonthly ? monthly : yearly;
   const xKey = isMonthly ? "label" : "year";
   // label sparsity so the axis never crowds on a phone
   const tickEvery = isMonthly ? 1 : Math.ceil(state.settings.projectionYears / 6);
+
+  // a dot on the pace curve at each goal's deadline, labelled with the goal name
+  const paceMarkers = paceGoals.map((g) => {
+    const y = combinedPace(g.months).goalPaceAll;
+    if (isMonthly) {
+      const startM = (year - 1) * 12 + 1;
+      if (g.months < startM || g.months > startM + 11) return null;
+      return { id: g.id, x: monthly[g.months - startM]?.label, y, label: g.label };
+    }
+    const gy = Math.min(Math.max(1, Math.round(g.months / 12)), state.settings.projectionYears);
+    return { id: g.id, x: gy, y, label: g.label };
+  }).filter(Boolean);
 
   return (
     <div className="flex flex-col gap-5">
@@ -1233,6 +1278,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
           <div className="flex flex-wrap items-center gap-2">
             <Segmented options={[["savings", t("savings")], ["networth", t("netWorth")]]} value={metric} onChange={setMetric} />
             <Segmented options={[["yearly", t("yearly")], ["monthly", t("monthly")]]} value={grain} onChange={setGrain} />
+            <Segmented options={[["log", t("scale_log")], ["linear", t("scale_linear")]]} value={scaleMode} onChange={setScaleMode} />
           </div>
         </div>
 
@@ -1249,14 +1295,18 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
 
         <div style={{ width: "100%", height: 300 }}>
           <ResponsiveContainer>
-            <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 4 }} barCategoryGap={whatIf.active ? "12%" : "22%"}>
+            <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 4 }} barCategoryGap={whatIf.active ? "12%" : "22%"}>
               <CartesianGrid stroke={C.line} vertical={false} />
               <XAxis dataKey={xKey} stroke={C.faint} fontSize={11} tickLine={false} axisLine={false}
                 interval={tickEvery - 1} tickFormatter={(v) => (isMonthly ? v : `${v}y`)} />
-              <YAxis tickFormatter={(v) => abbr(v)} stroke={C.faint} fontSize={11} tickLine={false} axisLine={false} width={44} />
+              <YAxis tickFormatter={(v) => abbr(v)} stroke={C.faint} fontSize={11} tickLine={false} axisLine={false} width={44}
+                scale={logScale ? "log" : "auto"} domain={logScale ? [1000, "auto"] : [0, "auto"]} allowDataOverflow={logScale} />
               <Tooltip
                 cursor={{ fill: C.greenSoft, fillOpacity: 0.5 }}
-                formatter={(v, n) => [fmt.format(v), n === "whatif" ? t("whatif") : t("projected")]}
+                formatter={(v, n) => {
+                  if (n === "goalPaceAll") return [fmt.format(v), t("goalPaceAll")];
+                  return [fmt.format(v), n === "whatif" ? t("whatif") : t("projected")];
+                }}
                 labelFormatter={(v) => (isMonthly ? t("monthYear", { m: v, n: year }) : t("yearN", { n: v }))}
                 contentStyle={{ borderRadius: 10, border: `1px solid ${C.line}`, fontSize: 12, ...num }} />
 
@@ -1269,15 +1319,31 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
                 <Bar dataKey="whatif" radius={[6, 6, 0, 0]} maxBarSize={38} fill={C.clay} fillOpacity={0.85} />
               )}
 
+              {/* one smooth curve: the pace needed to fund all goals on time */}
+              {paceGoals.length > 0 && (
+                <Line type="monotone" dataKey="goalPaceAll"
+                  stroke={C.clay} strokeWidth={2} strokeDasharray="5 4"
+                  dot={false} connectNulls isAnimationActive={false} />
+              )}
+              {/* mark each goal where it lands on the pace curve */}
+              {paceMarkers.map((m) => (
+                <ReferenceDot key={m.id} x={m.x} y={m.y} r={4} fill={C.clay} stroke="#fff" strokeWidth={1.5}
+                  label={{ value: m.label, position: "top", fontSize: 9, fill: C.clay }} />
+              ))}
+
               <ReferenceLine y={retireTarget} stroke={C.clay} strokeDasharray="5 4" strokeWidth={1.5}
                 label={{ value: t("retirement"), position: "insideTopRight", fontSize: 10, fill: C.clay }} />
-              {goalLines.map((g) => (
-                <ReferenceLine key={g.id} y={g.target} stroke={C.conservative} strokeOpacity={0.7} strokeDasharray="2 4"
-                  label={{ value: g.label, position: "insideTopLeft", fontSize: 9, fill: C.sub }} />
-              ))}
-            </BarChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
+
+        {/* goal pace legend — explains the dashed trajectory curve */}
+        {paceGoals.length > 0 && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <span style={{ width: 16, borderTop: `2px dashed ${C.clay}` }} />
+            <p style={{ fontSize: 11, color: C.faint }}>{t("goalPaceHint")}</p>
+          </div>
+        )}
 
         {/* milestone strip */}
         <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${milestones.length}, 1fr)` }}>
