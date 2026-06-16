@@ -1042,7 +1042,7 @@ export default function App() {
               items={filtered.income} columns={incomeCols(state.members)}
               onAdd={() => addItem("income", { id: uid(), label: t("new_income"), amount: 0, frequency: "monthly", memberId: state.members[0].id })}
               onUpdate={(id, p) => updItem("income", id, p)}
-              onDelete={(id) => delItem("income", id)} fmt={fmt}
+              onDelete={(id) => delItem("income", id)} fmt={fmt} sortByDate
               presets={INCOME_PRESETS}
               onAddPreset={(p) => addItem("income", { id: uid(), label: t(p.key), amount: 0, frequency: p.frequency, memberId: state.members[0].id })} />
             <Breakdown items={filtered.income} groupBy={bySource}
@@ -1057,7 +1057,7 @@ export default function App() {
               items={filtered.expenses} columns={expenseCols(state.members)}
               onAdd={() => addItem("expenses", { id: uid(), label: t("new_expense"), amount: 0, frequency: "monthly", category: "Other", memberId: state.members[0].id })}
               onUpdate={(id, p) => updItem("expenses", id, p)}
-              onDelete={(id) => delItem("expenses", id)} fmt={fmt}
+              onDelete={(id) => delItem("expenses", id)} fmt={fmt} sortByDate
               presets={EXPENSE_PRESETS}
               onAddPreset={(p) => addItem("expenses", { id: uid(), label: t(p.key), amount: 0, frequency: p.frequency, category: t(p.catKey), memberId: state.members[0].id })} />
             <Breakdown items={filtered.expenses} groupBy={byCategory}
@@ -1071,7 +1071,7 @@ export default function App() {
             items={filtered.oneOffs} columns={oneOffCols(state.members)}
             onAdd={() => addItem("oneOffs", { id: uid(), label: t("new_expense"), amount: 0, date: isoIn(6), memberId: state.members[0].id })}
             onUpdate={(id, p) => updItem("oneOffs", id, p)}
-            onDelete={(id) => delItem("oneOffs", id)} fmt={fmt} />
+            onDelete={(id) => delItem("oneOffs", id)} fmt={fmt} sortByDate />
         )}
 
         {tab === "goals" && (
@@ -1080,7 +1080,7 @@ export default function App() {
             items={filtered.goals} columns={goalCols(state.members)}
             onAdd={() => addItem("goals", { id: uid(), label: t("new_goal"), target: 10000, date: isoIn(24), memberId: state.members[0].id })}
             onUpdate={(id, p) => updItem("goals", id, p)}
-            onDelete={(id) => delItem("goals", id)} fmt={fmt} />
+            onDelete={(id) => delItem("goals", id)} fmt={fmt} sortByDate />
         )}
 
         {tab === "balance" && (
@@ -1314,14 +1314,23 @@ function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
 /* ================================================================== *
  * Generic list section (income / expenses / one-offs / goals / etc.)
  * ================================================================== */
-function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelete, fmt, presets, onAddPreset }) {
+function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelete, fmt, presets, onAddPreset, sortByDate }) {
   const [openId, setOpenId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
-  const prevLen = useRef(items.length);
+  const prevIds = useRef(new Set(items.map((i) => i.id)));
   useEffect(() => {
-    if (items.length > prevLen.current) setOpenId(items[0].id);
-    prevLen.current = items.length;
+    // open whichever row was just added, wherever it lands after sorting
+    const added = items.find((i) => !prevIds.current.has(i.id));
+    if (added) setOpenId(added.id);
+    prevIds.current = new Set(items.map((i) => i.id));
   }, [items]);
+  // dated items (e.g. one-offs) sorted soonest-first; undated (recurring) keep their order up top
+  let rows = items;
+  if (sortByDate) {
+    const undated = items.filter((i) => !i.date);
+    const dated = items.filter((i) => i.date).sort((a, b) => a.date.localeCompare(b.date));
+    rows = [...undated, ...dated];
+  }
   const hasPresets = (presets || []).length > 0;
   // hide a suggestion once an item with that name already exists
   const have = new Set(items.map((it) => (it.label || "").trim().toLowerCase()));
@@ -1397,7 +1406,7 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
                 {t("empty")}
               </td></tr>
             )}
-            {items.map((it) => (
+            {rows.map((it) => (
               <tr key={it.id} style={{ borderTop: `1px solid ${C.line}` }}>
                 {columns.map((c) => (
                   <td key={c.key} style={{ padding: "5px 8px" }}>
@@ -1420,7 +1429,7 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
         {items.length === 0 && (
           <p style={{ padding: "12px 2px", color: C.faint, fontSize: 13 }}>{t("empty")}</p>
         )}
-        {items.map((it) => {
+        {rows.map((it) => {
           const open = openId === it.id;
           const amount = it.amount ?? it.target ?? it.value ?? it.balance;
           return (
