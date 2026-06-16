@@ -6,7 +6,7 @@ import {
 import {
   Wallet, TrendingDown, CalendarClock, Target, Landmark, Settings as Cog,
   LayoutDashboard, Plus, Trash2, Download, Upload, Users, ShieldCheck,
-  PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown,
+  PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ *
@@ -51,6 +51,7 @@ const STR = {
     footer: "Projections are estimates, not financial advice.",
 
     stat_surplus: "Monthly surplus", stat_retireNum: "Retirement number",
+    stat_income: "Monthly income", stat_expense: "Monthly expenses",
     stat_retireOn: "On track to retire", stat_balanceIn: "Balance in {n} yrs",
     inout: "{in} in · {out} out", setManually: "set manually", xAnnual: "{n}× annual expenses",
     inYrs: "in {n} yrs", beyond: "beyond horizon — adjust inputs",
@@ -66,7 +67,7 @@ const STR = {
     whatifTitle: "What-if scenario",
     whatifDesc: "Compare a change against your baseline without editing anything. The dashed clay line is the what-if.",
     wiIncome: "Monthly income change", wiExpense: "Monthly expense change",
-    wiReturn: "Expected return", wiOneOff: "One-off cost",
+    wiReturn: "Expected return", wiOneOff: "One-off cost", wiReset: "Reset",
 
     add: "Add", empty: "Nothing here yet — add your first entry.", delete: "Delete",
     title_income: "Income", sub_income: "Recurring and one-off. Tag each to a person for the household toggle.",
@@ -126,6 +127,7 @@ const STR = {
     footer: "การคาดการณ์เป็นเพียงการประมาณ ไม่ใช่คำแนะนำทางการเงิน",
 
     stat_surplus: "เงินเหลือต่อเดือน", stat_retireNum: "เงินเกษียณที่ต้องมี",
+    stat_income: "รายได้ต่อเดือน", stat_expense: "รายจ่ายต่อเดือน",
     stat_retireOn: "คาดว่าจะเกษียณ", stat_balanceIn: "ยอดเงินใน {n} ปี",
     inout: "{in} เข้า · {out} ออก", setManually: "ตั้งเอง", xAnnual: "{n}× ค่าใช้จ่ายต่อปี",
     inYrs: "อีก {n} ปี", beyond: "เกินช่วงที่คำนวณ — ปรับข้อมูล",
@@ -141,6 +143,7 @@ const STR = {
     whatifTitle: "สถานการณ์สมมติ",
     whatifDesc: "เปรียบเทียบการเปลี่ยนแปลงกับค่าพื้นฐานโดยไม่ต้องแก้ข้อมูลจริง เส้นประสีส้มคือสถานการณ์สมมติ",
     wiIncome: "รายได้ต่อเดือนเปลี่ยน", wiExpense: "รายจ่ายต่อเดือนเปลี่ยน",
+    wiReset: "รีเซ็ต",
     wiReturn: "ผลตอบแทนคาดหวัง", wiOneOff: "ค่าใช้จ่ายครั้งเดียว",
 
     add: "เพิ่ม", empty: "ยังไม่มีรายการ — เพิ่มรายการแรกของคุณ", delete: "ลบ",
@@ -194,6 +197,7 @@ const STR = {
     footer: "Prognosen sind Schätzungen, keine Finanzberatung.",
 
     stat_surplus: "Monatlicher Überschuss", stat_retireNum: "Rentenbetrag",
+    stat_income: "Monatliches Einkommen", stat_expense: "Monatliche Ausgaben",
     stat_retireOn: "Rente voraussichtlich", stat_balanceIn: "Stand in {n} Jahren",
     inout: "{in} ein · {out} aus", setManually: "manuell gesetzt", xAnnual: "{n}× Jahresausgaben",
     inYrs: "in {n} Jahren", beyond: "außerhalb des Zeitraums – Eingaben anpassen",
@@ -209,6 +213,7 @@ const STR = {
     whatifTitle: "Was-wäre-wenn-Szenario",
     whatifDesc: "Vergleiche eine Änderung mit deiner Basis, ohne etwas zu bearbeiten. Die gestrichelte Linie ist das Szenario.",
     wiIncome: "Monatl. Einkommen ändern", wiExpense: "Monatl. Ausgaben ändern",
+    wiReset: "Zurücksetzen",
     wiReturn: "Erwartete Rendite", wiOneOff: "Einmalige Kosten",
 
     add: "Hinzufügen", empty: "Noch nichts hier – füge deinen ersten Eintrag hinzu.", delete: "Löschen",
@@ -262,6 +267,7 @@ const STR = {
     footer: "Les projections sont des estimations, pas des conseils financiers.",
 
     stat_surplus: "Excédent mensuel", stat_retireNum: "Montant retraite",
+    stat_income: "Revenu mensuel", stat_expense: "Dépenses mensuelles",
     stat_retireOn: "Retraite prévue", stat_balanceIn: "Solde dans {n} ans",
     inout: "{in} entrée · {out} sortie", setManually: "défini manuellement", xAnnual: "{n}× dépenses annuelles",
     inYrs: "dans {n} ans", beyond: "au-delà de la période – ajustez les données",
@@ -277,6 +283,7 @@ const STR = {
     whatifTitle: "Scénario hypothétique",
     whatifDesc: "Comparez un changement à votre base sans rien modifier. La ligne pointillée est l'hypothèse.",
     wiIncome: "Variation revenu mensuel", wiExpense: "Variation dépense mensuelle",
+    wiReset: "Réinitialiser",
     wiReturn: "Rendement attendu", wiOneOff: "Coût ponctuel",
 
     add: "Ajouter", empty: "Rien ici pour l'instant – ajoutez votre première entrée.", delete: "Supprimer",
@@ -1075,6 +1082,12 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     <div className="flex flex-col gap-5">
       {/* headline cards */}
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))" }}>
+        <Stat label={t("stat_income")}
+          value={fmt.format(projection.monthlyIncome)}
+          tone={C.green} />
+        <Stat label={t("stat_expense")}
+          value={fmt.format(projection.monthlyExpense)}
+          tone={C.clay} />
         <Stat label={t("stat_surplus")}
           value={fmt.format(projection.monthlyNet)}
           tone={projection.monthlyNet >= 0 ? C.green : C.clay}
@@ -1170,6 +1183,8 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
  * ================================================================== */
 function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
   const up = (p) => setWhatIf((w) => ({ ...w, ...p }));
+  const reset = () => up({ incomeDelta: 0, expenseDelta: 0, returnRate: null, oneOffAmount: 0, oneOffMonth: 12 });
+  const dirty = whatIf.incomeDelta || whatIf.expenseDelta || whatIf.oneOffAmount || whatIf.returnRate != null;
   return (
     <Card>
       <div className="flex items-center justify-between">
@@ -1177,7 +1192,16 @@ function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
           <GitCompare size={16} color={C.clay} />
           <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("whatifTitle")}</h2>
         </div>
-        <Toggle on={whatIf.active} onChange={(v) => up({ active: v })} />
+        <div className="flex items-center gap-3">
+          {whatIf.active && dirty && (
+            <button onClick={reset}
+              className="flex items-center gap-1 rounded-md px-2 py-1"
+              style={{ border: `1px solid ${C.line}`, color: C.sub, fontSize: 12.5 }}>
+              <RotateCcw size={13} /> {t("wiReset")}
+            </button>
+          )}
+          <Toggle on={whatIf.active} onChange={(v) => up({ active: v })} />
+        </div>
       </div>
       <p style={{ color: C.faint, fontSize: 12, marginTop: 4 }}>
         {t("whatifDesc")}
