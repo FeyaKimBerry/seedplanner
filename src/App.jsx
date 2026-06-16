@@ -85,6 +85,9 @@ const STR = {
     new_asset: "New asset", new_debt: "New debt", new_person: "New person",
 
     whereGoes: "Where it goes", perMo: "/mo",
+    totalSpend: "Total spending", perDay: "/day", perWk: "/wk", perYr: "/yr",
+    unit_day: "Day", unit_week: "Week", unit_month: "Month", unit_year: "Year",
+    incomeSources: "Where it comes from", totalIncome: "Total income",
     emTitle: "Emergency fund", emDesc: "Kept separate from your goals — your buffer before anything else.",
     emCurrent: "Current", emTarget: "Target", emFunded: "{pct}% funded · {a} of {b}",
 
@@ -157,6 +160,9 @@ const STR = {
     new_asset: "สินทรัพย์ใหม่", new_debt: "หนี้ใหม่", new_person: "บุคคลใหม่",
 
     whereGoes: "เงินไปไหนบ้าง", perMo: "/เดือน",
+    totalSpend: "รายจ่ายรวม", perDay: "/วัน", perWk: "/สัปดาห์", perYr: "/ปี",
+    unit_day: "วัน", unit_week: "สัปดาห์", unit_month: "เดือน", unit_year: "ปี",
+    incomeSources: "รายได้มาจากไหน", totalIncome: "รายได้รวม",
     emTitle: "เงินสำรองฉุกเฉิน", emDesc: "แยกจากเป้าหมายอื่น — กันชนก่อนเรื่องอื่น",
     emCurrent: "ปัจจุบัน", emTarget: "เป้าหมาย", emFunded: "{pct}% แล้ว · {a} จาก {b}",
 
@@ -222,6 +228,9 @@ const STR = {
     new_asset: "Neuer Vermögenswert", new_debt: "Neue Schuld", new_person: "Neue Person",
 
     whereGoes: "Wohin es geht", perMo: "/Mon.",
+    totalSpend: "Gesamtausgaben", perDay: "/Tag", perWk: "/Wo.", perYr: "/Jahr",
+    unit_day: "Tag", unit_week: "Woche", unit_month: "Monat", unit_year: "Jahr",
+    incomeSources: "Woher es kommt", totalIncome: "Gesamteinkommen",
     emTitle: "Notgroschen", emDesc: "Getrennt von deinen Zielen – dein Puffer vor allem anderen.",
     emCurrent: "Aktuell", emTarget: "Ziel", emFunded: "{pct}% gedeckt · {a} von {b}",
 
@@ -287,6 +296,9 @@ const STR = {
     new_asset: "Nouvel actif", new_debt: "Nouvelle dette", new_person: "Nouvelle personne",
 
     whereGoes: "Où va l'argent", perMo: "/mois",
+    totalSpend: "Dépenses totales", perDay: "/jour", perWk: "/sem.", perYr: "/an",
+    unit_day: "Jour", unit_week: "Semaine", unit_month: "Mois", unit_year: "Année",
+    incomeSources: "D'où ça vient", totalIncome: "Revenu total",
     emTitle: "Fonds d'urgence", emDesc: "Séparé de vos objectifs – votre coussin avant tout le reste.",
     emCurrent: "Actuel", emTarget: "Cible", emFunded: "{pct}% atteint · {a} sur {b}",
 
@@ -932,12 +944,16 @@ export default function App() {
         )}
 
         {tab === "income" && (
-          <ListSection
-            title={t("title_income")} subtitle={t("sub_income")}
-            items={filtered.income} columns={incomeCols(state.members)}
-            onAdd={() => addItem("income", { id: uid(), label: t("new_income"), amount: 0, frequency: "monthly", memberId: state.members[0].id })}
-            onUpdate={(id, p) => updItem("income", id, p)}
-            onDelete={(id) => delItem("income", id)} fmt={fmt} />
+          <>
+            <ListSection
+              title={t("title_income")} subtitle={t("sub_income")}
+              items={filtered.income} columns={incomeCols(state.members)}
+              onAdd={() => addItem("income", { id: uid(), label: t("new_income"), amount: 0, frequency: "monthly", memberId: state.members[0].id })}
+              onUpdate={(id, p) => updItem("income", id, p)}
+              onDelete={(id) => delItem("income", id)} fmt={fmt} />
+            <Breakdown items={filtered.income} groupBy={bySource}
+              title={t("incomeSources")} totalLabel={t("totalIncome")} fmt={fmt} />
+          </>
         )}
 
         {tab === "expenses" && (
@@ -948,7 +964,8 @@ export default function App() {
               onAdd={() => addItem("expenses", { id: uid(), label: t("new_expense"), amount: 0, frequency: "monthly", category: "Other", memberId: state.members[0].id })}
               onUpdate={(id, p) => updItem("expenses", id, p)}
               onDelete={(id) => delItem("expenses", id)} fmt={fmt} />
-            <SpendBreakdown expenses={filtered.expenses} fmt={fmt} />
+            <Breakdown items={filtered.expenses} groupBy={byCategory}
+              title={t("whereGoes")} totalLabel={t("totalSpend")} fmt={fmt} />
           </>
         )}
 
@@ -1352,42 +1369,62 @@ const debtCols = (members) => [
 ];
 
 /* ================================================================== *
- * Spending breakdown
+ * Income / spending breakdown
  * ================================================================== */
-function SpendBreakdown({ expenses, fmt }) {
-  const byCat = useMemo(() => {
+// Factor to convert a monthly figure into the chosen period.
+const PERIOD_FACTOR = { day: 12 / 365, week: 12 / 52, month: 1, year: 12 };
+const PERIOD_SUFFIX = { day: "perDay", week: "perWk", month: "perMo", year: "perYr" };
+const BREAKDOWN_PALETTE = [C.green, C.optimistic, C.clay, C.conservative, "#8AA39B", "#D9A66C"];
+const byCategory = (e) => e.category || "Other";
+const bySource = (it) => it.label || "—";
+
+// Generic recurring-amount breakdown with a Day/Week/Month/Year selector.
+// `groupBy` returns the bucket name for an item; one-off items are ignored.
+function Breakdown({ items, groupBy, title, totalLabel, fmt }) {
+  const [period, setPeriod] = useState("month");
+  const factor = PERIOD_FACTOR[period];
+  const groups = useMemo(() => {
     const m = {};
-    expenses.forEach((e) => {
-      const mo = e.frequency === "annual" ? e.amount / 12 : e.amount;
-      m[e.category || "Other"] = (m[e.category || "Other"] || 0) + mo;
+    items.forEach((it) => {
+      if (it.frequency === "oneoff") return;
+      m[groupBy(it)] = (m[groupBy(it)] || 0) + monthlyOf(it.amount, it.frequency);
     });
-    return Object.entries(m).map(([name, value]) => ({ name, value: Math.round(value) }));
-  }, [expenses]);
-  const palette = [C.green, C.optimistic, C.clay, C.conservative, "#8AA39B", "#D9A66C"];
-  if (!byCat.length) return null;
+    return Object.entries(m).map(([name, value]) => ({ name, value }));
+  }, [items, groupBy]);
+  if (!groups.length) return null;
+  const total = groups.reduce((s, g) => s + g.value, 0);
+  const scaled = groups
+    .map((g) => ({ name: g.name, value: Math.round(g.value * factor) }))
+    .sort((a, b) => b.value - a.value);
+  const suffix = t(PERIOD_SUFFIX[period]);
   return (
     <Card>
-      <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("whereGoes")}</h2>
-      <div className="mt-2 flex flex-wrap items-center gap-6">
-        <div style={{ width: 180, height: 180 }}>
-          <ResponsiveContainer>
-            <PieChart>
-              <Pie data={byCat} dataKey="value" nameKey="name" innerRadius={48} outerRadius={80} paddingAngle={2}>
-                {byCat.map((_, i) => <Cell key={i} fill={palette[i % palette.length]} />)}
-              </Pie>
-              <Tooltip formatter={(v) => fmt.format(v)} contentStyle={{ borderRadius: 10, border: `1px solid ${C.line}`, fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 style={{ fontWeight: 600, fontSize: 15 }}>{title}</h2>
+          <div style={{ marginTop: 4 }}>
+            <span style={{ fontSize: 12, color: C.sub }}>{totalLabel}: </span>
+            <span style={{ fontSize: 18, fontWeight: 700, ...num }}>{fmt.format(Math.round(total * factor))}</span>
+            <span style={{ fontSize: 13, color: C.faint }}>{suffix}</span>
+          </div>
         </div>
-        <div className="flex flex-col gap-1.5">
-          {byCat.sort((a, b) => b.value - a.value).map((c, i) => (
-            <div key={c.name} className="flex items-center gap-2" style={{ fontSize: 13 }}>
-              <span style={{ width: 10, height: 10, borderRadius: 3, background: palette[i % palette.length] }} />
-              <span style={{ width: 110, color: C.sub }}>{c.name}</span>
-              <span style={{ fontWeight: 600, ...num }}>{fmt.format(c.value)}<span style={{ color: C.faint, fontWeight: 400 }}>{t("perMo")}</span></span>
-            </div>
-          ))}
-        </div>
+        <Segmented
+          options={[["day", t("unit_day")], ["week", t("unit_week")], ["month", t("unit_month")], ["year", t("unit_year")]]}
+          value={period} onChange={setPeriod} />
+      </div>
+      <div className="mt-3" style={{ width: "100%", height: Math.max(120, scaled.length * 38 + 20) }}>
+        <ResponsiveContainer>
+          <BarChart data={scaled} layout="vertical" margin={{ left: 4, right: 56, top: 4, bottom: 4 }}>
+            <XAxis type="number" hide />
+            <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 12, fill: C.sub }} axisLine={false} tickLine={false} />
+            <Tooltip formatter={(v) => `${fmt.format(v)}${suffix}`} cursor={{ fill: C.greenSoft }}
+              contentStyle={{ borderRadius: 10, border: `1px solid ${C.line}`, fontSize: 12 }} />
+            <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={20}
+              label={{ position: "right", fontSize: 11, fill: C.sub, formatter: (v) => fmt.format(v) }}>
+              {scaled.map((_, i) => <Cell key={i} fill={BREAKDOWN_PALETTE[i % BREAKDOWN_PALETTE.length]} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </Card>
   );
