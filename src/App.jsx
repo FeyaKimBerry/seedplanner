@@ -1582,7 +1582,7 @@ function Breakdown({ items, groupBy, title, totalLabel, fmt }) {
   const suffix = t(PERIOD_SUFFIX[period]);
   return (
     <Card>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div>
           <h2 style={{ fontWeight: 600, fontSize: 15 }}>{title}</h2>
           <div style={{ marginTop: 4 }}>
@@ -1591,7 +1591,7 @@ function Breakdown({ items, groupBy, title, totalLabel, fmt }) {
             <span style={{ fontSize: 13, color: C.faint }}>{suffix}</span>
           </div>
         </div>
-        <Segmented
+        <Segmented fluid
           options={[["day", t("unit_day")], ["week", t("unit_week")], ["month", t("unit_month")], ["year", t("unit_year")]]}
           value={period} onChange={setPeriod} />
       </div>
@@ -1873,13 +1873,15 @@ function Stat({ label, value, sub, tone }) {
     </div>
   );
 }
-function Segmented({ options, value, onChange }) {
+function Segmented({ options, value, onChange, fluid }) {
   return (
-    <div style={{ display: "inline-flex", background: C.greenSoft, borderRadius: 10, padding: 3 }}>
+    <div className={fluid ? "flex w-full sm:inline-flex sm:w-auto" : "inline-flex"}
+      style={{ background: C.greenSoft, borderRadius: 10, padding: 3 }}>
       {options.map(([v, l]) => (
         <button key={v} onClick={() => onChange(v)}
+          className={fluid ? "flex-1 sm:flex-none" : ""}
           style={{ padding: "5px 12px", fontSize: 12.5, borderRadius: 8, fontWeight: value === v ? 600 : 500,
-            background: value === v ? C.card : "transparent", color: value === v ? C.ink : C.sub,
+            whiteSpace: "nowrap", background: value === v ? C.card : "transparent", color: value === v ? C.ink : C.sub,
             boxShadow: value === v ? "0 1px 3px rgba(40,90,90,0.12)" : "none" }}>
           {l}
         </button>
