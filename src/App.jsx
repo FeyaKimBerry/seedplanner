@@ -142,6 +142,8 @@ const STR = {
     login_google: "Sign in with Google",
     login_note: "Placeholder sign-in — no account is created and nothing leaves your device yet. Real Google sign-in is wired up in the full build.",
     signOut: "Sign out",
+    signOutConfirm: "Sign out now? You'll need to sign in again to get back in.",
+    cancel: "Cancel",
     nav_home: "Home", nav_privacy: "Privacy Policy", nav_terms: "Terms of Service",
 
     rep_title: "Seedplanner — financial projection", rep_generated: "generated", rep_byYear: "Projection by year",
@@ -246,6 +248,8 @@ const STR = {
     login_google: "เข้าสู่ระบบด้วย Google",
     login_note: "การเข้าสู่ระบบนี้เป็นเพียงตัวอย่าง — ยังไม่มีการสร้างบัญชีและไม่มีข้อมูลออกจากอุปกรณ์ของคุณ การเข้าสู่ระบบ Google จริงจะมีในเวอร์ชันเต็ม",
     signOut: "ออกจากระบบ",
+    signOutConfirm: "ออกจากระบบตอนนี้หรือไม่? คุณจะต้องเข้าสู่ระบบอีกครั้งเพื่อกลับเข้ามา",
+    cancel: "ยกเลิก",
     nav_home: "หน้าแรก", nav_privacy: "นโยบายความเป็นส่วนตัว", nav_terms: "ข้อกำหนดการใช้งาน",
 
     rep_title: "Seedplanner — การคาดการณ์ทางการเงิน", rep_generated: "สร้างเมื่อ", rep_byYear: "การคาดการณ์รายปี",
@@ -350,6 +354,8 @@ const STR = {
     login_google: "Mit Google anmelden",
     login_note: "Platzhalter-Anmeldung – es wird kein Konto erstellt und nichts verlässt dein Gerät. Die echte Google-Anmeldung ist in der vollständigen Version eingebaut.",
     signOut: "Abmelden",
+    signOutConfirm: "Jetzt abmelden? Du musst dich erneut anmelden, um zurückzukehren.",
+    cancel: "Abbrechen",
     nav_home: "Startseite", nav_privacy: "Datenschutz", nav_terms: "Nutzungsbedingungen",
 
     rep_title: "Seedplanner – Finanzprognose", rep_generated: "erstellt", rep_byYear: "Prognose nach Jahr",
@@ -454,6 +460,8 @@ const STR = {
     login_google: "Se connecter avec Google",
     login_note: "Connexion fictive — aucun compte n'est créé et rien ne quitte votre appareil pour l'instant. La vraie connexion Google est intégrée dans la version complète.",
     signOut: "Se déconnecter",
+    signOutConfirm: "Se déconnecter maintenant ? Vous devrez vous reconnecter pour revenir.",
+    cancel: "Annuler",
     nav_home: "Accueil", nav_privacy: "Politique de confidentialité", nav_terms: "Conditions d'utilisation",
 
     rep_title: "Seedplanner – projection financière", rep_generated: "généré", rep_byYear: "Projection par année",
@@ -785,13 +793,20 @@ export default function App() {
     try { return localStorage.getItem(AUTH_KEY) === "1"; } catch { return false; }
   });
   const saveTimer = useRef(null);
+  const [confirm, setConfirm] = useState(null); // { title, message, confirmLabel, danger, onConfirm }
 
   useEffect(() => {
     store.load().then((s) => setState(s || clone(emptyState)));
   }, []);
 
   const loadSample = () => setState(clone(seed));
-  const clearData = () => { if (window.confirm(t("clearConfirm"))) setState(clone(emptyState)); };
+  const clearData = () => setConfirm({
+    title: t("clearData"),
+    message: t("clearConfirm"),
+    confirmLabel: t("clearData"),
+    danger: true,
+    onConfirm: () => setState(clone(emptyState)),
+  });
 
   // Highlight the whole value when a number field is focused, so the user can
   // type over it (e.g. the default 0) instead of deleting it first.
@@ -895,10 +910,16 @@ export default function App() {
     setState((s) => ({ ...s, [key]: s[key].filter((i) => i.id !== id) }));
 
   /* ---- placeholder sign-out: clears the auth flag, returns to login ---- */
-  const signOut = () => {
-    try { localStorage.removeItem(AUTH_KEY); } catch {}
-    setAuthed(false);
-  };
+  const signOut = () => setConfirm({
+    title: t("signOut"),
+    message: t("signOutConfirm"),
+    confirmLabel: t("signOut"),
+    danger: true,
+    onConfirm: () => {
+      try { localStorage.removeItem(AUTH_KEY); } catch {}
+      setAuthed(false);
+    },
+  });
 
   /* ---- export / import ---- */
   const exportJSON = () => {
@@ -1168,6 +1189,8 @@ export default function App() {
       </main>
 
       <ExportSheet sheet={sheet} onClose={() => setSheet(null)} />
+
+      <ConfirmDialog data={confirm} onClose={() => setConfirm(null)} />
 
       <footer className="mx-auto px-3 pb-10 pt-2 sm:px-5" style={{ maxWidth: 1100 }}>
         <p style={{ color: C.faint, fontSize: 12, lineHeight: 1.6 }}>
@@ -2002,6 +2025,39 @@ function SettingsPanel({ state, setSettings, setState, onLoadSample, onClearData
           </button>
         </div>
       </Card>
+    </div>
+  );
+}
+
+/* ================================================================== *
+ * Confirm dialog — centered modal for negative / irreversible actions
+ * ================================================================== */
+function ConfirmDialog({ data, onClose }) {
+  if (!data) return null;
+  const accent = data.danger ? C.clay : C.green;
+  const confirm = () => { data.onConfirm?.(); onClose(); };
+
+  return (
+    <div onClick={onClose}
+      style={{ position: "fixed", inset: 0, background: "rgba(35,50,60,0.35)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true"
+        style={{ background: C.card, width: "100%", maxWidth: 380, borderRadius: 20, padding: 22, boxShadow: "0 20px 50px rgba(40,90,90,0.22)" }}>
+        <h2 style={{ fontWeight: 700, fontSize: 17, color: C.ink }}>{data.title}</h2>
+        <p style={{ color: C.sub, fontSize: 13.5, marginTop: 8, lineHeight: 1.5 }}>{data.message}</p>
+
+        <div className="mt-5 flex gap-2">
+          <button onClick={onClose}
+            className="flex-1 rounded-xl px-3 py-2.5 text-sm"
+            style={{ fontWeight: 600, background: C.card, color: C.ink, border: `1px solid ${C.line}` }}>
+            {t("cancel")}
+          </button>
+          <button onClick={confirm} autoFocus
+            className="flex-1 rounded-xl px-3 py-2.5 text-sm"
+            style={{ fontWeight: 600, background: accent, color: "#fff", border: `1px solid ${accent}` }}>
+            {data.confirmLabel || t("done")}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
