@@ -783,6 +783,10 @@ export default function App() {
   const [state, setState] = useState(null);
   const [tab, setTab] = useState("dashboard");
   const [metric, setMetric] = useState("savings"); // savings | networth
+  // chart view options — kept here (not in Dashboard) so they survive tab switches
+  const [grain, setGrain] = useState("monthly"); // yearly | monthly
+  const [scaleMode, setScaleMode] = useState("log"); // log | linear
+  const [pickYear, setPickYear] = useState(1); // chosen year in the monthly view
   const [whatIf, setWhatIf] = useState({
     active: false, incomeDelta: 0, expenseDelta: 0, returnRate: null,
     oneOffAmount: 0, oneOffMonth: 12,
@@ -1115,7 +1119,8 @@ export default function App() {
           (state.income.length === 0 && state.expenses.length === 0)
             ? <WelcomeCard onLoadSample={loadSample} onStart={startWithPresets} />
             : <Dashboard {...{ state, projection, fmt, retireTarget, retireDate, retireMonths,
-                metric, setMetric, whatIf, setWhatIf, chartKey, filtered }} />
+                metric, setMetric, grain, setGrain, scaleMode, setScaleMode, pickYear, setPickYear,
+                whatIf, setWhatIf, chartKey, filtered }} />
         )}
 
         {tab === "income" && (
@@ -1270,7 +1275,7 @@ function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
 /* ================================================================== *
  * Dashboard
  * ================================================================== */
-function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMonths, metric, setMetric, whatIf, setWhatIf, chartKey, filtered }) {
+function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMonths, metric, setMetric, grain, setGrain, scaleMode, setScaleMode, pickYear, setPickYear, whatIf, setWhatIf, chartKey, filtered }) {
   const milestones = [1, 2, 3, 5, 10].filter((y) => y <= state.settings.projectionYears);
   const pointAt = (y) => projection.data[Math.min(y * 12, projection.data.length - 1)];
 
@@ -1356,11 +1361,9 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     return out;
   }, [projection, chartKey, projYears, yearlyCtrl, yearBuckets]);
 
-  // monthly drill-down for a chosen year (12 bars)
-  const [grain, setGrain] = useState("monthly"); // yearly | monthly
-  const [scaleMode, setScaleMode] = useState("log"); // log | linear — log keeps small goals readable
+  // monthly drill-down for a chosen year (12 bars). grain/scaleMode/pickYear are lifted
+  // to App so the chosen view persists when the user navigates between tabs.
   const logScale = scaleMode === "log";
-  const [pickYear, setPickYear] = useState(1);
   const year = Math.min(Math.max(1, pickYear), state.settings.projectionYears);
 
   const monthly = useMemo(() => {
