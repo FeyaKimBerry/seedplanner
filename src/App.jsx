@@ -1692,10 +1692,13 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
           const open = openId === it.id;
           const amount = it.amount ?? it.target ?? it.value ?? it.balance;
           return (
-            <div key={it.id} style={{ borderBottom: `1px solid ${C.line}` }}>
+            <div key={it.id}
+              style={open
+                ? { background: C.bg, border: `1px solid ${C.line}`, borderRadius: 12, padding: "0 12px", margin: "8px 0", boxShadow: shadowSoft }
+                : { borderBottom: `1px solid ${C.line}` }}>
               <button onClick={() => setOpenId(open ? null : it.id)}
                 className="flex w-full items-center justify-between gap-2 py-3 text-left">
-                <span style={{ fontWeight: 500, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ fontWeight: open ? 600 : 500, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: open ? C.green : C.ink }}>
                   {it.label || "—"}
                 </span>
                 <span className="flex shrink-0 items-center gap-2" style={{ color: C.sub, fontSize: 13 }}>
@@ -1706,11 +1709,11 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
                     </span>
                   )}
                   <ChevronDown size={16}
-                    style={{ color: C.faint, transition: "transform .15s", transform: open ? "rotate(180deg)" : "none" }} />
+                    style={{ color: open ? C.green : C.faint, transition: "transform .15s", transform: open ? "rotate(180deg)" : "none" }} />
                 </span>
               </button>
               {open && (
-                <div className="pb-3">
+                <div className="pb-3" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
                   {columns.map((c) => (
                     <div key={c.key} className="mb-2.5 flex flex-col gap-1">
                       <span style={{ color: C.faint, fontSize: 12 }}>{c.label}</span>
