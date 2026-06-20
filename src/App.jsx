@@ -964,7 +964,7 @@ export default function App() {
       const p = projection.data[Math.min(y * 12, projection.data.length - 1)];
       const passed = p.expected >= retireTarget;
       rows.push(
-        `<tr${passed ? ' class="hit"' : ""}><td>${y === 0 ? t("rep_now") : t("rep_year") + " " + y}</td>` +
+        `<tr${passed ? ' class="hit"' : ""}><td>${y === 0 ? t("rep_now") : new Date().getFullYear() + y}</td>` +
         `<td class="r">${m(p.expected)}</td><td class="r">${m(p.netWorth)}</td></tr>`
       );
     }
@@ -1255,7 +1255,7 @@ function WelcomeCard({ onLoadSample, onStart }) {
 function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
   if (!active || !payload || !payload.length) return null;
   const row = payload[0].payload || {};
-  const title = isMonthly ? t("monthYear", { m: label, n: year }) : t("yearN", { n: label });
+  const title = row.cal || (isMonthly ? t("monthYear", { m: label, n: year }) : t("yearN", { n: label }));
   return (
     <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 10, padding: "8px 10px", fontSize: 12, ...num }}>
       <div style={{ fontWeight: 600, marginBottom: 4 }}>{title}</div>
@@ -1294,6 +1294,9 @@ function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
 function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMonths, metric, setMetric, grain, setGrain, scaleMode, setScaleMode, pickYear, setPickYear, whatIf, setWhatIf, chartKey, filtered }) {
   const milestones = [1, 2, 3, 5, 10].filter((y) => y <= state.settings.projectionYears);
   const pointAt = (y) => projection.data[Math.min(y * 12, projection.data.length - 1)];
+  // Projection year y ends y calendar years from today — label everything by that real year.
+  const baseYear = new Date().getFullYear();
+  const calYear = (y) => baseYear + y;
 
   const startBal = projection.data[0][chartKey];
 
@@ -1401,10 +1404,10 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     for (let y = 1; y <= state.settings.projectionYears; y++) {
       const p = projection.data[Math.min(y * 12, projection.data.length - 1)];
       const b = yearBuckets.find((bk) => bk.year === y);
-      out.push({ year: y, value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(yearlyCtrl, y * 12), goalsHere: b?.goals, oneOffsHere: eventsByYear.get(y) });
+      out.push({ year: y, cal: String(calYear(y)), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(yearlyCtrl, y * 12), goalsHere: b?.goals, oneOffsHere: eventsByYear.get(y) });
     }
     return out;
-  }, [projection, chartKey, projYears, yearlyCtrl, yearBuckets, eventsByYear]);
+  }, [projection, chartKey, projYears, yearlyCtrl, yearBuckets, eventsByYear, baseYear]);
 
   // monthly drill-down for a chosen year (12 bars). grain/scaleMode/pickYear are lifted
   // to App so the chosen view persists when the user navigates between tabs.
@@ -1420,7 +1423,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       const d = new Date();
       d.setMonth(d.getMonth() + m);
       const b = monthBuckets.find((bk) => bk.months === m);
-      out.push({ label: d.toLocaleString(undefined, { month: "short" }), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(monthlyCtrl, m), goalsHere: b?.goals, oneOffsHere: eventsByMonth.get(m) });
+      out.push({ label: d.toLocaleString(undefined, { month: "short" }), cal: d.toLocaleString(undefined, { month: "short", year: "numeric" }), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(monthlyCtrl, m), goalsHere: b?.goals, oneOffsHere: eventsByMonth.get(m) });
     }
     return out;
   }, [projection, chartKey, year, monthlyCtrl, monthBuckets, eventsByMonth]);
@@ -1501,10 +1504,9 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
           <div className="mb-3 flex items-center gap-3">
             <button onClick={() => setPickYear((y) => Math.max(1, y - 1))}
               style={{ border: `1px solid ${C.line}`, borderRadius: 7, width: 30, height: 30, color: C.sub, fontSize: 16 }}>–</button>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{t("yearN", { n: year })}</span>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>{monthly[0]?.cal} – {monthly[monthly.length - 1]?.cal}</span>
             <button onClick={() => setPickYear((y) => Math.min(state.settings.projectionYears, y + 1))}
               style={{ border: `1px solid ${C.line}`, borderRadius: 7, width: 30, height: 30, color: C.sub, fontSize: 16 }}>+</button>
-            <span style={{ fontSize: 12, color: C.faint }}>{new Date(new Date().setFullYear(new Date().getFullYear() + year)).getFullYear()}</span>
           </div>
         )}
 
@@ -1513,7 +1515,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
             <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 4 }} barCategoryGap={whatIf.active ? "12%" : "22%"}>
               <CartesianGrid stroke={C.line} vertical={false} />
               <XAxis dataKey={xKey} stroke={C.faint} fontSize={11} tickLine={false} axisLine={false}
-                interval={tickEvery - 1} tickFormatter={(v) => (isMonthly ? v : `${v}y`)} />
+                interval={tickEvery - 1} tickFormatter={(v) => (isMonthly ? v : String(calYear(v)))} />
               <YAxis tickFormatter={(v) => abbr(v)} stroke={C.faint} fontSize={11} tickLine={false} axisLine={false} width={44}
                 scale={logScale ? "log" : "auto"} domain={logScale ? [1000, "auto"] : [0, "auto"]} allowDataOverflow={logScale} />
               <Tooltip
@@ -1559,7 +1561,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
         <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${milestones.length}, 1fr)` }}>
           {milestones.map((y) => (
             <div key={y} style={{ borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>
-              <div style={{ fontSize: 11, color: C.faint }}>{t("yrShort", { n: y })}</div>
+              <div style={{ fontSize: 11, color: C.faint }}>{calYear(y)}</div>
               <div style={{ fontWeight: 600, fontSize: 13, ...num }}>{fmt.format(pointAt(y)[chartKey])}</div>
             </div>
           ))}
