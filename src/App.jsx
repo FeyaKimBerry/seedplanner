@@ -10,6 +10,12 @@ import {
   PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw,
   MoreHorizontal,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Shared snappy, iOS-like easing/timing for all UI motion.
+const EASE = [0.32, 0.72, 0, 1];
+const SNAP = { duration: 0.22, ease: EASE };
+const SNAP_FAST = { duration: 0.16, ease: EASE };
 
 /* ------------------------------------------------------------------ *
  * Palette — calm "private ledger". Green = savings growing,
@@ -1554,18 +1560,23 @@ function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
       <p style={{ color: C.faint, fontSize: 12, marginTop: 4 }}>
         {t("whatifDesc")}
       </p>
+      <AnimatePresence initial={false}>
       {whatIf.active && (
-        <div className="mt-4 grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px,1fr))" }}>
-          <Slider label={t("wiIncome")} value={whatIf.incomeDelta} min={-4000} max={6000} step={100}
-            onChange={(v) => up({ incomeDelta: v })} fmt={(v) => (v >= 0 ? "+" : "") + fmt.format(v)} />
-          <Slider label={t("wiExpense")} value={whatIf.expenseDelta} min={-3000} max={5000} step={100}
-            onChange={(v) => up({ expenseDelta: v })} fmt={(v) => (v >= 0 ? "+" : "") + fmt.format(v)} />
-          <Slider label={t("wiReturn")} value={whatIf.returnRate ?? settings.returnExpected} min={0} max={12} step={0.5}
-            onChange={(v) => up({ returnRate: v })} fmt={(v) => v + "%"} />
-          <Slider label={t("wiOneOff")} value={whatIf.oneOffAmount} min={0} max={80000} step={1000}
-            onChange={(v) => up({ oneOffAmount: v })} fmt={(v) => fmt.format(v)} />
-        </div>
+        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }} transition={SNAP} style={{ overflow: "hidden" }}>
+          <div className="mt-4 grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px,1fr))" }}>
+            <Slider label={t("wiIncome")} value={whatIf.incomeDelta} min={-4000} max={6000} step={100}
+              onChange={(v) => up({ incomeDelta: v })} fmt={(v) => (v >= 0 ? "+" : "") + fmt.format(v)} />
+            <Slider label={t("wiExpense")} value={whatIf.expenseDelta} min={-3000} max={5000} step={100}
+              onChange={(v) => up({ expenseDelta: v })} fmt={(v) => (v >= 0 ? "+" : "") + fmt.format(v)} />
+            <Slider label={t("wiReturn")} value={whatIf.returnRate ?? settings.returnExpected} min={0} max={12} step={0.5}
+              onChange={(v) => up({ returnRate: v })} fmt={(v) => v + "%"} />
+            <Slider label={t("wiOneOff")} value={whatIf.oneOffAmount} min={0} max={80000} step={1000}
+              onChange={(v) => up({ oneOffAmount: v })} fmt={(v) => fmt.format(v)} />
+          </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </Card>
   );
 }
@@ -1620,7 +1631,10 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
       </div>
 
       {/* Add menu — blank entry + presets grouped by category */}
+      <AnimatePresence initial={false}>
       {hasPresets && showAdd && (
+        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }} transition={SNAP} style={{ overflow: "hidden" }}>
         <div className="mt-3" style={{ border: `1px solid ${C.line}`, borderRadius: 12, padding: 12, background: C.bg }}>
           <button onClick={addBlank}
             className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-2 text-sm"
@@ -1646,7 +1660,9 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
             </div>
           ))}
         </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Desktop / tablet: table */}
       <div className="mt-3 hidden overflow-x-auto sm:block">
@@ -1712,26 +1728,35 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
                     style={{ color: open ? C.green : C.faint, transition: "transform .15s", transform: open ? "rotate(180deg)" : "none" }} />
                 </span>
               </button>
-              {open && (
-                <div className="pb-3" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
-                  {columns.map((c) => (
-                    <div key={c.key} className="mb-2.5 flex flex-col gap-1">
-                      <span style={{ color: C.faint, fontSize: 12 }}>{c.label}</span>
-                      <div className="mfield">{c.render(it, (patch) => onUpdate(it.id, patch))}</div>
+              <AnimatePresence initial={false}>
+                {open && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={SNAP}
+                    style={{ overflow: "hidden" }}>
+                    <div className="pb-3" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
+                      {columns.map((c) => (
+                        <div key={c.key} className="mb-2.5 flex flex-col gap-1">
+                          <span style={{ color: C.faint, fontSize: 12 }}>{c.label}</span>
+                          <div className="mfield">{c.render(it, (patch) => onUpdate(it.id, patch))}</div>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between">
+                        <button onClick={() => onDelete(it.id)} className="flex items-center gap-1 text-sm"
+                          style={{ color: C.faint }} title={t("delete")}>
+                          <Trash2 size={15} /> {t("delete")}
+                        </button>
+                        <button onClick={() => setOpenId(null)} className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm"
+                          style={{ background: C.greenSoft, color: C.green, fontWeight: 600 }}>
+                          <Check size={15} /> {t("done")}
+                        </button>
+                      </div>
                     </div>
-                  ))}
-                  <div className="flex items-center justify-between">
-                    <button onClick={() => onDelete(it.id)} className="flex items-center gap-1 text-sm"
-                      style={{ color: C.faint }} title={t("delete")}>
-                      <Trash2 size={15} /> {t("delete")}
-                    </button>
-                    <button onClick={() => setOpenId(null)} className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm"
-                      style={{ background: C.greenSoft, color: C.green, fontWeight: 600 }}>
-                      <Check size={15} /> {t("done")}
-                    </button>
-                  </div>
-                </div>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}
@@ -2149,32 +2174,38 @@ function SettingsPanel({ state, setSettings, setState, onLoadSample, onClearData
  * Confirm dialog — centered modal for negative / irreversible actions
  * ================================================================== */
 function ConfirmDialog({ data, onClose }) {
-  if (!data) return null;
-  const accent = data.danger ? C.clay : C.green;
-  const confirm = () => { data.onConfirm?.(); onClose(); };
+  const accent = data?.danger ? C.clay : C.green;
+  const confirm = () => { data?.onConfirm?.(); onClose(); };
 
   return (
-    <div onClick={onClose}
-      style={{ position: "fixed", inset: 0, background: "rgba(35,50,60,0.35)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true"
-        style={{ background: C.card, width: "100%", maxWidth: 380, borderRadius: 20, padding: 22, boxShadow: "0 20px 50px rgba(40,90,90,0.22)" }}>
-        <h2 style={{ fontWeight: 700, fontSize: 17, color: C.ink }}>{data.title}</h2>
-        <p style={{ color: C.sub, fontSize: 13.5, marginTop: 8, lineHeight: 1.5 }}>{data.message}</p>
+    <AnimatePresence>
+      {data && (
+        <motion.div onClick={onClose}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={SNAP_FAST}
+          style={{ position: "fixed", inset: 0, background: "rgba(35,50,60,0.35)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <motion.div onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true"
+            initial={{ opacity: 0, scale: 0.94, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 8 }} transition={SNAP}
+            style={{ background: C.card, width: "100%", maxWidth: 380, borderRadius: 20, padding: 22, boxShadow: "0 20px 50px rgba(40,90,90,0.22)" }}>
+            <h2 style={{ fontWeight: 700, fontSize: 17, color: C.ink }}>{data.title}</h2>
+            <p style={{ color: C.sub, fontSize: 13.5, marginTop: 8, lineHeight: 1.5 }}>{data.message}</p>
 
-        <div className="mt-5 flex gap-2">
-          <button onClick={onClose}
-            className="flex-1 rounded-xl px-3 py-2.5 text-sm"
-            style={{ fontWeight: 600, background: C.card, color: C.ink, border: `1px solid ${C.line}` }}>
-            {t("cancel")}
-          </button>
-          <button onClick={confirm} autoFocus
-            className="flex-1 rounded-xl px-3 py-2.5 text-sm"
-            style={{ fontWeight: 600, background: accent, color: "#fff", border: `1px solid ${accent}` }}>
-            {data.confirmLabel || t("done")}
-          </button>
-        </div>
-      </div>
-    </div>
+            <div className="mt-5 flex gap-2">
+              <button onClick={onClose}
+                className="flex-1 rounded-xl px-3 py-2.5 text-sm"
+                style={{ fontWeight: 600, background: C.card, color: C.ink, border: `1px solid ${C.line}` }}>
+                {t("cancel")}
+              </button>
+              <button onClick={confirm} autoFocus
+                className="flex-1 rounded-xl px-3 py-2.5 text-sm"
+                style={{ fontWeight: 600, background: accent, color: "#fff", border: `1px solid ${accent}` }}>
+                {data.confirmLabel || t("done")}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -2183,10 +2214,9 @@ function ConfirmDialog({ data, onClose }) {
  * ================================================================== */
 function ExportSheet({ sheet, onClose }) {
   const [copied, setCopied] = useState(false);
-  if (!sheet) return null;
 
   const canShare = typeof navigator !== "undefined" && !!navigator.share;
-  const isReport = sheet.kind === "report";
+  const isReport = sheet?.kind === "report";
 
   const copy = async () => {
     try {
@@ -2249,9 +2279,13 @@ function ExportSheet({ sheet, onClose }) {
   );
 
   return (
-    <div onClick={onClose}
+    <AnimatePresence>
+    {sheet && (
+    <motion.div onClick={onClose}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={SNAP_FAST}
       style={{ position: "fixed", inset: 0, background: "rgba(35,50,60,0.35)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div onClick={(e) => e.stopPropagation()}
+      <motion.div onClick={(e) => e.stopPropagation()}
+        initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={SNAP}
         style={{ background: C.card, width: "100%", maxWidth: 520, borderRadius: "20px 20px 0 0", padding: 20, boxShadow: "0 -10px 40px rgba(40,90,90,0.18)", maxHeight: "85vh", overflowY: "auto" }}>
         <div style={{ width: 38, height: 4, borderRadius: 99, background: C.line, margin: "0 auto 14px" }} />
         <h2 style={{ fontWeight: 700, fontSize: 17 }}>{sheet.title}</h2>
@@ -2285,8 +2319,10 @@ function ExportSheet({ sheet, onClose }) {
           style={{ color: C.sub, background: "transparent", fontWeight: 500 }}>
           {t("close")}
         </button>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+    )}
+    </AnimatePresence>
   );
 }
 
@@ -2385,9 +2421,14 @@ function MoreMenu({ onExport, onExportPDF, onImport, className = "" }) {
         style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
         <MoreHorizontal size={17} />
       </button>
+      <AnimatePresence>
       {open && (
-        <div role="menu"
-          style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", minWidth: 172, background: C.card, border: `1px solid ${C.line}`, borderRadius: 12, boxShadow: shadow, padding: 6, zIndex: 30 }}>
+        <motion.div role="menu"
+          initial={{ opacity: 0, scale: 0.95, y: -6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: -6 }}
+          transition={SNAP_FAST}
+          style={{ transformOrigin: "top right", position: "absolute", right: 0, top: "calc(100% + 6px)", minWidth: 172, background: C.card, border: `1px solid ${C.line}`, borderRadius: 12, boxShadow: shadow, padding: 6, zIndex: 30 }}>
           <button role="menuitem" style={item} onMouseEnter={hoverOn} onMouseLeave={hoverOff}
             onClick={() => { setOpen(false); onExport(); }}>
             <Download size={15} /> {t("export")}
@@ -2401,8 +2442,9 @@ function MoreMenu({ onExport, onExportPDF, onImport, className = "" }) {
             <input type="file" accept="application/json" className="hidden"
               onChange={(e) => { setOpen(false); onImport(e); }} />
           </label>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
