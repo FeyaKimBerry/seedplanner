@@ -1274,6 +1274,16 @@ function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
           ))}
         </div>
       )}
+      {row.oneOffsHere && row.oneOffsHere.length > 0 && (
+        <div style={{ marginTop: 5, paddingTop: 5, borderTop: `1px solid ${C.line}` }}>
+          <div style={{ color: C.faint, fontSize: 11, marginBottom: 2 }}>{t("tab_oneOffs")}</div>
+          {row.oneOffsHere.map((o) => (
+            <div key={o.id} style={{ color: o.amount < 0 ? C.clay : C.green }}>
+              {o.amount < 0 ? "−" : "+"}{fmt.format(Math.abs(o.amount))} · {o.label}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1330,6 +1340,35 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     return [...map.values()].sort((a, b) => a.months - b.months);
   }, [cumGoals]);
 
+  // Upcoming one-off events, so the tooltip can explain a dip: the "Upcoming" expenses
+  // count as negative, any one-off income as positive. Keyed the same way the projection
+  // applies them (monthsFromNow), so they line up with where the balance actually moves.
+  const oneOffEvents = useMemo(() => {
+    const ev = [];
+    filtered.oneOffs.forEach((o) => {
+      const m = monthsFromNow(o.date);
+      if (m >= 1) ev.push({ id: o.id, m, label: o.label, amount: -(o.amount || 0) });
+    });
+    filtered.income.filter((i) => i.frequency === "oneoff").forEach((i) => {
+      const m = monthsFromNow(i.date);
+      if (m >= 1) ev.push({ id: i.id, m, label: i.label, amount: +(i.amount || 0) });
+    });
+    return ev;
+  }, [filtered.oneOffs, filtered.income]);
+  const eventsByYear = useMemo(() => {
+    const map = new Map();
+    oneOffEvents.forEach((e) => {
+      const y = Math.min(Math.max(1, Math.ceil(e.m / 12)), projYears);
+      const arr = map.get(y) || []; arr.push(e); map.set(y, arr);
+    });
+    return map;
+  }, [oneOffEvents, projYears]);
+  const eventsByMonth = useMemo(() => {
+    const map = new Map();
+    oneOffEvents.forEach((e) => { const arr = map.get(e.m) || []; arr.push(e); map.set(e.m, arr); });
+    return map;
+  }, [oneOffEvents]);
+
   // Control points for the goals line: (today, savings) → each bucket → flat.
   // Bucketing (not raw goals) avoids duplicate points when goals share a month/year,
   // so the line always reaches the cluster's top total and the dot sits on it.
@@ -1362,10 +1401,10 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     for (let y = 1; y <= state.settings.projectionYears; y++) {
       const p = projection.data[Math.min(y * 12, projection.data.length - 1)];
       const b = yearBuckets.find((bk) => bk.year === y);
-      out.push({ year: y, value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(yearlyCtrl, y * 12), goalsHere: b?.goals });
+      out.push({ year: y, value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(yearlyCtrl, y * 12), goalsHere: b?.goals, oneOffsHere: eventsByYear.get(y) });
     }
     return out;
-  }, [projection, chartKey, projYears, yearlyCtrl, yearBuckets]);
+  }, [projection, chartKey, projYears, yearlyCtrl, yearBuckets, eventsByYear]);
 
   // monthly drill-down for a chosen year (12 bars). grain/scaleMode/pickYear are lifted
   // to App so the chosen view persists when the user navigates between tabs.
@@ -1381,10 +1420,10 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       const d = new Date();
       d.setMonth(d.getMonth() + m);
       const b = monthBuckets.find((bk) => bk.months === m);
-      out.push({ label: d.toLocaleString(undefined, { month: "short" }), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(monthlyCtrl, m), goalsHere: b?.goals });
+      out.push({ label: d.toLocaleString(undefined, { month: "short" }), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(monthlyCtrl, m), goalsHere: b?.goals, oneOffsHere: eventsByMonth.get(m) });
     }
     return out;
-  }, [projection, chartKey, year, monthlyCtrl, monthBuckets]);
+  }, [projection, chartKey, year, monthlyCtrl, monthBuckets, eventsByMonth]);
 
   const isMonthly = grain === "monthly";
   const chartData = isMonthly ? monthly : yearly;
