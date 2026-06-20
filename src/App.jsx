@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, ReferenceDot, ResponsiveContainer, PieChart, Pie, Cell,
@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   Wallet, TrendingDown, CalendarClock, Target, Landmark, Settings as Cog,
-  LayoutDashboard, Plus, Trash2, Download, Upload, Users, ShieldCheck,
+  LayoutDashboard, Plus, Trash2, Download, Upload, ShieldCheck,
   PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw,
   MoreHorizontal,
 } from "lucide-react";
@@ -256,7 +256,7 @@ const STR = {
     rep_foot: "การคาดการณ์เป็นการประมาณจากข้อมูลและผลตอบแทนที่สมมติ ไม่ใช่คำแนะนำทางการเงิน",
   },
   de: {
-    everyone: "Alle", export: "Export", import: "Import",
+    export: "Export", import: "Import",
     tab_dashboard: "Übersicht", tab_income: "Einkommen", tab_expenses: "Ausgaben",
     tab_oneOffs: "Anstehend", tab_goals: "Ziele", tab_balance: "Vermögen & Schulden", tab_settings: "Einstellungen",
     footer: "Prognosen sind Schätzungen, keine Finanzberatung.",
@@ -297,12 +297,12 @@ const STR = {
     title_debts: "Schulden", sub_debts: "Kredite werden über den Zeitraum getilgt. Zahlungen senken deinen monatlichen Überschuss, bis sie abbezahlt sind.",
 
     col_source: "Quelle", col_amount: "Betrag", col_howOften: "Häufigkeit", col_dateOneoff: "Datum (einmalig)",
-    col_person: "Person", col_item: "Posten", col_category: "Kategorie", col_what: "Was", col_cost: "Kosten",
+    col_item: "Posten", col_category: "Kategorie", col_what: "Was", col_cost: "Kosten",
     col_when: "Wann", col_goal: "Ziel", col_target: "Zielbetrag", col_byWhen: "Bis wann", col_asset: "Vermögenswert",
     col_value: "Wert", col_debt: "Schuld", col_balance: "Saldo", col_rate: "Zins %", col_monthlyPay: "Monatl. Rate",
     freq_monthly: "Monatlich", freq_fortnightly: "Vierzehntägig", freq_annual: "Jährlich", freq_weekly: "Wöchentlich", freq_daily: "Täglich", freq_oneoff: "Einmalig",
     new_income: "Neues Einkommen", new_expense: "Neue Ausgabe", new_goal: "Neues Ziel",
-    new_asset: "Neuer Vermögenswert", new_debt: "Neue Schuld", new_person: "Neue Person",
+    new_asset: "Neuer Vermögenswert", new_debt: "Neue Schuld",
 
     presetTitle: "Vorschläge", presetHint: "Unsicher, was du erfassen sollst? Tippe, um einen üblichen Posten hinzuzufügen, und trage den Betrag ein.",
     welcome_title: "Willkommen bei Seedplanner", welcome_body: "Füge dein Einkommen und deine Ausgaben hinzu, um deine Sparprognose zu sehen und wann du in Rente gehen könntest. Beginne bei null oder erkunde zuerst mit Beispieldaten.",
@@ -336,8 +336,6 @@ const STR = {
     setOpt: "Optimistische Rendite %", setInfl: "Inflation %", setInflToggle: "Beträge in heutiger Kaufkraft anzeigen (inflationsbereinigt)",
     setRetireTitle: "Rentenziel", setRetireDesc: "Leer lassen zur automatischen Berechnung aus deinen Ausgaben (4%-Regel = 25× Jahresausgaben).",
     setManualTarget: "Manuelles Ziel (optional)", auto: "auto", setAutoMultiple: "Auto-Faktor (× Jahresausgaben)",
-    household: "Haushalt", addPerson: "Person hinzufügen",
-    householdDesc: "Ordne Einkommen, Ausgaben und Ziele Personen zu und wechsle oben zwischen Alle und einer Person.",
     setLanguage: "Sprache",
 
     exData_title: "Daten exportieren", exData_desc: "Deine vollständige Sicherung. Kopiere oder teile sie zum Speichern und stelle sie später über Import wieder her.",
@@ -363,7 +361,7 @@ const STR = {
     rep_foot: "Prognosen sind Schätzungen basierend auf deinen Eingaben und angenommenen Renditen – keine Finanzberatung.",
   },
   fr: {
-    everyone: "Tout le monde", export: "Exporter", import: "Importer",
+    export: "Exporter", import: "Importer",
     tab_dashboard: "Aperçu", tab_income: "Revenus", tab_expenses: "Dépenses",
     tab_oneOffs: "À venir", tab_goals: "Objectifs", tab_balance: "Actifs et dettes", tab_settings: "Réglages",
     footer: "Les projections sont des estimations, pas des conseils financiers.",
@@ -404,12 +402,12 @@ const STR = {
     title_debts: "Dettes", sub_debts: "Les prêts s'amortissent sur la période. Les paiements réduisent votre excédent mensuel jusqu'à leur remboursement.",
 
     col_source: "Source", col_amount: "Montant", col_howOften: "Fréquence", col_dateOneoff: "Date (ponctuel)",
-    col_person: "Personne", col_item: "Poste", col_category: "Catégorie", col_what: "Quoi", col_cost: "Coût",
+    col_item: "Poste", col_category: "Catégorie", col_what: "Quoi", col_cost: "Coût",
     col_when: "Quand", col_goal: "Objectif", col_target: "Cible", col_byWhen: "Pour quand", col_asset: "Actif",
     col_value: "Valeur", col_debt: "Dette", col_balance: "Solde", col_rate: "Taux %", col_monthlyPay: "Paiement mensuel",
     freq_monthly: "Mensuel", freq_fortnightly: "Bimensuel", freq_annual: "Annuel", freq_weekly: "Hebdomadaire", freq_daily: "Quotidien", freq_oneoff: "Ponctuel",
     new_income: "Nouveau revenu", new_expense: "Nouvelle dépense", new_goal: "Nouvel objectif",
-    new_asset: "Nouvel actif", new_debt: "Nouvelle dette", new_person: "Nouvelle personne",
+    new_asset: "Nouvel actif", new_debt: "Nouvelle dette",
 
     presetTitle: "Suggestions", presetHint: "Vous ne savez pas quoi enregistrer ? Touchez pour ajouter un poste courant, puis saisissez le montant.",
     welcome_title: "Bienvenue sur Seedplanner", welcome_body: "Ajoutez vos revenus et dépenses pour voir votre projection d'épargne et quand vous pourrez prendre votre retraite. Partez de zéro, ou explorez d'abord avec des données d'exemple.",
@@ -443,8 +441,6 @@ const STR = {
     setOpt: "Rendement optimiste %", setInfl: "Inflation %", setInflToggle: "Afficher les montants en valeur d'aujourd'hui (ajusté de l'inflation)",
     setRetireTitle: "Objectif retraite", setRetireDesc: "Laissez vide pour un calcul automatique à partir de vos dépenses (règle des 4 % = 25× dépenses annuelles).",
     setManualTarget: "Objectif manuel (facultatif)", auto: "auto", setAutoMultiple: "Multiple auto (× dépenses annuelles)",
-    household: "Foyer", addPerson: "Ajouter une personne",
-    householdDesc: "Associez revenus, dépenses et objectifs aux personnes, puis basculez entre Tout le monde et une personne en haut.",
     setLanguage: "Langue",
 
     exData_title: "Exporter vos données", exData_desc: "Votre sauvegarde complète. Copiez ou partagez-la pour l'enregistrer, puis restaurez-la via Importer.",
