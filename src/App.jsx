@@ -80,6 +80,7 @@ const STR = {
     title_oneOffs: "Upcoming expenses", sub_oneOffs: "Dated one-off costs — travel, gifts, a car. Each one dips your curve on its month.",
     title_goals: "Savings goals", sub_goals: "Named targets, stacked on the chart as cumulative dots in date order.",
     col_saved: "Saved",
+    nGoals: "{n} goals",
     goalsRankTitle: "Goal tracker", goalsRankSub: "Sorted by date — the goal due soonest is on top.",
     goalAutoHint: "Your savings now ({a}) applied to the soonest-due goal first.",
     g_focus: "Focus next", g_done: "Reached", g_overdue: "Overdue", g_need: "Save {a}/mo", g_needNoDate: "Add a date to track pace",
@@ -186,6 +187,7 @@ const STR = {
     title_oneOffs: "ค่าใช้จ่ายที่จะถึง", sub_oneOffs: "ค่าใช้จ่ายครั้งเดียวที่มีกำหนด — ท่องเที่ยว ของขวัญ รถ แต่ละรายการจะทำให้กราฟลดในเดือนนั้น",
     title_goals: "เป้าหมายการออม", sub_goals: "เป้าหมายที่ตั้งชื่อ แสดงบนกราฟเป็นจุดสะสมเรียงตามวันที่",
     col_saved: "ออมแล้ว",
+    nGoals: "{n} เป้าหมาย",
     goalsRankTitle: "ตัวติดตามเป้าหมาย", goalsRankSub: "เรียงตามวันที่ — เป้าหมายที่ถึงกำหนดก่อนจะอยู่บนสุด",
     goalAutoHint: "เงินออมตอนนี้ ({a}) นำไปใส่เป้าหมายที่ถึงกำหนดก่อน",
     g_focus: "โฟกัสต่อไป", g_done: "สำเร็จแล้ว", g_overdue: "เลยกำหนด", g_need: "ออม {a}/เดือน", g_needNoDate: "เพิ่มวันที่เพื่อติดตามจังหวะ",
@@ -292,6 +294,7 @@ const STR = {
     title_oneOffs: "Anstehende Ausgaben", sub_oneOffs: "Datierte einmalige Kosten – Reisen, Geschenke, ein Auto. Jede senkt deine Kurve in ihrem Monat.",
     title_goals: "Sparziele", sub_goals: "Benannte Ziele, im Diagramm als kumulative Punkte nach Datum dargestellt.",
     col_saved: "Gespart",
+    nGoals: "{n} Ziele",
     goalsRankTitle: "Ziel-Tracker", goalsRankSub: "Nach Datum sortiert — das früheste Ziel steht oben.",
     goalAutoHint: "Deine aktuellen Ersparnisse ({a}) zuerst auf das früheste Ziel angewandt.",
     g_focus: "Als Nächstes", g_done: "Erreicht", g_overdue: "Überfällig", g_need: "{a}/Mon. sparen", g_needNoDate: "Datum hinzufügen, um das Tempo zu verfolgen",
@@ -398,6 +401,7 @@ const STR = {
     title_oneOffs: "Dépenses à venir", sub_oneOffs: "Coûts ponctuels datés – voyages, cadeaux, une voiture. Chacun fait baisser votre courbe le mois venu.",
     title_goals: "Objectifs d'épargne", sub_goals: "Objectifs nommés, affichés sur le graphique en points cumulés par date.",
     col_saved: "Épargné",
+    nGoals: "{n} objectifs",
     goalsRankTitle: "Suivi des objectifs", goalsRankSub: "Trié par date — l'objectif le plus proche est en haut.",
     goalAutoHint: "Votre épargne actuelle ({a}) appliquée d'abord à l'objectif le plus proche.",
     g_focus: "Priorité", g_done: "Atteint", g_overdue: "En retard", g_need: "Épargner {a}/mois", g_needNoDate: "Ajoutez une date pour suivre le rythme",
@@ -1235,6 +1239,34 @@ function WelcomeCard({ onLoadSample, onStart }) {
   );
 }
 
+/* Custom chart tooltip — shows the projected/goal values plus, when a bar's
+ * year/month holds goals, the individual goals that landed there. */
+function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
+  if (!active || !payload || !payload.length) return null;
+  const row = payload[0].payload || {};
+  const title = isMonthly ? t("monthYear", { m: label, n: year }) : t("yearN", { n: label });
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 10, padding: "8px 10px", fontSize: 12, ...num }}>
+      <div style={{ fontWeight: 600, marginBottom: 4 }}>{title}</div>
+      {payload.filter((p) => p.dataKey !== "goalLine").map((p) => (
+        <div key={p.dataKey} style={{ color: p.color }}>
+          {(p.dataKey === "whatif" ? t("whatif") : t("projected"))}: {fmt.format(p.value)}
+        </div>
+      ))}
+      {row.goalLine != null && (
+        <div style={{ color: C.clay }}>{t("tab_goals")}: {fmt.format(row.goalLine)}</div>
+      )}
+      {row.goalsHere && row.goalsHere.length > 0 && (
+        <div style={{ marginTop: 5, paddingTop: 5, borderTop: `1px solid ${C.line}` }}>
+          {row.goalsHere.map((g) => (
+            <div key={g.id} style={{ color: C.sub }}>• {g.label} — {fmt.format(g.target)}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ================================================================== *
  * Dashboard
  * ================================================================== */
@@ -1260,22 +1292,57 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       .map((g) => { cum += g.target; return { ...g, cum }; });
   }, [filtered.goals]);
 
-  // Piecewise-linear height of the goals line at a given month from now.
-  // Control points: (today, current savings) → (each goal's month, its cumulative
-  // total) → flat at the last total beyond the final goal.
-  const goalLineAt = (month) => {
-    if (!cumGoals.length) return null;
-    const pts = [{ months: 0, cum: startBal }, ...cumGoals];
-    const last = pts[pts.length - 1];
-    if (month >= last.months) return last.cum;
-    for (let i = 1; i < pts.length; i++) {
-      if (month <= pts[i].months) {
-        const a = pts[i - 1], b = pts[i];
-        const f = (month - a.months) / (b.months - a.months || 1);
-        return Math.round(a.cum + (b.cum - a.cum) * f);
+  const projYears = state.settings.projectionYears;
+
+  // Goals clustered by calendar year so the chart never stacks many dots on one bar.
+  // Each year keeps its goals and sits at that year's top cumulative total. Ceil() so a
+  // goal always buckets to the year it's reached by, keeping its dot on the line.
+  const yearBuckets = useMemo(() => {
+    const map = new Map();
+    cumGoals.forEach((g) => {
+      const y = Math.min(Math.max(1, Math.ceil(g.months / 12)), projYears);
+      const b = map.get(y) || { year: y, goals: [], cum: 0 };
+      b.goals.push(g); b.cum = Math.max(b.cum, g.cum);
+      map.set(y, b);
+    });
+    return [...map.values()].sort((a, b) => a.year - b.year);
+  }, [cumGoals, projYears]);
+
+  // Same idea bucketed by exact month, for the monthly view.
+  const monthBuckets = useMemo(() => {
+    const map = new Map();
+    cumGoals.forEach((g) => {
+      const b = map.get(g.months) || { months: g.months, goals: [], cum: 0 };
+      b.goals.push(g); b.cum = Math.max(b.cum, g.cum);
+      map.set(g.months, b);
+    });
+    return [...map.values()].sort((a, b) => a.months - b.months);
+  }, [cumGoals]);
+
+  // Control points for the goals line: (today, savings) → each bucket → flat.
+  // Bucketing (not raw goals) avoids duplicate points when goals share a month/year,
+  // so the line always reaches the cluster's top total and the dot sits on it.
+  const yearlyCtrl = useMemo(() =>
+    cumGoals.length ? [{ m: 0, v: startBal }, ...yearBuckets.map((b) => ({ m: b.year * 12, v: b.cum }))] : [],
+    [cumGoals.length, yearBuckets, startBal]);
+  const monthlyCtrl = useMemo(() =>
+    cumGoals.length ? [{ m: 0, v: startBal }, ...monthBuckets.map((b) => ({ m: b.months, v: b.cum }))] : [],
+    [cumGoals.length, monthBuckets, startBal]);
+
+  // Piecewise-linear height of the line at a given month from now.
+  const sampleLine = (ctrl, month) => {
+    if (ctrl.length < 2) return null;
+    if (month <= ctrl[0].m) return ctrl[0].v;
+    const last = ctrl[ctrl.length - 1];
+    if (month >= last.m) return last.v;
+    for (let i = 1; i < ctrl.length; i++) {
+      if (month <= ctrl[i].m) {
+        const a = ctrl[i - 1], b = ctrl[i];
+        const f = (month - a.m) / (b.m - a.m || 1);
+        return Math.round(a.v + (b.v - a.v) * f);
       }
     }
-    return last.cum;
+    return last.v;
   };
 
   // one bar per year (end-of-year balance), easier to scan than a curve
@@ -1283,10 +1350,11 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     const out = [];
     for (let y = 1; y <= state.settings.projectionYears; y++) {
       const p = projection.data[Math.min(y * 12, projection.data.length - 1)];
-      out.push({ year: y, value: p[chartKey], whatif: p.whatif, goalLine: goalLineAt(y * 12) });
+      const b = yearBuckets.find((bk) => bk.year === y);
+      out.push({ year: y, value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(yearlyCtrl, y * 12), goalsHere: b?.goals });
     }
     return out;
-  }, [projection, chartKey, state.settings.projectionYears, cumGoals, startBal]);
+  }, [projection, chartKey, projYears, yearlyCtrl, yearBuckets]);
 
   // monthly drill-down for a chosen year (12 bars)
   const [grain, setGrain] = useState("monthly"); // yearly | monthly
@@ -1303,10 +1371,11 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       const p = projection.data[Math.min(m, projection.data.length - 1)];
       const d = new Date();
       d.setMonth(d.getMonth() + m);
-      out.push({ label: d.toLocaleString(undefined, { month: "short" }), value: p[chartKey], whatif: p.whatif, goalLine: goalLineAt(m) });
+      const b = monthBuckets.find((bk) => bk.months === m);
+      out.push({ label: d.toLocaleString(undefined, { month: "short" }), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(monthlyCtrl, m), goalsHere: b?.goals });
     }
     return out;
-  }, [projection, chartKey, year, cumGoals, startBal]);
+  }, [projection, chartKey, year, monthlyCtrl, monthBuckets]);
 
   const isMonthly = grain === "monthly";
   const chartData = isMonthly ? monthly : yearly;
@@ -1314,16 +1383,20 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
   // label sparsity so the axis never crowds on a phone
   const tickEvery = isMonthly ? 1 : Math.ceil(state.settings.projectionYears / 6);
 
-  // a dot at each goal's chronological position, sitting at its cumulative total
-  const goalDots = cumGoals.map((g) => {
+  // one dot per bucket (year, or month in the monthly view) at its cumulative total.
+  // When a bucket holds several goals the dot is labelled with the count instead.
+  const goalDots = useMemo(() => {
+    if (!cumGoals.length) return [];
+    const mk = (b, x) => ({ id: String(x), x, y: b.cum, count: b.goals.length,
+      label: b.goals.length === 1 ? b.goals[0].label : t("nGoals", { n: b.goals.length }) });
     if (isMonthly) {
       const startM = (year - 1) * 12 + 1;
-      if (g.months < startM || g.months > startM + 11) return null;
-      return { id: g.id, x: monthly[g.months - startM]?.label, y: g.cum, label: g.label };
+      return monthBuckets
+        .filter((b) => b.months >= startM && b.months <= startM + 11)
+        .map((b) => mk(b, monthly[b.months - startM]?.label));
     }
-    const gy = Math.min(Math.max(1, Math.round(g.months / 12)), state.settings.projectionYears);
-    return { id: g.id, x: gy, y: g.cum, label: g.label };
-  }).filter(Boolean);
+    return yearBuckets.map((b) => mk(b, b.year));
+  }, [cumGoals.length, isMonthly, year, monthly, yearBuckets, monthBuckets]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -1397,12 +1470,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
                 scale={logScale ? "log" : "auto"} domain={logScale ? [1000, "auto"] : [0, "auto"]} allowDataOverflow={logScale} />
               <Tooltip
                 cursor={{ fill: C.greenSoft, fillOpacity: 0.5 }}
-                formatter={(v, n) => {
-                  if (n === "goalLine") return [fmt.format(v), t("tab_goals")];
-                  return [fmt.format(v), n === "whatif" ? t("whatif") : t("projected")];
-                }}
-                labelFormatter={(v) => (isMonthly ? t("monthYear", { m: v, n: year }) : t("yearN", { n: v }))}
-                contentStyle={{ borderRadius: 10, border: `1px solid ${C.line}`, fontSize: 12, ...num }} />
+                content={<ChartTooltip fmt={fmt} isMonthly={isMonthly} year={year} />} />
 
               <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={38}>
                 {chartData.map((d, i) => (
@@ -1419,9 +1487,9 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
                   stroke={C.clay} strokeWidth={2}
                   dot={false} connectNulls isAnimationActive={false} />
               )}
-              {/* a dot at each goal, at its cumulative height */}
+              {/* one dot per bucket; clustered years show a goal count */}
               {goalDots.map((m) => (
-                <ReferenceDot key={m.id} x={m.x} y={m.y} r={4} fill={C.clay} stroke="#fff" strokeWidth={1.5}
+                <ReferenceDot key={m.id} x={m.x} y={m.y} r={m.count > 1 ? 6 : 4} fill={C.clay} stroke="#fff" strokeWidth={1.5}
                   label={{ value: m.label, position: "top", fontSize: 9, fill: C.clay }} />
               ))}
 
