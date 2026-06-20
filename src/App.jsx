@@ -1068,25 +1068,26 @@ export default function App() {
             </select>
             <ViewSwitcher members={state.members} view={view} setView={setView} />
             <button onClick={exportJSON} title={t("export")} aria-label={t("export")}
-              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm sm:px-2.5"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
               style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <Download size={15} /> <span className="hidden sm:inline">{t("export")}</span>
+              <Download size={15} /> <span>{t("export")}</span>
             </button>
             <button onClick={exportPDF} title="PDF" aria-label="PDF"
-              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm sm:px-2.5"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
               style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <FileText size={15} /> <span className="hidden sm:inline">PDF</span>
+              <FileText size={15} /> <span>PDF</span>
             </button>
             <label title={t("import")} aria-label={t("import")}
-              className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm sm:px-2.5"
+              className="flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
               style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <Upload size={15} /> <span className="hidden sm:inline">{t("import")}</span>
+              <Upload size={15} /> <span>{t("import")}</span>
               <input type="file" accept="application/json" onChange={importJSON} className="hidden" />
             </label>
+            <span aria-hidden style={{ width: 1, alignSelf: "stretch", margin: "2px 2px", background: C.line }} />
             <button onClick={signOut} title={t("signOut")} aria-label={t("signOut")}
-              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm sm:px-2.5"
-              style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <LogOut size={15} /> <span className="hidden sm:inline">{t("signOut")}</span>
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
+              style={{ border: `1px solid ${C.claySoft}`, color: C.clay, background: C.claySoft }}>
+              <LogOut size={15} /> <span>{t("signOut")}</span>
             </button>
           </div>
         </div>
