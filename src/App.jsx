@@ -100,7 +100,8 @@ const STR = {
     data_title: "Data", data_desc: "Load an example to explore, or wipe everything and start fresh.", clearData: "Clear all data",
     clearConfirm: "Clear all your data? This can't be undone.",
     cat_housing: "Housing", cat_food: "Food", cat_transport: "Transport",
-    cat_debt: "Debt & loans", cat_health: "Health", cat_lifestyle: "Lifestyle", cat_utilities: "Bills & utilities",
+    cat_debt: "Debt & loans", cat_health: "Health", cat_lifestyle: "Lifestyle", cat_utilities: "Bills & utilities", cat_other: "Other",
+    addCategory: "+ Add category…", newCategory: "New category",
     ig_work: "Employment", ig_invest: "Investments", ig_other: "Other income", presetBlank: "Blank entry",
     p_salary: "Salary", p_freelance: "Freelance / side hustle", p_business: "Business income",
     p_rental: "Rental income", p_dividends: "Dividends", p_interest: "Interest", p_benefit: "Government benefit",
@@ -205,7 +206,8 @@ const STR = {
     data_title: "ข้อมูล", data_desc: "โหลดตัวอย่างเพื่อลองใช้ หรือล้างทั้งหมดเพื่อเริ่มใหม่", clearData: "ล้างข้อมูลทั้งหมด",
     clearConfirm: "ล้างข้อมูลทั้งหมด? ไม่สามารถย้อนกลับได้",
     cat_housing: "ที่อยู่อาศัย", cat_food: "อาหาร", cat_transport: "การเดินทาง",
-    cat_debt: "หนี้และเงินกู้", cat_health: "สุขภาพ", cat_lifestyle: "ไลฟ์สไตล์", cat_utilities: "บิลและสาธารณูปโภค",
+    cat_debt: "หนี้และเงินกู้", cat_health: "สุขภาพ", cat_lifestyle: "ไลฟ์สไตล์", cat_utilities: "บิลและสาธารณูปโภค", cat_other: "อื่นๆ",
+    addCategory: "+ เพิ่มหมวดหมู่…", newCategory: "หมวดหมู่ใหม่",
     ig_work: "งานประจำ", ig_invest: "การลงทุน", ig_other: "รายได้อื่นๆ", presetBlank: "รายการเปล่า",
     p_salary: "เงินเดือน", p_freelance: "ฟรีแลนซ์ / งานเสริม", p_business: "รายได้จากธุรกิจ",
     p_rental: "รายได้ค่าเช่า", p_dividends: "เงินปันผล", p_interest: "ดอกเบี้ย", p_benefit: "สวัสดิการรัฐ",
@@ -310,7 +312,8 @@ const STR = {
     data_title: "Daten", data_desc: "Lade ein Beispiel zum Erkunden oder lösche alles und beginne neu.", clearData: "Alle Daten löschen",
     clearConfirm: "Alle deine Daten löschen? Das kann nicht rückgängig gemacht werden.",
     cat_housing: "Wohnen", cat_food: "Essen", cat_transport: "Transport",
-    cat_debt: "Schulden & Kredite", cat_health: "Gesundheit", cat_lifestyle: "Lifestyle", cat_utilities: "Rechnungen & Nebenkosten",
+    cat_debt: "Schulden & Kredite", cat_health: "Gesundheit", cat_lifestyle: "Lifestyle", cat_utilities: "Rechnungen & Nebenkosten", cat_other: "Sonstiges",
+    addCategory: "+ Kategorie hinzufügen…", newCategory: "Neue Kategorie",
     ig_work: "Beschäftigung", ig_invest: "Investitionen", ig_other: "Sonstiges Einkommen", presetBlank: "Leerer Eintrag",
     p_salary: "Gehalt", p_freelance: "Freiberuflich / Nebenjob", p_business: "Geschäftseinkommen",
     p_rental: "Mieteinnahmen", p_dividends: "Dividenden", p_interest: "Zinsen", p_benefit: "Staatliche Leistung",
@@ -415,7 +418,8 @@ const STR = {
     data_title: "Données", data_desc: "Chargez un exemple pour explorer, ou effacez tout pour repartir à zéro.", clearData: "Effacer toutes les données",
     clearConfirm: "Effacer toutes vos données ? Action irréversible.",
     cat_housing: "Logement", cat_food: "Alimentation", cat_transport: "Transport",
-    cat_debt: "Dettes & prêts", cat_health: "Santé", cat_lifestyle: "Style de vie", cat_utilities: "Factures & charges",
+    cat_debt: "Dettes & prêts", cat_health: "Santé", cat_lifestyle: "Style de vie", cat_utilities: "Factures & charges", cat_other: "Autre",
+    addCategory: "+ Ajouter une catégorie…", newCategory: "Nouvelle catégorie",
     ig_work: "Emploi", ig_invest: "Investissements", ig_other: "Autres revenus", presetBlank: "Entrée vierge",
     p_salary: "Salaire", p_freelance: "Freelance / activité annexe", p_business: "Revenu d'entreprise",
     p_rental: "Revenu locatif", p_dividends: "Dividendes", p_interest: "Intérêts", p_benefit: "Aide de l'État",
@@ -791,6 +795,15 @@ export default function App() {
   }, []);
 
   const loadSample = () => setState(clone(seed));
+  // Seed a few common income/expense rows at $0 so a fresh user has a starting point.
+  const startWithPresets = () => {
+    setState((s) => ({
+      ...s,
+      income: STARTER_INCOME.map((p) => ({ id: uid(), label: t(p.key), amount: 0, frequency: p.frequency })),
+      expenses: STARTER_EXPENSES.map((p) => ({ id: uid(), label: t(p.key), amount: 0, frequency: p.frequency, category: t(p.catKey) })),
+    }));
+    setTab("income");
+  };
   const clearData = () => setConfirm({
     title: t("clearData"),
     message: t("clearConfirm"),
@@ -1096,7 +1109,7 @@ export default function App() {
       <main className="mx-auto px-3 py-5 sm:px-5 sm:py-6" style={{ maxWidth: 1100 }}>
         {tab === "dashboard" && (
           (state.income.length === 0 && state.expenses.length === 0)
-            ? <WelcomeCard onLoadSample={loadSample} onStart={() => setTab("income")} />
+            ? <WelcomeCard onLoadSample={loadSample} onStart={startWithPresets} />
             : <Dashboard {...{ state, projection, fmt, retireTarget, retireDate, retireMonths,
                 metric, setMetric, whatIf, setWhatIf, chartKey, filtered }} />
         )}
@@ -1120,8 +1133,8 @@ export default function App() {
           <>
             <ListSection
               title={t("title_expenses")} subtitle={t("sub_expenses")}
-              items={filtered.expenses} columns={expenseCols()}
-              onAdd={() => addItem("expenses", { id: uid(), label: t("new_expense"), amount: 0, frequency: "monthly", category: "Other" })}
+              items={filtered.expenses} columns={expenseCols(state.expenses)}
+              onAdd={() => addItem("expenses", { id: uid(), label: t("new_expense"), amount: 0, frequency: "monthly", category: t("cat_other") })}
               onUpdate={(id, p) => updItem("expenses", id, p)}
               onDelete={(id) => delItem("expenses", id)} fmt={fmt} sortByDate
               presets={EXPENSE_PRESETS}
@@ -1662,6 +1675,40 @@ const selectCell = (val, onChange, opts) => (
     {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
   </select>
 );
+// Category picker: standard + custom categories, plus a "+ Add category…" option
+// that swaps the select for a text input so the user can name their own.
+function CategoryCell({ value, extra, onChange }) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const cellStyle = { border: `1px solid ${C.line}`, borderRadius: 9, padding: "5px 8px", fontSize: 13, background: C.card, width: 150 };
+
+  if (adding) {
+    const commit = () => {
+      const v = draft.trim();
+      setAdding(false); setDraft("");
+      if (v) onChange(v);
+    };
+    return (
+      <input autoFocus value={draft} placeholder={t("newCategory")}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          else if (e.key === "Escape") { setAdding(false); setDraft(""); }
+        }}
+        style={cellStyle} />
+    );
+  }
+  return (
+    <select value={value}
+      onChange={(e) => { e.target.value === ADD_CUSTOM ? setAdding(true) : onChange(e.target.value); }}
+      style={cellStyle}>
+      {categoryOpts(value, extra).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      <option disabled>──────────</option>
+      <option value={ADD_CUSTOM}>{t("addCategory")}</option>
+    </select>
+  );
+}
 const freqOpts = () => [
   { value: "monthly", label: t("freq_monthly") },
   { value: "fortnightly", label: t("freq_fortnightly") },
@@ -1671,6 +1718,20 @@ const freqOpts = () => [
   { value: "oneoff", label: t("freq_oneoff") },
 ];
 const recurringFreqOpts = () => freqOpts().filter((o) => o.value !== "oneoff");
+
+// Expense categories offered as a dropdown so users pick instead of typing.
+const CAT_KEYS = ["cat_housing", "cat_utilities", "cat_food", "cat_transport", "cat_health", "cat_debt", "cat_lifestyle", "cat_other"];
+const ADD_CUSTOM = "__add_custom__"; // sentinel option that opens the "type your own" input
+const categoryOpts = (current, extra = []) => {
+  // standard categories first, then any custom ones the user has already added,
+  // then the current value (so old/imported data stays selectable) — de-duplicated.
+  const seen = new Set();
+  const opts = [];
+  for (const v of [...CAT_KEYS.map((k) => t(k)), ...extra, current].filter(Boolean)) {
+    if (!seen.has(v)) { seen.add(v); opts.push({ value: v, label: v }); }
+  }
+  return opts;
+};
 
 /* ---- preset suggestions ---- */
 // Common items grouped so new users can tap to add instead of starting blank.
@@ -1723,18 +1784,36 @@ const EXPENSE_PRESETS = [
   { key: "p_savings", catKey: "cat_lifestyle", frequency: "monthly" },
 ];
 
+// A small "starter kit" of the most common items, pre-filled at $0 so a new user
+// who picks "Add my income" sees rows to edit instead of a blank page.
+const STARTER_INCOME = [
+  { key: "p_salary", frequency: "monthly" },
+  { key: "p_freelance", frequency: "monthly" },
+];
+const STARTER_EXPENSES = [
+  { key: "p_rent", catKey: "cat_housing", frequency: "monthly" },
+  { key: "p_groceries", catKey: "cat_food", frequency: "monthly" },
+  { key: "p_utilities", catKey: "cat_utilities", frequency: "monthly" },
+  { key: "p_transit", catKey: "cat_transport", frequency: "monthly" },
+  { key: "p_subs", catKey: "cat_lifestyle", frequency: "monthly" },
+];
+
 const incomeCols = () => [
   { key: "label", label: t("col_source"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
   { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
   { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), freqOpts()) },
   { key: "date", label: t("col_dateOneoff"), render: (it, u) => it.frequency === "oneoff" ? inputCell(it.date || isoIn(3), (v) => u({ date: v }), { type: "date", w: 140 }) : <span style={{ color: C.faint }}>—</span> },
 ];
-const expenseCols = () => [
-  { key: "label", label: t("col_item"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
-  { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
-  { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), recurringFreqOpts()) },
-  { key: "category", label: t("col_category"), render: (it, u) => inputCell(it.category, (v) => u({ category: v }), { w: 120 }) },
-];
+const expenseCols = (items = []) => {
+  // categories already in use (incl. custom ones) so they appear in every row's dropdown
+  const usedCats = [...new Set(items.map((i) => i.category).filter(Boolean))];
+  return [
+    { key: "label", label: t("col_item"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
+    { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
+    { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), recurringFreqOpts()) },
+    { key: "category", label: t("col_category"), render: (it, u) => <CategoryCell value={it.category} extra={usedCats} onChange={(v) => u({ category: v })} /> },
+  ];
+};
 const oneOffCols = () => [
   { key: "label", label: t("col_what"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
   { key: "amount", label: t("col_cost"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
