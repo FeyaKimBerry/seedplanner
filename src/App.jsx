@@ -8,6 +8,7 @@ import {
   Wallet, TrendingDown, CalendarClock, Target, Landmark, Settings as Cog,
   LayoutDashboard, Plus, Trash2, Download, Upload, Users, ShieldCheck,
   PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw,
+  MoreHorizontal,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ *
@@ -144,6 +145,7 @@ const STR = {
     signOut: "Sign out",
     signOutConfirm: "Sign out now? You'll need to sign in again to get back in.",
     cancel: "Cancel",
+    more: "More",
     nav_home: "Home", nav_privacy: "Privacy Policy", nav_terms: "Terms of Service",
 
     rep_title: "Seedplanner — financial projection", rep_generated: "generated", rep_byYear: "Projection by year",
@@ -250,6 +252,7 @@ const STR = {
     signOut: "ออกจากระบบ",
     signOutConfirm: "ออกจากระบบตอนนี้หรือไม่? คุณจะต้องเข้าสู่ระบบอีกครั้งเพื่อกลับเข้ามา",
     cancel: "ยกเลิก",
+    more: "เพิ่มเติม",
     nav_home: "หน้าแรก", nav_privacy: "นโยบายความเป็นส่วนตัว", nav_terms: "ข้อกำหนดการใช้งาน",
 
     rep_title: "Seedplanner — การคาดการณ์ทางการเงิน", rep_generated: "สร้างเมื่อ", rep_byYear: "การคาดการณ์รายปี",
@@ -356,6 +359,7 @@ const STR = {
     signOut: "Abmelden",
     signOutConfirm: "Jetzt abmelden? Du musst dich erneut anmelden, um zurückzukehren.",
     cancel: "Abbrechen",
+    more: "Mehr",
     nav_home: "Startseite", nav_privacy: "Datenschutz", nav_terms: "Nutzungsbedingungen",
 
     rep_title: "Seedplanner – Finanzprognose", rep_generated: "erstellt", rep_byYear: "Prognose nach Jahr",
@@ -462,6 +466,7 @@ const STR = {
     signOut: "Se déconnecter",
     signOutConfirm: "Se déconnecter maintenant ? Vous devrez vous reconnecter pour revenir.",
     cancel: "Annuler",
+    more: "Plus",
     nav_home: "Accueil", nav_privacy: "Politique de confidentialité", nav_terms: "Conditions d'utilisation",
 
     rep_title: "Seedplanner – projection financière", rep_generated: "généré", rep_byYear: "Projection par année",
@@ -1067,22 +1072,26 @@ export default function App() {
               {LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
             <ViewSwitcher members={state.members} view={view} setView={setView} />
-            <button onClick={exportJSON} title={t("export")} aria-label={t("export")}
-              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
-              style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <Download size={15} /> <span>{t("export")}</span>
-            </button>
-            <button onClick={exportPDF} title="PDF" aria-label="PDF"
-              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
-              style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <FileText size={15} /> <span>PDF</span>
-            </button>
-            <label title={t("import")} aria-label={t("import")}
-              className="flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
-              style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
-              <Upload size={15} /> <span>{t("import")}</span>
-              <input type="file" accept="application/json" onChange={importJSON} className="hidden" />
-            </label>
+            {/* data actions: inline on wider screens, collapsed into a menu on phones */}
+            <div className="hidden items-center gap-2 sm:flex">
+              <button onClick={exportJSON} title={t("export")} aria-label={t("export")}
+                className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
+                style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
+                <Download size={15} /> <span>{t("export")}</span>
+              </button>
+              <button onClick={exportPDF} title="PDF" aria-label="PDF"
+                className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
+                style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
+                <FileText size={15} /> <span>PDF</span>
+              </button>
+              <label title={t("import")} aria-label={t("import")}
+                className="flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
+                style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
+                <Upload size={15} /> <span>{t("import")}</span>
+                <input type="file" accept="application/json" onChange={importJSON} className="hidden" />
+              </label>
+            </div>
+            <MoreMenu className="sm:hidden" onExport={exportJSON} onExportPDF={exportPDF} onImport={importJSON} />
             <span aria-hidden style={{ width: 1, alignSelf: "stretch", margin: "2px 2px", background: C.line }} />
             <button onClick={signOut} title={t("signOut")} aria-label={t("signOut")}
               className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
@@ -2248,6 +2257,56 @@ function ViewSwitcher({ members, view, setView }) {
       <option value="all">{t("everyone")}</option>
       {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
     </select>
+  );
+}
+/* Overflow menu — holds data actions on small screens so the bar stays one row */
+function MoreMenu({ onExport, onExportPDF, onImport, className = "" }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const item = {
+    display: "flex", alignItems: "center", gap: 9, width: "100%",
+    padding: "9px 12px", fontSize: 14, color: C.ink, background: "transparent",
+    cursor: "pointer", textAlign: "left", borderRadius: 8,
+  };
+  const hoverOn = (e) => { e.currentTarget.style.background = C.bg; };
+  const hoverOff = (e) => { e.currentTarget.style.background = "transparent"; };
+
+  return (
+    <div ref={ref} className={className} style={{ position: "relative" }}>
+      <button onClick={() => setOpen((o) => !o)} title={t("more")} aria-label={t("more")} aria-expanded={open}
+        className="flex items-center rounded-md px-2.5 py-1.5"
+        style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
+        <MoreHorizontal size={17} />
+      </button>
+      {open && (
+        <div role="menu"
+          style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", minWidth: 172, background: C.card, border: `1px solid ${C.line}`, borderRadius: 12, boxShadow: shadow, padding: 6, zIndex: 30 }}>
+          <button role="menuitem" style={item} onMouseEnter={hoverOn} onMouseLeave={hoverOff}
+            onClick={() => { setOpen(false); onExport(); }}>
+            <Download size={15} /> {t("export")}
+          </button>
+          <button role="menuitem" style={item} onMouseEnter={hoverOn} onMouseLeave={hoverOff}
+            onClick={() => { setOpen(false); onExportPDF(); }}>
+            <FileText size={15} /> PDF
+          </button>
+          <label role="menuitem" style={{ ...item }} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+            <Upload size={15} /> {t("import")}
+            <input type="file" accept="application/json" className="hidden"
+              onChange={(e) => { setOpen(false); onImport(e); }} />
+          </label>
+        </div>
+      )}
+    </div>
   );
 }
 function Toggle({ on, onChange }) {
