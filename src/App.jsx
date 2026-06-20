@@ -47,7 +47,7 @@ const LANGS = [["en", "EN"], ["th", "ไทย"], ["de", "DE"], ["fr", "FR"]];
 
 const STR = {
   en: {
-    everyone: "Everyone", export: "Export", import: "Import",
+    export: "Export", import: "Import",
     tab_dashboard: "Overview", tab_income: "Income", tab_expenses: "Expenses",
     tab_oneOffs: "Upcoming", tab_goals: "Goals", tab_balance: "Assets & debts", tab_settings: "Settings",
     footer: "Projections are estimates, not financial advice.",
@@ -75,7 +75,7 @@ const STR = {
     wiReturn: "Expected return", wiOneOff: "One-off cost", wiReset: "Reset",
 
     add: "Add", empty: "Nothing here yet — add your first entry.", delete: "Delete", done: "Done",
-    title_income: "Income", sub_income: "Recurring and one-off. Tag each to a person for the household toggle.",
+    title_income: "Income", sub_income: "Recurring and one-off income.",
     title_expenses: "Expenses", sub_expenses: "Your recurring outgoings. These set your monthly surplus.",
     title_oneOffs: "Upcoming expenses", sub_oneOffs: "Dated one-off costs — travel, gifts, a car. Each one dips your curve on its month.",
     title_goals: "Savings goals", sub_goals: "Named targets, drawn as lines on the chart. Watch the curve cross them.",
@@ -87,12 +87,12 @@ const STR = {
     title_debts: "Debts", sub_debts: "Loans amortise over the projection. Payments reduce your monthly surplus until they're cleared.",
 
     col_source: "Source", col_amount: "Amount", col_howOften: "How often", col_dateOneoff: "Date (one-off)",
-    col_person: "Person", col_item: "Item", col_category: "Category", col_what: "What", col_cost: "Cost",
+    col_item: "Item", col_category: "Category", col_what: "What", col_cost: "Cost",
     col_when: "When", col_goal: "Goal", col_target: "Target", col_byWhen: "By when", col_asset: "Asset",
     col_value: "Value", col_debt: "Debt", col_balance: "Balance", col_rate: "Rate %", col_monthlyPay: "Monthly pay",
     freq_monthly: "Monthly", freq_fortnightly: "Fortnightly", freq_annual: "Annual", freq_weekly: "Weekly", freq_daily: "Daily", freq_oneoff: "One-off",
     new_income: "New income", new_expense: "New expense", new_goal: "New goal",
-    new_asset: "New asset", new_debt: "New debt", new_person: "New person",
+    new_asset: "New asset", new_debt: "New debt",
 
     presetTitle: "Suggestions", presetHint: "Not sure what to record? Tap to add a common item, then fill in the amount.",
     welcome_title: "Welcome to Seedplanner", welcome_body: "Add your income and expenses to see your savings projection and when you could retire. Start from scratch, or explore with sample data first.",
@@ -126,8 +126,6 @@ const STR = {
     setOpt: "Optimistic return %", setInfl: "Inflation %", setInflToggle: "Show figures in today's dollars (inflation-adjusted)",
     setRetireTitle: "Retirement target", setRetireDesc: "Leave blank to auto-calculate from your spending (the 4% rule = 25× annual expenses).",
     setManualTarget: "Manual target (optional)", auto: "auto", setAutoMultiple: "Auto multiple (× annual expenses)",
-    household: "Household", addPerson: "Add person",
-    householdDesc: "Tag income, expenses and goals to people, then switch between Everyone and one person up top.",
     setLanguage: "Language",
 
     exData_title: "Export your data", exData_desc: "Your full backup. Copy or share it to save, then use Import to restore it later.",
@@ -153,7 +151,7 @@ const STR = {
     rep_foot: "Projections are estimates based on your inputs and assumed returns — not financial advice.",
   },
   th: {
-    everyone: "ทั้งหมด", export: "ส่งออก", import: "นำเข้า",
+    export: "ส่งออก", import: "นำเข้า",
     tab_dashboard: "ภาพรวม", tab_income: "รายได้", tab_expenses: "รายจ่าย",
     tab_oneOffs: "ที่จะถึง", tab_goals: "เป้าหมาย", tab_balance: "สินทรัพย์และหนี้สิน", tab_settings: "ตั้งค่า",
     footer: "การคาดการณ์เป็นเพียงการประมาณ ไม่ใช่คำแนะนำทางการเงิน",
@@ -182,7 +180,7 @@ const STR = {
     wiReturn: "ผลตอบแทนคาดหวัง", wiOneOff: "ค่าใช้จ่ายครั้งเดียว",
 
     add: "เพิ่ม", empty: "ยังไม่มีรายการ — เพิ่มรายการแรกของคุณ", delete: "ลบ", done: "เสร็จ",
-    title_income: "รายได้", sub_income: "ทั้งแบบประจำและครั้งเดียว ระบุบุคคลเพื่อใช้สลับมุมมองครัวเรือน",
+    title_income: "รายได้", sub_income: "รายได้ทั้งแบบประจำและครั้งเดียว",
     title_expenses: "รายจ่าย", sub_expenses: "รายจ่ายประจำของคุณ ใช้คำนวณเงินเหลือต่อเดือน",
     title_oneOffs: "ค่าใช้จ่ายที่จะถึง", sub_oneOffs: "ค่าใช้จ่ายครั้งเดียวที่มีกำหนด — ท่องเที่ยว ของขวัญ รถ แต่ละรายการจะทำให้กราฟลดในเดือนนั้น",
     title_goals: "เป้าหมายการออม", sub_goals: "เป้าหมายที่ตั้งชื่อ แสดงเป็นเส้นบนกราฟ ดูกราฟตัดผ่านเป้าหมาย",
@@ -194,12 +192,12 @@ const STR = {
     title_debts: "หนี้สิน", sub_debts: "เงินกู้จะถูกผ่อนตามช่วงเวลา การผ่อนจะลดเงินเหลือต่อเดือนจนกว่าจะหมด",
 
     col_source: "แหล่งที่มา", col_amount: "จำนวนเงิน", col_howOften: "ความถี่", col_dateOneoff: "วันที่ (ครั้งเดียว)",
-    col_person: "บุคคล", col_item: "รายการ", col_category: "หมวดหมู่", col_what: "รายการ", col_cost: "จำนวนเงิน",
+    col_item: "รายการ", col_category: "หมวดหมู่", col_what: "รายการ", col_cost: "จำนวนเงิน",
     col_when: "เมื่อไร", col_goal: "เป้าหมาย", col_target: "ยอดเป้าหมาย", col_byWhen: "ภายในเมื่อ", col_asset: "สินทรัพย์",
     col_value: "มูลค่า", col_debt: "หนี้", col_balance: "ยอดคงเหลือ", col_rate: "ดอกเบี้ย %", col_monthlyPay: "ผ่อนต่อเดือน",
     freq_monthly: "รายเดือน", freq_fortnightly: "รายสองสัปดาห์", freq_annual: "รายปี", freq_weekly: "รายสัปดาห์", freq_daily: "รายวัน", freq_oneoff: "ครั้งเดียว",
     new_income: "รายได้ใหม่", new_expense: "รายจ่ายใหม่", new_goal: "เป้าหมายใหม่",
-    new_asset: "สินทรัพย์ใหม่", new_debt: "หนี้ใหม่", new_person: "บุคคลใหม่",
+    new_asset: "สินทรัพย์ใหม่", new_debt: "หนี้ใหม่",
 
     presetTitle: "รายการแนะนำ", presetHint: "ไม่รู้จะบันทึกอะไร? แตะเพื่อเพิ่มรายการที่พบบ่อย แล้วกรอกจำนวนเงิน",
     welcome_title: "ยินดีต้อนรับสู่ Seedplanner", welcome_body: "เพิ่มรายได้และรายจ่ายเพื่อดูการคาดการณ์เงินออมและว่าคุณจะเกษียณได้เมื่อไหร่ เริ่มจากศูนย์ หรือลองใช้ข้อมูลตัวอย่างก่อนก็ได้",
@@ -233,8 +231,6 @@ const STR = {
     setOpt: "ผลตอบแทนสูง %", setInfl: "เงินเฟ้อ %", setInflToggle: "แสดงตัวเลขเป็นมูลค่าปัจจุบัน (ปรับเงินเฟ้อ)",
     setRetireTitle: "เป้าหมายเกษียณ", setRetireDesc: "เว้นว่างเพื่อคำนวณอัตโนมัติจากค่าใช้จ่าย (กฎ 4% = 25× ค่าใช้จ่ายต่อปี)",
     setManualTarget: "ตั้งเป้าหมายเอง (ไม่บังคับ)", auto: "อัตโนมัติ", setAutoMultiple: "ตัวคูณอัตโนมัติ (× ค่าใช้จ่ายต่อปี)",
-    household: "ครัวเรือน", addPerson: "เพิ่มบุคคล",
-    householdDesc: "ระบุบุคคลให้รายได้ รายจ่าย และเป้าหมาย แล้วสลับระหว่างทั้งหมดกับรายบุคคลด้านบน",
     setLanguage: "ภาษา",
 
     exData_title: "ส่งออกข้อมูล", exData_desc: "ข้อมูลสำรองทั้งหมด คัดลอกหรือแชร์เพื่อบันทึก แล้วใช้นำเข้าเพื่อกู้คืนภายหลัง",
@@ -289,7 +285,7 @@ const STR = {
     wiReturn: "Erwartete Rendite", wiOneOff: "Einmalige Kosten",
 
     add: "Hinzufügen", empty: "Noch nichts hier – füge deinen ersten Eintrag hinzu.", delete: "Löschen", done: "Fertig",
-    title_income: "Einkommen", sub_income: "Wiederkehrend und einmalig. Ordne jedem Eintrag eine Person für die Haushaltsansicht zu.",
+    title_income: "Einkommen", sub_income: "Wiederkehrendes und einmaliges Einkommen.",
     title_expenses: "Ausgaben", sub_expenses: "Deine wiederkehrenden Ausgaben. Sie bestimmen deinen monatlichen Überschuss.",
     title_oneOffs: "Anstehende Ausgaben", sub_oneOffs: "Datierte einmalige Kosten – Reisen, Geschenke, ein Auto. Jede senkt deine Kurve in ihrem Monat.",
     title_goals: "Sparziele", sub_goals: "Benannte Ziele, als Linien im Diagramm dargestellt. Sieh zu, wie die Kurve sie kreuzt.",
@@ -396,7 +392,7 @@ const STR = {
     wiReturn: "Rendement attendu", wiOneOff: "Coût ponctuel",
 
     add: "Ajouter", empty: "Rien ici pour l'instant – ajoutez votre première entrée.", delete: "Supprimer", done: "Terminé",
-    title_income: "Revenus", sub_income: "Récurrents et ponctuels. Associez chacun à une personne pour la vue foyer.",
+    title_income: "Revenus", sub_income: "Revenus récurrents et ponctuels.",
     title_expenses: "Dépenses", sub_expenses: "Vos dépenses récurrentes. Elles déterminent votre excédent mensuel.",
     title_oneOffs: "Dépenses à venir", sub_oneOffs: "Coûts ponctuels datés – voyages, cadeaux, une voiture. Chacun fait baisser votre courbe le mois venu.",
     title_goals: "Objectifs d'épargne", sub_goals: "Objectifs nommés, tracés en lignes sur le graphique. Regardez la courbe les franchir.",
@@ -570,36 +566,32 @@ const seed = {
     retirementTarget: null, // null = auto (annual expenses × multiple)
     retireMultiple: 25,
   },
-  members: [
-    { id: "me", name: "Me" },
-    { id: "partner", name: "Partner" },
-  ],
   income: [
-    { id: uid(), label: "Salary (PAYG)", amount: 7200, frequency: "monthly", memberId: "me" },
-    { id: uid(), label: "Freelance", amount: 1500, frequency: "monthly", memberId: "me" },
-    { id: uid(), label: "Salary", amount: 6500, frequency: "monthly", memberId: "partner" },
+    { id: uid(), label: "Salary (PAYG)", amount: 7200, frequency: "monthly" },
+    { id: uid(), label: "Freelance", amount: 1500, frequency: "monthly" },
+    { id: uid(), label: "Salary", amount: 6500, frequency: "monthly" },
   ],
   expenses: [
-    { id: uid(), label: "Rent", amount: 2600, frequency: "monthly", category: "Housing", memberId: "me" },
-    { id: uid(), label: "Groceries", amount: 900, frequency: "monthly", category: "Food", memberId: "me" },
-    { id: uid(), label: "Utilities", amount: 320, frequency: "monthly", category: "Housing", memberId: "partner" },
-    { id: uid(), label: "Subscriptions", amount: 90, frequency: "monthly", category: "Lifestyle", memberId: "me" },
-    { id: uid(), label: "Transport", amount: 280, frequency: "monthly", category: "Transport", memberId: "partner" },
+    { id: uid(), label: "Rent", amount: 2600, frequency: "monthly", category: "Housing" },
+    { id: uid(), label: "Groceries", amount: 900, frequency: "monthly", category: "Food" },
+    { id: uid(), label: "Utilities", amount: 320, frequency: "monthly", category: "Housing" },
+    { id: uid(), label: "Subscriptions", amount: 90, frequency: "monthly", category: "Lifestyle" },
+    { id: uid(), label: "Transport", amount: 280, frequency: "monthly", category: "Transport" },
   ],
   oneOffs: [
-    { id: uid(), label: "Japan honeymoon", amount: 12000, date: isoIn(8), memberId: "me" },
-    { id: uid(), label: "Christmas gifts", amount: 1500, date: isoIn(6), memberId: "me" },
-    { id: uid(), label: "New laptop", amount: 3000, date: isoIn(14), memberId: "partner" },
+    { id: uid(), label: "Japan honeymoon", amount: 12000, date: isoIn(8) },
+    { id: uid(), label: "Christmas gifts", amount: 1500, date: isoIn(6) },
+    { id: uid(), label: "New laptop", amount: 3000, date: isoIn(14) },
   ],
   goals: [
-    { id: uid(), label: "House deposit", target: 120000, current: 18000, date: isoIn(48), memberId: "me" },
-    { id: uid(), label: "Travel fund", target: 20000, current: 4000, date: isoIn(24), memberId: "partner" },
+    { id: uid(), label: "House deposit", target: 120000, current: 18000, date: isoIn(48) },
+    { id: uid(), label: "Travel fund", target: 20000, current: 4000, date: isoIn(24) },
   ],
   debts: [
-    { id: uid(), label: "Car loan", balance: 18000, annualRate: 7, monthlyPayment: 600, memberId: "partner" },
+    { id: uid(), label: "Car loan", balance: 18000, annualRate: 7, monthlyPayment: 600 },
   ],
   assets: [
-    { id: uid(), label: "Super", value: 85000, memberId: "me" },
+    { id: uid(), label: "Super", value: 85000 },
   ],
   emergency: { target: 20000, current: 12000 },
 };
@@ -608,7 +600,6 @@ const seed = {
 // is opt-in (via "Try with sample data"), never the silent default.
 const emptyState = {
   settings: { ...seed.settings, startingSavings: 0 },
-  members: [{ id: "me", name: "Me" }],
   income: [], expenses: [], oneOffs: [], goals: [], debts: [], assets: [],
   emergency: { target: 0, current: 0 },
 };
@@ -787,7 +778,6 @@ function LoginScreen({ onSignIn }) {
 export default function App() {
   const [state, setState] = useState(null);
   const [tab, setTab] = useState("dashboard");
-  const [view, setView] = useState("all"); // member filter
   const [metric, setMetric] = useState("savings"); // savings | networth
   const [whatIf, setWhatIf] = useState({
     active: false, incomeDelta: 0, expenseDelta: 0, returnRate: null,
@@ -839,24 +829,17 @@ export default function App() {
     });
   }, [state?.settings.currency]);
 
-  const memberName = useCallback(
-    (id) => state?.members.find((m) => m.id === id)?.name || "—",
-    [state?.members]
-  );
-
-  // member-filtered slices
   const filtered = useMemo(() => {
     if (!state) return null;
-    const f = (arr) => (view === "all" ? arr : arr.filter((x) => x.memberId === view));
     return {
-      income: f(state.income),
-      expenses: f(state.expenses),
-      oneOffs: f(state.oneOffs),
-      goals: f(state.goals),
-      debts: f(state.debts),
-      assets: f(state.assets),
+      income: state.income,
+      expenses: state.expenses,
+      oneOffs: state.oneOffs,
+      goals: state.goals,
+      debts: state.debts,
+      assets: state.assets,
     };
-  }, [state, view]);
+  }, [state]);
 
   const projection = useMemo(() => {
     if (!state || !filtered) return null;
@@ -951,7 +934,6 @@ export default function App() {
   const exportPDF = () => {
     const m = (v) => fmt.format(v || 0);
     const dt = (iso) => (iso ? new Date(iso).toLocaleDateString() : "—");
-    const viewLabel = view === "all" ? t("everyone") : memberName(view);
 
     // year-by-year projection rows
     const rows = [];
@@ -973,17 +955,17 @@ export default function App() {
 
     const fr = (f) => t("freq_" + f) || f;
     const incomeRows = filtered.income.map((i) =>
-      `<tr><td>${i.label}</td><td class="r">${m(i.amount)}</td><td>${fr(i.frequency)}</td><td>${memberName(i.memberId)}</td></tr>`);
+      `<tr><td>${i.label}</td><td class="r">${m(i.amount)}</td><td>${fr(i.frequency)}</td></tr>`);
     const expenseRows = filtered.expenses.map((e) =>
-      `<tr><td>${e.label}</td><td class="r">${m(e.amount)}</td><td>${fr(e.frequency)}</td><td>${e.category}</td><td>${memberName(e.memberId)}</td></tr>`);
+      `<tr><td>${e.label}</td><td class="r">${m(e.amount)}</td><td>${fr(e.frequency)}</td><td>${e.category}</td></tr>`);
     const oneOffRows = filtered.oneOffs.map((o) =>
-      `<tr><td>${o.label}</td><td class="r">${m(o.amount)}</td><td>${dt(o.date)}</td><td>${memberName(o.memberId)}</td></tr>`);
+      `<tr><td>${o.label}</td><td class="r">${m(o.amount)}</td><td>${dt(o.date)}</td></tr>`);
     const goalRows = filtered.goals.map((g) =>
-      `<tr><td>${g.label}</td><td class="r">${m(g.target)}</td><td>${dt(g.date)}</td><td>${memberName(g.memberId)}</td></tr>`);
+      `<tr><td>${g.label}</td><td class="r">${m(g.target)}</td><td>${dt(g.date)}</td></tr>`);
     const debtRows = filtered.debts.map((d) =>
-      `<tr><td>${d.label}</td><td class="r">${m(d.balance)}</td><td class="r">${d.annualRate}%</td><td class="r">${m(d.monthlyPayment)}</td><td>${memberName(d.memberId)}</td></tr>`);
+      `<tr><td>${d.label}</td><td class="r">${m(d.balance)}</td><td class="r">${d.annualRate}%</td><td class="r">${m(d.monthlyPayment)}</td></tr>`);
     const assetRows = filtered.assets.map((a) =>
-      `<tr><td>${a.label}</td><td class="r">${m(a.value)}</td><td>${memberName(a.memberId)}</td></tr>`);
+      `<tr><td>${a.label}</td><td class="r">${m(a.value)}</td></tr>`);
 
     // pull the live chart SVG so the report shows the bars
     let chartHTML = "";
@@ -1015,7 +997,7 @@ export default function App() {
 </style></head><body>
   <div class="head">
     <h1>${t("rep_title")}</h1>
-    <div class="meta">${viewLabel} · ${t("rep_generated")} ${new Date().toLocaleDateString()} · ${state.settings.currency} · ${state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars")}</div>
+    <div class="meta">${t("rep_generated")} ${new Date().toLocaleDateString()} · ${state.settings.currency} · ${state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars")}</div>
   </div>
   <div class="cards">
     <div class="card"><div class="l">${t("stat_surplus")}</div><div class="v">${m(projection.monthlyNet)}</div></div>
@@ -1026,12 +1008,12 @@ export default function App() {
   ${chartHTML}
   <h3>${t("rep_byYear")}</h3>
   <table><thead><tr><th>${t("col_when")}</th><th class="r">${t("savings")}</th><th class="r">${t("netWorth")}</th></tr></thead><tbody>${rows.join("")}</tbody></table>
-  ${section(t("title_income"), [{ t: t("col_source") }, { t: t("col_amount"), r: 1 }, { t: t("col_howOften") }, { t: t("col_person") }], incomeRows)}
-  ${section(t("title_expenses"), [{ t: t("col_item") }, { t: t("col_amount"), r: 1 }, { t: t("col_howOften") }, { t: t("col_category") }, { t: t("col_person") }], expenseRows)}
-  ${section(t("title_oneOffs"), [{ t: t("col_what") }, { t: t("col_cost"), r: 1 }, { t: t("col_when") }, { t: t("col_person") }], oneOffRows)}
-  ${section(t("title_goals"), [{ t: t("col_goal") }, { t: t("col_target"), r: 1 }, { t: t("col_byWhen") }, { t: t("col_person") }], goalRows)}
-  ${section(t("title_debts"), [{ t: t("col_debt") }, { t: t("col_balance"), r: 1 }, { t: t("col_rate") }, { t: t("col_monthlyPay"), r: 1 }, { t: t("col_person") }], debtRows)}
-  ${section(t("title_assets"), [{ t: t("col_asset") }, { t: t("col_value"), r: 1 }, { t: t("col_person") }], assetRows)}
+  ${section(t("title_income"), [{ t: t("col_source") }, { t: t("col_amount"), r: 1 }, { t: t("col_howOften") }], incomeRows)}
+  ${section(t("title_expenses"), [{ t: t("col_item") }, { t: t("col_amount"), r: 1 }, { t: t("col_howOften") }, { t: t("col_category") }], expenseRows)}
+  ${section(t("title_oneOffs"), [{ t: t("col_what") }, { t: t("col_cost"), r: 1 }, { t: t("col_when") }], oneOffRows)}
+  ${section(t("title_goals"), [{ t: t("col_goal") }, { t: t("col_target"), r: 1 }, { t: t("col_byWhen") }], goalRows)}
+  ${section(t("title_debts"), [{ t: t("col_debt") }, { t: t("col_balance"), r: 1 }, { t: t("col_rate") }, { t: t("col_monthlyPay"), r: 1 }], debtRows)}
+  ${section(t("title_assets"), [{ t: t("col_asset") }, { t: t("col_value"), r: 1 }], assetRows)}
   <h3>${t("rep_emergency")}</h3>
   <table><tbody><tr><td>${t("emCurrent")}</td><td class="r">${m(state.emergency.current)}</td></tr><tr><td>${t("emTarget")}</td><td class="r">${m(state.emergency.target)}</td></tr></tbody></table>
   <div class="foot">${t("rep_foot")}</div>
@@ -1071,7 +1053,6 @@ export default function App() {
               style={{ border: `1px solid ${C.line}`, borderRadius: 8, padding: "6px 9px", fontSize: 13, background: C.card, color: C.ink }}>
               {LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
-            <ViewSwitcher members={state.members} view={view} setView={setView} />
             {/* data actions: inline on wider screens, collapsed into a menu on phones */}
             <div className="hidden items-center gap-2 sm:flex">
               <button onClick={exportJSON} title={t("export")} aria-label={t("export")}
@@ -1128,12 +1109,12 @@ export default function App() {
           <>
             <ListSection
               title={t("title_income")} subtitle={t("sub_income")}
-              items={filtered.income} columns={incomeCols(state.members)}
-              onAdd={() => addItem("income", { id: uid(), label: t("new_income"), amount: 0, frequency: "monthly", memberId: state.members[0].id })}
+              items={filtered.income} columns={incomeCols()}
+              onAdd={() => addItem("income", { id: uid(), label: t("new_income"), amount: 0, frequency: "monthly" })}
               onUpdate={(id, p) => updItem("income", id, p)}
               onDelete={(id) => delItem("income", id)} fmt={fmt} sortByDate
               presets={INCOME_PRESETS}
-              onAddPreset={(p) => addItem("income", { id: uid(), label: t(p.key), amount: 0, frequency: p.frequency, memberId: state.members[0].id })} />
+              onAddPreset={(p) => addItem("income", { id: uid(), label: t(p.key), amount: 0, frequency: p.frequency })} />
             <Breakdown items={filtered.income} groupBy={bySource}
               title={t("incomeSources")} totalLabel={t("totalIncome")} fmt={fmt} />
           </>
@@ -1143,12 +1124,12 @@ export default function App() {
           <>
             <ListSection
               title={t("title_expenses")} subtitle={t("sub_expenses")}
-              items={filtered.expenses} columns={expenseCols(state.members)}
-              onAdd={() => addItem("expenses", { id: uid(), label: t("new_expense"), amount: 0, frequency: "monthly", category: "Other", memberId: state.members[0].id })}
+              items={filtered.expenses} columns={expenseCols()}
+              onAdd={() => addItem("expenses", { id: uid(), label: t("new_expense"), amount: 0, frequency: "monthly", category: "Other" })}
               onUpdate={(id, p) => updItem("expenses", id, p)}
               onDelete={(id) => delItem("expenses", id)} fmt={fmt} sortByDate
               presets={EXPENSE_PRESETS}
-              onAddPreset={(p) => addItem("expenses", { id: uid(), label: t(p.key), amount: 0, frequency: p.frequency, category: t(p.catKey), memberId: state.members[0].id })} />
+              onAddPreset={(p) => addItem("expenses", { id: uid(), label: t(p.key), amount: 0, frequency: p.frequency, category: t(p.catKey) })} />
             <Breakdown items={filtered.expenses} groupBy={byCategory}
               title={t("whereGoes")} totalLabel={t("totalSpend")} fmt={fmt} />
           </>
@@ -1157,8 +1138,8 @@ export default function App() {
         {tab === "oneOffs" && (
           <ListSection
             title={t("title_oneOffs")} subtitle={t("sub_oneOffs")}
-            items={filtered.oneOffs} columns={oneOffCols(state.members)}
-            onAdd={() => addItem("oneOffs", { id: uid(), label: t("new_expense"), amount: 0, date: isoIn(6), memberId: state.members[0].id })}
+            items={filtered.oneOffs} columns={oneOffCols()}
+            onAdd={() => addItem("oneOffs", { id: uid(), label: t("new_expense"), amount: 0, date: isoIn(6) })}
             onUpdate={(id, p) => updItem("oneOffs", id, p)}
             onDelete={(id) => delItem("oneOffs", id)} fmt={fmt} sortByDate />
         )}
@@ -1167,8 +1148,8 @@ export default function App() {
           <>
             <ListSection
               title={t("title_goals")} subtitle={t("sub_goals")}
-              items={filtered.goals} columns={goalCols(state.members)}
-              onAdd={() => addItem("goals", { id: uid(), label: t("new_goal"), target: 10000, date: isoIn(24), memberId: state.members[0].id })}
+              items={filtered.goals} columns={goalCols()}
+              onAdd={() => addItem("goals", { id: uid(), label: t("new_goal"), target: 10000, date: isoIn(24) })}
               onUpdate={(id, p) => updItem("goals", id, p)}
               onDelete={(id) => delItem("goals", id)} fmt={fmt} sortByDate />
             <GoalProgress goals={filtered.goals} fmt={fmt} pool={state.settings.startingSavings} />
@@ -1180,14 +1161,14 @@ export default function App() {
             <EmergencyCard emergency={state.emergency} setEmergency={(p) => set({ emergency: { ...state.emergency, ...p } })} fmt={fmt} />
             <ListSection
               title={t("title_assets")} subtitle={t("sub_assets")}
-              items={filtered.assets} columns={assetCols(state.members)}
-              onAdd={() => addItem("assets", { id: uid(), label: t("new_asset"), value: 0, memberId: state.members[0].id })}
+              items={filtered.assets} columns={assetCols()}
+              onAdd={() => addItem("assets", { id: uid(), label: t("new_asset"), value: 0 })}
               onUpdate={(id, p) => updItem("assets", id, p)}
               onDelete={(id) => delItem("assets", id)} fmt={fmt} />
             <ListSection
               title={t("title_debts")} subtitle={t("sub_debts")}
-              items={filtered.debts} columns={debtCols(state.members)}
-              onAdd={() => addItem("debts", { id: uid(), label: t("new_debt"), balance: 0, annualRate: 6, monthlyPayment: 0, memberId: state.members[0].id })}
+              items={filtered.debts} columns={debtCols()}
+              onAdd={() => addItem("debts", { id: uid(), label: t("new_debt"), balance: 0, annualRate: 6, monthlyPayment: 0 })}
               onUpdate={(id, p) => updItem("debts", id, p)}
               onDelete={(id) => delItem("debts", id)} fmt={fmt} />
           </>
@@ -1685,7 +1666,6 @@ const selectCell = (val, onChange, opts) => (
     {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
   </select>
 );
-const memberOpts = (members) => members.map((m) => ({ value: m.id, label: m.name }));
 const freqOpts = () => [
   { value: "monthly", label: t("freq_monthly") },
   { value: "fortnightly", label: t("freq_fortnightly") },
@@ -1747,43 +1727,37 @@ const EXPENSE_PRESETS = [
   { key: "p_savings", catKey: "cat_lifestyle", frequency: "monthly" },
 ];
 
-const incomeCols = (members) => [
+const incomeCols = () => [
   { key: "label", label: t("col_source"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
   { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
   { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), freqOpts()) },
   { key: "date", label: t("col_dateOneoff"), render: (it, u) => it.frequency === "oneoff" ? inputCell(it.date || isoIn(3), (v) => u({ date: v }), { type: "date", w: 140 }) : <span style={{ color: C.faint }}>—</span> },
-  { key: "member", label: t("col_person"), render: (it, u) => selectCell(it.memberId, (v) => u({ memberId: v }), memberOpts(members)) },
 ];
-const expenseCols = (members) => [
+const expenseCols = () => [
   { key: "label", label: t("col_item"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
   { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
   { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), recurringFreqOpts()) },
   { key: "category", label: t("col_category"), render: (it, u) => inputCell(it.category, (v) => u({ category: v }), { w: 120 }) },
-  { key: "member", label: t("col_person"), render: (it, u) => selectCell(it.memberId, (v) => u({ memberId: v }), memberOpts(members)) },
 ];
-const oneOffCols = (members) => [
+const oneOffCols = () => [
   { key: "label", label: t("col_what"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
   { key: "amount", label: t("col_cost"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
   { key: "date", label: t("col_when"), render: (it, u) => inputCell(it.date, (v) => u({ date: v }), { type: "date", w: 140 }) },
-  { key: "member", label: t("col_person"), render: (it, u) => selectCell(it.memberId, (v) => u({ memberId: v }), memberOpts(members)) },
 ];
-const goalCols = (members) => [
+const goalCols = () => [
   { key: "label", label: t("col_goal"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
   { key: "target", label: t("col_target"), render: (it, u) => moneyCell(it.target, (v) => u({ target: v })) },
   { key: "date", label: t("col_byWhen"), render: (it, u) => inputCell(it.date, (v) => u({ date: v }), { type: "date", w: 140 }) },
-  { key: "member", label: t("col_person"), render: (it, u) => selectCell(it.memberId, (v) => u({ memberId: v }), memberOpts(members)) },
 ];
-const assetCols = (members) => [
+const assetCols = () => [
   { key: "label", label: t("col_asset"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
   { key: "value", label: t("col_value"), render: (it, u) => moneyCell(it.value, (v) => u({ value: v })) },
-  { key: "member", label: t("col_person"), render: (it, u) => selectCell(it.memberId, (v) => u({ memberId: v }), memberOpts(members)) },
 ];
-const debtCols = (members) => [
+const debtCols = () => [
   { key: "label", label: t("col_debt"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
   { key: "balance", label: t("col_balance"), render: (it, u) => moneyCell(it.balance, (v) => u({ balance: v })) },
   { key: "annualRate", label: t("col_rate"), render: (it, u) => <input type="number" value={it.annualRate} onChange={(e) => u({ annualRate: +e.target.value || 0 })} style={{ border: `1px solid ${C.line}`, borderRadius: 9, padding: "5px 8px", width: 70, fontSize: 13, textAlign: "right", ...num }} /> },
   { key: "monthlyPayment", label: t("col_monthlyPay"), render: (it, u) => moneyCell(it.monthlyPayment, (v) => u({ monthlyPayment: v })) },
-  { key: "member", label: t("col_person"), render: (it, u) => selectCell(it.memberId, (v) => u({ memberId: v }), memberOpts(members)) },
 ];
 
 /* ================================================================== *
@@ -1936,9 +1910,6 @@ function EmergencyCard({ emergency, setEmergency, fmt }) {
  * ================================================================== */
 function SettingsPanel({ state, setSettings, setState, onLoadSample, onClearData }) {
   const s = state.settings;
-  const addMember = () => setState((st) => ({ ...st, members: [...st.members, { id: uid(), name: t("new_person") }] }));
-  const updMember = (id, name) => setState((st) => ({ ...st, members: st.members.map((m) => m.id === id ? { ...m, name } : m) }));
-  const delMember = (id) => setState((st) => ({ ...st, members: st.members.filter((m) => m.id !== id) }));
 
   return (
     <div className="flex flex-col gap-5">
@@ -1991,31 +1962,6 @@ function SettingsPanel({ state, setSettings, setState, onLoadSample, onClearData
           <Field label={t("setAutoMultiple")}>
             <input type="number" value={s.retireMultiple} onChange={(e) => setSettings({ retireMultiple: +e.target.value || 25 })} style={fieldStyle} />
           </Field>
-        </div>
-      </Card>
-
-      <Card>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users size={16} color={C.green} />
-            <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("household")}</h2>
-          </div>
-          <button onClick={addMember} className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm" style={{ background: C.green, color: "#fff" }}>
-            <Plus size={15} /> {t("addPerson")}
-          </button>
-        </div>
-        <p style={{ color: C.faint, fontSize: 12, marginTop: 2 }}>
-          {t("householdDesc")}
-        </p>
-        <div className="mt-3 flex flex-col gap-2">
-          {state.members.map((m) => (
-            <div key={m.id} className="flex items-center gap-2">
-              <input value={m.name} onChange={(e) => updMember(m.id, e.target.value)} style={{ ...fieldStyle, width: 200 }} />
-              {state.members.length > 1 && (
-                <button onClick={() => delMember(m.id)} style={{ color: C.faint }}><Trash2 size={15} /></button>
-              )}
-            </div>
-          ))}
         </div>
       </Card>
 
@@ -2248,15 +2194,6 @@ function Segmented({ options, value, onChange, fluid }) {
         </button>
       ))}
     </div>
-  );
-}
-function ViewSwitcher({ members, view, setView }) {
-  return (
-    <select value={view} onChange={(e) => setView(e.target.value)}
-      style={{ border: `1px solid ${C.line}`, borderRadius: 8, padding: "6px 9px", fontSize: 13, background: C.card, color: C.ink }}>
-      <option value="all">{t("everyone")}</option>
-      {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-    </select>
   );
 }
 /* Overflow menu — holds data actions on small screens so the bar stays one row */
