@@ -637,8 +637,9 @@ function isoIn(months) {
 function monthsFromNow(iso) {
   if (!iso) return 0;
   const now = new Date();
-  const d = new Date(iso);
-  return (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth());
+  const [y, m, d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1, d); // local midnight — avoids UTC shift for users west of UTC
+  return (date.getFullYear() - now.getFullYear()) * 12 + (date.getMonth() - now.getMonth());
 }
 
 /* ------------------------------------------------------------------ *
