@@ -597,11 +597,11 @@ const seed = {
     { id: uid(), label: "Transport", amount: 280, frequency: "monthly", category: "Transport" },
   ],
   plans: [
-    { id: uid(), label: "Japan honeymoon", amount: 12000, date: isoIn(8), type: "spend" },
-    { id: uid(), label: "Christmas gifts", amount: 1500, date: isoIn(6), type: "spend" },
-    { id: uid(), label: "New laptop", amount: 3000, date: isoIn(14), type: "spend" },
-    { id: uid(), label: "House deposit", amount: 120000, current: 18000, date: isoIn(48), type: "save" },
-    { id: uid(), label: "Travel fund", amount: 20000, current: 4000, date: isoIn(24), type: "save" },
+    { id: uid(), label: "Japan honeymoon", amount: 12000, date: isoIn(8) },
+    { id: uid(), label: "Christmas gifts", amount: 1500, date: isoIn(6) },
+    { id: uid(), label: "New laptop", amount: 3000, date: isoIn(14) },
+    { id: uid(), label: "House deposit", amount: 120000, current: 18000, date: isoIn(48) },
+    { id: uid(), label: "Travel fund", amount: 20000, current: 4000, date: isoIn(24) },
   ],
   debts: [
     { id: uid(), label: "Car loan", balance: 18000, annualRate: 7, monthlyPayment: 600 },
@@ -644,7 +644,7 @@ function monthlyOf(amount, frequency) {
   return amount; // monthly
 }
 
-function buildProjection({ settings, income, expenses, oneOffs, debts, assets, plans, whatIf }) {
+function buildProjection({ settings, income, expenses, oneOffs, debts, assets, whatIf }) {
   const months = settings.projectionYears * 12;
 
   const wi = !!whatIf?.active;
@@ -678,21 +678,6 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, p
     whatIfOneOffByMonth[m] = (whatIfOneOffByMonth[m] || 0) + whatIf.oneOffAmount;
   }
 
-  // Save-toward plans: spread the remaining balance needed evenly across months until
-  // the goal date. Each month the reserved slice is deducted from the balance — the
-  // money is being set aside, so the general savings curve is lower by that amount.
-  const saveReservations = (plans || [])
-    .filter((p) => p.type === "save")
-    .map((p) => {
-      const until = Math.max(1, monthsFromNow(p.date));
-      const needed = Math.max(0, (p.amount || 0) - (p.current || 0));
-      return { until, monthly: needed / until };
-    })
-    .filter((r) => r.monthly > 0);
-
-  const reservationAt = (m) =>
-    saveReservations.reduce((s, r) => (m <= r.until ? s + r.monthly : s), 0);
-
   const assetTotal = assets.reduce((s, a) => s + (a.value || 0), 0);
 
   const rates = {
@@ -717,12 +702,11 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, p
 
   for (let m = 0; m <= months; m++) {
     if (m > 0) {
-      const reservation = reservationAt(m);
       for (const k of ["conservative", "expected", "optimistic"]) {
-        bal[k] = bal[k] * (1 + rates[k] / 12) + baseNet - reservation - (oneOffByMonth[m] || 0);
+        bal[k] = bal[k] * (1 + rates[k] / 12) + baseNet - (oneOffByMonth[m] || 0);
       }
       if (wi) {
-        bal.whatif = bal.whatif * (1 + whatIfRate / 12) + whatIfNet - reservation - (whatIfOneOffByMonth[m] || 0);
+        bal.whatif = bal.whatif * (1 + whatIfRate / 12) + whatIfNet - (whatIfOneOffByMonth[m] || 0);
       }
       // amortise debt
       let totalRem = 0;
@@ -832,8 +816,8 @@ export default function App() {
       // migrate old oneOffs + goals → plans
       if (!s.plans && (s.oneOffs || s.goals)) {
         const migrated = [
-          ...(s.oneOffs || []).map((o) => ({ ...o, type: "spend" })),
-          ...(s.goals || []).map((g) => ({ id: g.id, label: g.label, amount: g.target || 0, date: g.date, type: "save", current: g.current || 0 })),
+          ...(s.oneOffs || []).map((o) => ({ id: o.id, label: o.label, amount: o.amount, date: o.date })),
+          ...(s.goals || []).map((g) => ({ id: g.id, label: g.label, amount: g.target || 0, date: g.date, current: g.current || 0 })),
         ];
         const { oneOffs: _o, goals: _g, ...rest } = s;
         setState({ ...rest, plans: migrated });
@@ -904,8 +888,7 @@ export default function App() {
       settings: state.settings,
       income: filtered.income,
       expenses: filtered.expenses,
-      oneOffs: filtered.plans.filter((p) => p.type === "spend"),
-      plans: filtered.plans,
+      oneOffs: filtered.plans,
       debts: filtered.debts,
       assets: filtered.assets,
       whatIf,
@@ -1198,10 +1181,10 @@ export default function App() {
             <ListSection
               title={t("title_plans")} subtitle={t("sub_plans")}
               items={filtered.plans} columns={planCols()}
-              onAdd={() => addItem("plans", { id: uid(), label: t("new_plan"), amount: 0, date: isoIn(12), type: "save", current: 0 })}
+              onAdd={() => addItem("plans", { id: uid(), label: t("new_plan"), amount: 0, date: isoIn(12), current: 0 })}
               onUpdate={(id, p) => updItem("plans", id, p)}
               onDelete={(id) => delItem("plans", id)} fmt={fmt} sortByDate />
-            <GoalProgress goals={filtered.plans.filter((p) => p.type === "save")} fmt={fmt} pool={state.settings.startingSavings} />
+            <GoalProgress goals={filtered.plans} fmt={fmt} pool={state.settings.startingSavings} />
           </>
         )}
 
@@ -1325,13 +1308,13 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
 
   const startBal = projection.data[0][chartKey];
 
-  // Save-type plans as cumulative points, ordered chronologically. Each plan's dot sits
-  // at the running total of every save target up to and including it.
+  // All plans as cumulative dots — each dot sits at the running total of plan amounts
+  // up to that date. The line shows the savings pace needed to fund them in order.
   const cumGoals = useMemo(() => {
     const now = new Date();
     let cum = 0;
     return filtered.plans
-      .filter((p) => p.type === "save" && (p.amount || 0) > 0 && p.date)
+      .filter((p) => (p.amount || 0) > 0 && p.date)
       .map((p) => ({ id: p.id, label: p.label, target: p.amount,
         months: Math.round((new Date(p.date) - now) / (1000 * 60 * 60 * 24 * 30.44)) }))
       .filter((p) => p.months > 0)
@@ -1366,13 +1349,12 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     return [...map.values()].sort((a, b) => a.months - b.months);
   }, [cumGoals]);
 
-  // Spend-type plans as one-off events so the tooltip can explain a dip in the curve.
-  // One-off income also appears here as a positive delta.
+  // All plans show as dips in the tooltip; one-off income shows as a positive delta.
   const oneOffEvents = useMemo(() => {
     const ev = [];
-    filtered.plans.filter((p) => p.type === "spend").forEach((o) => {
-      const m = monthsFromNow(o.date);
-      if (m >= 1) ev.push({ id: o.id, m, label: o.label, amount: -(o.amount || 0) });
+    filtered.plans.forEach((p) => {
+      const m = monthsFromNow(p.date);
+      if (m >= 1) ev.push({ id: p.id, m, label: p.label, amount: -(p.amount || 0) });
     });
     filtered.income.filter((i) => i.frequency === "oneoff").forEach((i) => {
       const m = monthsFromNow(i.date);
@@ -1988,16 +1970,10 @@ const expenseCols = (items = []) => {
   ];
 };
 const planCols = () => [
-  { key: "label", label: t("col_plan"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
-  { key: "type", label: t("plan_type"), render: (it, u) => selectCell(it.type || "save", (v) => u({ type: v }), [
-    { value: "save", label: t("plan_type_save") },
-    { value: "spend", label: t("plan_type_spend") },
-  ]) },
+  { key: "label", label: t("col_plan"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
   { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
   { key: "date", label: t("col_when"), render: (it, u) => inputCell(it.date, (v) => u({ date: v }), { type: "date", w: 140 }) },
-  { key: "current", label: t("col_saved"), render: (it, u) => it.type === "save"
-    ? moneyCell(it.current || 0, (v) => u({ current: v }))
-    : <span style={{ color: C.faint }}>—</span> },
+  { key: "current", label: t("col_saved"), render: (it, u) => moneyCell(it.current || 0, (v) => u({ current: v })) },
 ];
 const assetCols = () => [
   { key: "label", label: t("col_asset"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
