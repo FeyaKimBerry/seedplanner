@@ -1324,7 +1324,9 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     return filtered.plans
       .filter((p) => (p.amount || 0) > 0 && p.date)
       .map((p) => {
-        const months = Math.round((new Date(p.date) - now) / (1000 * 60 * 60 * 24 * 30.44));
+        const [y, m, d] = p.date.split("-").map(Number);
+        const planDate = new Date(y, m - 1, d); // local midnight, not UTC
+        const months = Math.round((planDate - now) / (1000 * 60 * 60 * 24 * 30.44));
         const idx = Math.min(Math.max(0, months), projection.data.length - 1);
         return { id: p.id, label: p.label, target: p.amount, months, cum: projection.data[idx][chartKey] };
       })
@@ -2085,7 +2087,8 @@ function PlansTracker({ plans, fmt, monthlyNet }) {
           const current = p.current || 0;
           const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
           const done = target > 0 && current >= target;
-          const monthsLeft = p.date ? Math.round((new Date(p.date) - now) / (1000 * 60 * 60 * 24 * 30.44)) : null;
+          const planDate = p.date ? (() => { const [y,m,d] = p.date.split("-").map(Number); return new Date(y,m-1,d); })() : null;
+          const monthsLeft = planDate ? Math.round((planDate - now) / (1000 * 60 * 60 * 24 * 30.44)) : null;
           const overdue = !done && monthsLeft !== null && monthsLeft <= 0;
           const remaining = Math.max(0, target - current);
           const perMonth = monthsLeft > 0 ? remaining / monthsLeft : null;
