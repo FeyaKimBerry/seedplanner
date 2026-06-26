@@ -1271,7 +1271,7 @@ function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
   return (
     <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 10, padding: "8px 10px", fontSize: 12, ...num }}>
       <div style={{ fontWeight: 600, marginBottom: 4 }}>{title}</div>
-      {payload.filter((p) => p.dataKey !== "goalLine").map((p) => (
+      {payload.filter((p) => p.dataKey !== "goalLine" && p.dataKey !== "planCost").map((p) => (
         <div key={p.dataKey} style={{ color: p.color }}>
           {p.dataKey === "whatif" ? t("whatif") : t("tooltip_remaining")}: {fmt.format(p.value)}
         </div>
