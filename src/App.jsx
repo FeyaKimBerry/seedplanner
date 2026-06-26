@@ -60,7 +60,8 @@ const STR = {
 
     stat_surplus: "Monthly surplus", stat_retireNum: "Retirement number",
     stat_income: "Monthly income", stat_expense: "Monthly expenses", stat_savingsNow: "Savings now",
-    ov_now: "Right now", ov_retire: "Retirement outlook",
+    ov_now: "Right now", ov_retire: "Retirement outlook", ov_balance: "Balance sheet",
+    stat_assets: "Total assets", stat_debts: "Total debts", stat_emergency: "Emergency fund",
     goalPaceAll: "Plans on track", goalPaceHint: "Each dot marks a plan's target amount — if your green bar is above the dot on that date, you have enough saved for it.",
     stat_retireOn: "On track to retire", stat_balanceIn: "Balance in {n} yrs",
     inout: "{in} in · {out} out", setManually: "set manually", xAnnual: "{n}× annual expenses",
@@ -170,7 +171,8 @@ const STR = {
 
     stat_surplus: "เงินเหลือต่อเดือน", stat_retireNum: "เงินเกษียณที่ต้องมี",
     stat_income: "รายได้ต่อเดือน", stat_expense: "รายจ่ายต่อเดือน", stat_savingsNow: "เงินออมตอนนี้",
-    ov_now: "ตอนนี้", ov_retire: "แนวโน้มการเกษียณ",
+    ov_now: "ตอนนี้", ov_retire: "แนวโน้มการเกษียณ", ov_balance: "งบดุล",
+    stat_assets: "สินทรัพย์รวม", stat_debts: "หนี้สินรวม", stat_emergency: "เงินสำรองฉุกเฉิน",
     goalPaceAll: "แผนตามเป้า", goalPaceHint: "เส้นแสดงค่าใช้จ่ายสะสมของแผนทั้งหมดถึงแต่ละวันที่ — จุดหมายถึงยอดรวมของแต่ละแผน ถ้าแท่งกราฟสีเขียวอยู่เหนือเส้น แสดงว่าคุณมีเงินเพียงพอ",
     stat_retireOn: "คาดว่าจะเกษียณ", stat_balanceIn: "ยอดเงินใน {n} ปี",
     inout: "{in} เข้า · {out} ออก", setManually: "ตั้งเอง", xAnnual: "{n}× ค่าใช้จ่ายต่อปี",
@@ -281,7 +283,8 @@ const STR = {
 
     stat_surplus: "Monatlicher Überschuss", stat_retireNum: "Rentenbetrag",
     stat_income: "Monatliches Einkommen", stat_expense: "Monatliche Ausgaben", stat_savingsNow: "Aktuelle Ersparnisse",
-    ov_now: "Aktuell", ov_retire: "Renten-Ausblick",
+    ov_now: "Aktuell", ov_retire: "Renten-Ausblick", ov_balance: "Bilanz",
+    stat_assets: "Vermögen gesamt", stat_debts: "Schulden gesamt", stat_emergency: "Notgroschen",
     goalPaceAll: "Pläne im Plan", goalPaceHint: "Die Linie zeigt die kumulierten Kosten deiner Pläne bis zum jeweiligen Datum — Punkte markieren den Gesamtbetrag jedes Plans. Wenn deine grünen Balken über der Linie liegen, hast du genug gespart.",
     stat_retireOn: "Rente voraussichtlich", stat_balanceIn: "Stand in {n} Jahren",
     inout: "{in} ein · {out} aus", setManually: "manuell gesetzt", xAnnual: "{n}× Jahresausgaben",
@@ -392,7 +395,8 @@ const STR = {
 
     stat_surplus: "Excédent mensuel", stat_retireNum: "Montant retraite",
     stat_income: "Revenu mensuel", stat_expense: "Dépenses mensuelles", stat_savingsNow: "Épargne actuelle",
-    ov_now: "En ce moment", ov_retire: "Perspective retraite",
+    ov_now: "En ce moment", ov_retire: "Perspective retraite", ov_balance: "Bilan",
+    stat_assets: "Actifs totaux", stat_debts: "Dettes totales", stat_emergency: "Fonds d'urgence",
     goalPaceAll: "Plans en bonne voie", goalPaceHint: "La ligne montre le coût cumulé de vos plans à chaque date — les points marquent le total de chaque plan. Si vos barres vertes sont au-dessus de la ligne, vous avez suffisamment épargné.",
     stat_retireOn: "Retraite prévue", stat_balanceIn: "Solde dans {n} ans",
     inout: "{in} entrée · {out} sortie", setManually: "défini manuellement", xAnnual: "{n}× dépenses annuelles",
@@ -1498,6 +1502,25 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
               sub: state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars") },
           ]} />
         </div>
+
+        {/* Balance sheet row — only shown if user has entered at least one value */}
+        {(projection.assetTotal > 0 || state.debts.reduce((s,d) => s + (d.balance||0), 0) > 0 || state.emergency.current > 0 || state.emergency.target > 0) && (() => {
+          const totalDebts = state.debts.reduce((s, d) => s + (d.balance || 0), 0);
+          const emPct = state.emergency.target > 0 ? Math.min(100, Math.round((state.emergency.current / state.emergency.target) * 100)) : null;
+          return (
+            <div>
+              <h3 style={{ fontSize: 11, fontWeight: 600, color: C.faint, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 7 }}>{t("ov_balance")}</h3>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <Stat label={t("stat_assets")} value={fmt.format(projection.assetTotal)} tone={C.green} />
+                <Stat label={t("stat_debts")} value={fmt.format(totalDebts)} tone={totalDebts > 0 ? C.clay : C.green} />
+                <Stat label={t("stat_emergency")}
+                  value={emPct != null ? `${emPct}%` : "—"}
+                  sub={emPct != null ? `${fmt.format(state.emergency.current)} / ${fmt.format(state.emergency.target)}` : null}
+                  tone={emPct != null && emPct >= 100 ? C.green : C.clay} />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* chart */}
