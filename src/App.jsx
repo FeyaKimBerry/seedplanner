@@ -644,7 +644,7 @@ function monthlyOf(amount, frequency) {
   return amount; // monthly
 }
 
-function buildProjection({ settings, income, expenses, oneOffs, debts, assets, whatIf }) {
+function buildProjection({ settings, income, expenses, oneOffs, debts, assets, plans, whatIf }) {
   const months = settings.projectionYears * 12;
 
   const wi = !!whatIf?.active;
@@ -678,6 +678,21 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
     whatIfOneOffByMonth[m] = (whatIfOneOffByMonth[m] || 0) + whatIf.oneOffAmount;
   }
 
+  // Save-toward plans: spread the remaining balance needed evenly across months until
+  // the goal date. Each month the reserved slice is deducted from the balance — the
+  // money is being set aside, so the general savings curve is lower by that amount.
+  const saveReservations = (plans || [])
+    .filter((p) => p.type === "save")
+    .map((p) => {
+      const until = Math.max(1, monthsFromNow(p.date));
+      const needed = Math.max(0, (p.amount || 0) - (p.current || 0));
+      return { until, monthly: needed / until };
+    })
+    .filter((r) => r.monthly > 0);
+
+  const reservationAt = (m) =>
+    saveReservations.reduce((s, r) => (m <= r.until ? s + r.monthly : s), 0);
+
   const assetTotal = assets.reduce((s, a) => s + (a.value || 0), 0);
 
   const rates = {
@@ -702,11 +717,12 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
 
   for (let m = 0; m <= months; m++) {
     if (m > 0) {
+      const reservation = reservationAt(m);
       for (const k of ["conservative", "expected", "optimistic"]) {
-        bal[k] = bal[k] * (1 + rates[k] / 12) + baseNet - (oneOffByMonth[m] || 0);
+        bal[k] = bal[k] * (1 + rates[k] / 12) + baseNet - reservation - (oneOffByMonth[m] || 0);
       }
       if (wi) {
-        bal.whatif = bal.whatif * (1 + whatIfRate / 12) + whatIfNet - (whatIfOneOffByMonth[m] || 0);
+        bal.whatif = bal.whatif * (1 + whatIfRate / 12) + whatIfNet - reservation - (whatIfOneOffByMonth[m] || 0);
       }
       // amortise debt
       let totalRem = 0;
@@ -889,6 +905,7 @@ export default function App() {
       income: filtered.income,
       expenses: filtered.expenses,
       oneOffs: filtered.plans.filter((p) => p.type === "spend"),
+      plans: filtered.plans,
       debts: filtered.debts,
       assets: filtered.assets,
       whatIf,
