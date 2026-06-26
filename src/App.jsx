@@ -61,7 +61,7 @@ const STR = {
     stat_surplus: "Monthly surplus", stat_retireNum: "Retirement number",
     stat_income: "Monthly income", stat_expense: "Monthly expenses", stat_savingsNow: "Savings now",
     ov_now: "Right now", ov_retire: "Retirement outlook",
-    goalPaceAll: "All goals · pace needed", goalPaceHint: "The line steps up through your goals in date order — each dot is the running total of all goals up to then. Where your bars rise above it, those goals are funded.",
+    goalPaceAll: "Plans on track", goalPaceHint: "The line traces your projected savings through each plan — dots show where your balance lands after each plan is paid. If the bars follow the line, you're on track.",
     stat_retireOn: "On track to retire", stat_balanceIn: "Balance in {n} yrs",
     inout: "{in} in · {out} out", setManually: "set manually", xAnnual: "{n}× annual expenses",
     inYrs: "in {n} yrs", beyond: "beyond horizon — adjust inputs",
@@ -169,7 +169,7 @@ const STR = {
     stat_surplus: "เงินเหลือต่อเดือน", stat_retireNum: "เงินเกษียณที่ต้องมี",
     stat_income: "รายได้ต่อเดือน", stat_expense: "รายจ่ายต่อเดือน", stat_savingsNow: "เงินออมตอนนี้",
     ov_now: "ตอนนี้", ov_retire: "แนวโน้มการเกษียณ",
-    goalPaceAll: "ทุกเป้าหมาย · จังหวะที่ต้องการ", goalPaceHint: "เส้นจะไล่ขึ้นตามเป้าหมายเรียงตามวันที่ — แต่ละจุดคือยอดสะสมของเป้าหมายทั้งหมดจนถึงตอนนั้น เมื่อแท่งกราฟสูงเกินเส้น แสดงว่าเป้าหมายเหล่านั้นมีเงินพอแล้ว",
+    goalPaceAll: "แผนตามเป้า", goalPaceHint: "เส้นติดตามเงินออมที่คาดการณ์ผ่านแต่ละแผน — จุดแสดงยอดเงินหลังจ่ายแผนนั้น ถ้าแท่งกราฟไล่ตามเส้น แสดงว่าคุณอยู่ในเส้นทางที่ถูกต้อง",
     stat_retireOn: "คาดว่าจะเกษียณ", stat_balanceIn: "ยอดเงินใน {n} ปี",
     inout: "{in} เข้า · {out} ออก", setManually: "ตั้งเอง", xAnnual: "{n}× ค่าใช้จ่ายต่อปี",
     inYrs: "อีก {n} ปี", beyond: "เกินช่วงที่คำนวณ — ปรับข้อมูล",
@@ -278,7 +278,7 @@ const STR = {
     stat_surplus: "Monatlicher Überschuss", stat_retireNum: "Rentenbetrag",
     stat_income: "Monatliches Einkommen", stat_expense: "Monatliche Ausgaben", stat_savingsNow: "Aktuelle Ersparnisse",
     ov_now: "Aktuell", ov_retire: "Renten-Ausblick",
-    goalPaceAll: "Alle Ziele · nötiges Tempo", goalPaceHint: "Die Linie steigt nach Datum durch deine Ziele — jeder Punkt ist die laufende Summe aller Ziele bis dahin. Wo deine Balken darüber liegen, sind diese Ziele finanziert.",
+    goalPaceAll: "Pläne im Plan", goalPaceHint: "Die Linie verfolgt deine prognostizierten Ersparnisse durch jeden Plan — Punkte zeigen, wo dein Saldo nach jedem Plan landet. Wenn die Balken der Linie folgen, bist du auf Kurs.",
     stat_retireOn: "Rente voraussichtlich", stat_balanceIn: "Stand in {n} Jahren",
     inout: "{in} ein · {out} aus", setManually: "manuell gesetzt", xAnnual: "{n}× Jahresausgaben",
     inYrs: "in {n} Jahren", beyond: "außerhalb des Zeitraums – Eingaben anpassen",
@@ -387,7 +387,7 @@ const STR = {
     stat_surplus: "Excédent mensuel", stat_retireNum: "Montant retraite",
     stat_income: "Revenu mensuel", stat_expense: "Dépenses mensuelles", stat_savingsNow: "Épargne actuelle",
     ov_now: "En ce moment", ov_retire: "Perspective retraite",
-    goalPaceAll: "Tous les objectifs · rythme requis", goalPaceHint: "La ligne monte par paliers selon la date — chaque point est le cumul de tous les objectifs jusque-là. Là où vos barres la dépassent, ces objectifs sont financés.",
+    goalPaceAll: "Plans en bonne voie", goalPaceHint: "La ligne trace votre épargne projetée à travers chaque plan — les points montrent où se situe votre solde après chaque plan payé. Si les barres suivent la ligne, vous êtes en bonne voie.",
     stat_retireOn: "Retraite prévue", stat_balanceIn: "Solde dans {n} ans",
     inout: "{in} entrée · {out} sortie", setManually: "défini manuellement", xAnnual: "{n}× dépenses annuelles",
     inYrs: "dans {n} ans", beyond: "au-delà de la période – ajustez les données",
@@ -1308,19 +1308,21 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
 
   const startBal = projection.data[0][chartKey];
 
-  // All plans as cumulative dots — each dot sits at the running total of plan amounts
-  // up to that date. The line shows the savings pace needed to fund them in order.
+  // All plans as dots at their actual projected savings balance on that date.
+  // Using the real projection value (which already dips at each plan) means the line
+  // rises between plans and drops when a plan hits — matching the green bars' shape.
   const cumGoals = useMemo(() => {
     const now = new Date();
-    let cum = 0;
     return filtered.plans
       .filter((p) => (p.amount || 0) > 0 && p.date)
-      .map((p) => ({ id: p.id, label: p.label, target: p.amount,
-        months: Math.round((new Date(p.date) - now) / (1000 * 60 * 60 * 24 * 30.44)) }))
+      .map((p) => {
+        const months = Math.round((new Date(p.date) - now) / (1000 * 60 * 60 * 24 * 30.44));
+        const idx = Math.min(Math.max(0, months), projection.data.length - 1);
+        return { id: p.id, label: p.label, target: p.amount, months, cum: projection.data[idx][chartKey] };
+      })
       .filter((p) => p.months > 0)
-      .sort((a, b) => a.months - b.months)
-      .map((p) => { cum += p.target; return { ...p, cum }; });
-  }, [filtered.plans]);
+      .sort((a, b) => a.months - b.months);
+  }, [filtered.plans, projection, chartKey]);
 
   const projYears = state.settings.projectionYears;
 
