@@ -149,6 +149,19 @@ const STR = {
 
     exData_title: "Export your data", exData_desc: "Your full backup. Copy or share it to save, then use Import to restore it later.",
     exRep_title: "Export report", exRep_desc: "A printable snapshot. On a computer, tap Print to save as PDF. On a phone, use Share to send it to Files, Notes, or print.",
+    exLender_title: "Lender report", exLender_desc: "A summary of your income, expenses, debts, assets and monthly surplus — formatted for sharing with a mortgage broker or lender. Print or save as PDF.",
+    exLender_btn: "Lender report",
+    lr_title: "Personal Finance Summary", lr_subtitle: "Prepared for loan assessment purposes",
+    lr_disclaimer: "This document is self-reported by the applicant and has not been independently verified. It is intended as a supporting summary only and does not constitute formal financial advice or a verified income statement.",
+    lr_generated: "Generated", lr_currency: "Currency",
+    lr_section_income: "Income", lr_section_expenses: "Regular Expenses",
+    lr_section_debts: "Existing Liabilities", lr_section_assets: "Assets",
+    lr_section_summary: "Monthly Cash Flow Summary",
+    lr_total_income: "Total monthly income", lr_total_expenses: "Total monthly expenses",
+    lr_total_debt_pay: "Total monthly debt repayments", lr_surplus: "Monthly surplus (disposable income)",
+    lr_total_assets: "Total assets", lr_total_debts: "Total liabilities (outstanding balances)",
+    lr_net_worth: "Net worth (assets minus liabilities)",
+    lr_savings: "Current savings",
     copy: "Copy", copied: "Copied ✓", share: "Share", print: "Print", download: "Download",
     downloadHtml: "Download .html", close: "Close",
     previewNote: "Preview — screenshot this to save it on your phone",
@@ -267,6 +280,18 @@ const STR = {
 
     exData_title: "ส่งออกข้อมูล", exData_desc: "ข้อมูลสำรองทั้งหมด คัดลอกหรือแชร์เพื่อบันทึก แล้วใช้นำเข้าเพื่อกู้คืนภายหลัง",
     exRep_title: "ส่งออกรายงาน", exRep_desc: "ภาพรวมสำหรับพิมพ์ บนคอมพิวเตอร์กดพิมพ์เพื่อบันทึกเป็น PDF บนมือถือใช้แชร์เพื่อส่งไปยังไฟล์ บันทึก หรือพิมพ์",
+    exLender_title: "รายงานสำหรับผู้ให้กู้", exLender_desc: "สรุปรายได้ รายจ่าย หนี้สิน สินทรัพย์ และเงินเหลือต่อเดือน — สำหรับแชร์กับนายหน้าสินเชื่อหรือผู้ให้กู้", exLender_btn: "รายงานผู้ให้กู้",
+    lr_title: "สรุปการเงินส่วนบุคคล", lr_subtitle: "จัดทำเพื่อประกอบการพิจารณาสินเชื่อ",
+    lr_disclaimer: "เอกสารนี้จัดทำโดยผู้สมัครด้วยตนเองและยังไม่ได้รับการตรวจสอบอย่างเป็นทางการ ใช้เป็นเอกสารประกอบเท่านั้น",
+    lr_generated: "สร้างเมื่อ", lr_currency: "สกุลเงิน",
+    lr_section_income: "รายได้", lr_section_expenses: "รายจ่ายประจำ",
+    lr_section_debts: "หนี้สินที่มีอยู่", lr_section_assets: "สินทรัพย์",
+    lr_section_summary: "สรุปกระแสเงินสดต่อเดือน",
+    lr_total_income: "รายได้ต่อเดือนรวม", lr_total_expenses: "รายจ่ายต่อเดือนรวม",
+    lr_total_debt_pay: "ผ่อนหนี้ต่อเดือนรวม", lr_surplus: "เงินเหลือต่อเดือน",
+    lr_total_assets: "สินทรัพย์รวม", lr_total_debts: "หนี้สินรวม",
+    lr_net_worth: "มูลค่าสุทธิ (สินทรัพย์หักหนี้สิน)",
+    lr_savings: "เงินออมปัจจุบัน",
     copy: "คัดลอก", copied: "คัดลอกแล้ว ✓", share: "แชร์", print: "พิมพ์", download: "ดาวน์โหลด",
     downloadHtml: "ดาวน์โหลด .html", close: "ปิด",
     previewNote: "ตัวอย่าง — ถ่ายภาพหน้าจอเพื่อบันทึกบนมือถือ",
@@ -385,6 +410,18 @@ const STR = {
 
     exData_title: "Daten exportieren", exData_desc: "Deine vollständige Sicherung. Kopiere oder teile sie zum Speichern und stelle sie später über Import wieder her.",
     exRep_title: "Bericht exportieren", exRep_desc: "Eine druckbare Übersicht. Am Computer auf Drucken tippen, um als PDF zu speichern. Am Handy über Teilen an Dateien, Notizen oder Drucken senden.",
+    exLender_title: "Kreditgeber-Bericht", exLender_desc: "Zusammenfassung von Einkommen, Ausgaben, Schulden, Vermögen und monatlichem Überschuss — zum Teilen mit einem Kreditgeber.", exLender_btn: "Kreditgeber-Bericht",
+    lr_title: "Persönliche Finanzübersicht", lr_subtitle: "Erstellt für Kreditprüfungszwecke",
+    lr_disclaimer: "Dieses Dokument wurde vom Antragsteller selbst erstellt und nicht unabhängig geprüft. Es dient nur als unterstützende Zusammenfassung.",
+    lr_generated: "Erstellt", lr_currency: "Währung",
+    lr_section_income: "Einkommen", lr_section_expenses: "Regelmäßige Ausgaben",
+    lr_section_debts: "Bestehende Verbindlichkeiten", lr_section_assets: "Vermögen",
+    lr_section_summary: "Monatliche Cashflow-Übersicht",
+    lr_total_income: "Gesamtes Monatseinkommen", lr_total_expenses: "Gesamte Monatsausgaben",
+    lr_total_debt_pay: "Gesamte monatliche Schuldentilgung", lr_surplus: "Monatlicher Überschuss",
+    lr_total_assets: "Gesamtvermögen", lr_total_debts: "Gesamtverbindlichkeiten",
+    lr_net_worth: "Nettovermögen (Vermögen minus Schulden)",
+    lr_savings: "Aktuelle Ersparnisse",
     copy: "Kopieren", copied: "Kopiert ✓", share: "Teilen", print: "Drucken", download: "Herunterladen",
     downloadHtml: "HTML herunterladen", close: "Schließen",
     previewNote: "Vorschau – mache einen Screenshot, um sie auf dem Handy zu speichern",
@@ -503,6 +540,18 @@ const STR = {
 
     exData_title: "Exporter vos données", exData_desc: "Votre sauvegarde complète. Copiez ou partagez-la pour l'enregistrer, puis restaurez-la via Importer.",
     exRep_title: "Exporter le rapport", exRep_desc: "Un aperçu imprimable. Sur ordinateur, touchez Imprimer pour enregistrer en PDF. Sur téléphone, utilisez Partager pour l'envoyer vers Fichiers, Notes ou l'imprimer.",
+    exLender_title: "Rapport prêteur", exLender_desc: "Résumé de vos revenus, dépenses, dettes, actifs et excédent mensuel — à partager avec un courtier ou un prêteur.", exLender_btn: "Rapport prêteur",
+    lr_title: "Résumé financier personnel", lr_subtitle: "Préparé à des fins d'évaluation de prêt",
+    lr_disclaimer: "Ce document est auto-déclaré par le demandeur et n'a pas été vérifié de manière indépendante. Il est fourni à titre de résumé d'appui uniquement.",
+    lr_generated: "Généré", lr_currency: "Devise",
+    lr_section_income: "Revenus", lr_section_expenses: "Dépenses régulières",
+    lr_section_debts: "Passifs existants", lr_section_assets: "Actifs",
+    lr_section_summary: "Résumé des flux de trésorerie mensuels",
+    lr_total_income: "Revenu mensuel total", lr_total_expenses: "Dépenses mensuelles totales",
+    lr_total_debt_pay: "Remboursements mensuels totaux", lr_surplus: "Excédent mensuel",
+    lr_total_assets: "Total des actifs", lr_total_debts: "Total des passifs",
+    lr_net_worth: "Valeur nette (actifs moins passifs)",
+    lr_savings: "Épargne actuelle",
     copy: "Copier", copied: "Copié ✓", share: "Partager", print: "Imprimer", download: "Télécharger",
     downloadHtml: "Télécharger .html", close: "Fermer",
     previewNote: "Aperçu – faites une capture d'écran pour l'enregistrer sur votre téléphone",
@@ -1111,6 +1160,142 @@ export default function App() {
     });
   };
 
+  const exportLenderReport = () => {
+    const m = (v) => fmt.format(v || 0);
+    const fr = (f) => t("freq_" + f) || f;
+    const toMonthly = (amt, freq) => {
+      if (freq === "annual") return amt / 12;
+      if (freq === "fortnightly") return (amt * 26) / 12;
+      if (freq === "weekly") return (amt * 52) / 12;
+      if (freq === "daily") return (amt * 365) / 12;
+      return amt;
+    };
+
+    const totalIncome = projection.monthlyIncome;
+    const totalExpenses = filtered.expenses.reduce((s, e) => s + toMonthly(e.amount, e.frequency), 0);
+    const totalDebtPay = filtered.debts.reduce((s, d) => s + (d.monthlyPayment || 0), 0);
+    const surplus = totalIncome - totalExpenses - totalDebtPay;
+    const totalAssets = filtered.assets.reduce((s, a) => s + (a.value || 0), 0) + state.settings.startingSavings;
+    const totalDebts = filtered.debts.reduce((s, d) => s + (d.balance || 0), 0);
+    const netWorth = totalAssets - totalDebts;
+
+    const sec = (title, headers, rows) => rows.length ? `
+      <div class="section">
+        <h3>${title}</h3>
+        <table>
+          <thead><tr>${headers.map(h => `<th class="${h.r ? "r" : ""}">${h.t}</th>`).join("")}</tr></thead>
+          <tbody>${rows.join("")}</tbody>
+        </table>
+      </div>` : "";
+
+    const incomeRows = filtered.income
+      .filter(i => i.frequency !== "oneoff")
+      .map(i => `<tr><td>${i.label}</td><td class="r">${m(i.amount)}</td><td>${fr(i.frequency)}</td><td class="r">${m(toMonthly(i.amount, i.frequency))}/mo</td></tr>`);
+
+    const expenseRows = filtered.expenses
+      .map(e => `<tr><td>${e.label}</td><td>${e.category || "—"}</td><td class="r">${m(e.amount)}</td><td>${fr(e.frequency)}</td><td class="r">${m(toMonthly(e.amount, e.frequency))}/mo</td></tr>`);
+
+    const debtRows = filtered.debts
+      .map(d => `<tr><td>${d.label}</td><td class="r">${m(d.balance)}</td><td class="r">${d.annualRate}%</td><td class="r">${m(d.monthlyPayment)}/mo</td></tr>`);
+
+    const assetRows = [
+      `<tr><td>Savings</td><td class="r">${m(state.settings.startingSavings)}</td></tr>`,
+      ...filtered.assets.map(a => `<tr><td>${a.label}</td><td class="r">${m(a.value)}</td></tr>`),
+    ];
+
+    const summaryRow = (label, value, highlight = false) =>
+      `<tr${highlight ? ' class="highlight"' : ""}><td>${label}</td><td class="r"><strong>${value}</strong></td></tr>`;
+
+    const html = `<!doctype html><html><head><meta charset="utf-8">
+<title>${t("lr_title")}</title>
+<style>
+  @page { margin: 20mm; }
+  * { box-sizing: border-box; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: #1a2a32; margin: 0; font-size: 13px; }
+  .header { border-bottom: 3px solid #1a2a32; padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .header-left h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
+  .header-left p { margin: 0; color: #5C6E76; font-size: 13px; }
+  .header-right { text-align: right; font-size: 12px; color: #5C6E76; }
+  .disclaimer { background: #fff8f0; border: 1px solid #e5a86b; border-radius: 8px; padding: 10px 14px; font-size: 11.5px; color: #7a5a30; margin-bottom: 20px; line-height: 1.5; }
+  .summary-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+  .card { border: 1px solid #dde8e8; border-radius: 10px; padding: 12px 14px; }
+  .card .label { font-size: 10.5px; color: #93A4AA; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .card .value { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .card .value.pos { color: #2E8C8C; }
+  .card .value.neg { color: #c0392b; }
+  .section { margin-bottom: 20px; }
+  h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #5C6E76; margin: 0 0 6px; padding-bottom: 4px; border-bottom: 1px solid #dde8e8; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; color: #93A4AA; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f2; }
+  td { padding: 5px 6px; border-bottom: 1px solid #f4f8f8; font-variant-numeric: tabular-nums; }
+  .r { text-align: right; }
+  tr.highlight td { background: #eaf4f4; font-weight: 600; }
+  .footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #dde8e8; font-size: 11px; color: #93A4AA; line-height: 1.5; }
+</style>
+</head><body>
+  <div class="header">
+    <div class="header-left">
+      <h1>${t("lr_title")}</h1>
+      <p>${t("lr_subtitle")}</p>
+    </div>
+    <div class="header-right">
+      ${t("lr_generated")}: ${new Date().toLocaleDateString()}<br/>
+      ${t("lr_currency")}: ${state.settings.currency}
+    </div>
+  </div>
+
+  <div class="disclaimer">${t("lr_disclaimer")}</div>
+
+  <div class="summary-cards">
+    <div class="card"><div class="label">${t("lr_total_income")}</div><div class="value pos">${m(totalIncome)}</div></div>
+    <div class="card"><div class="label">${t("lr_total_expenses")} + ${t("lr_total_debt_pay")}</div><div class="value">${m(totalExpenses + totalDebtPay)}</div></div>
+    <div class="card"><div class="label">${t("lr_surplus")}</div><div class="value ${surplus >= 0 ? "pos" : "neg"}">${m(surplus)}</div></div>
+    <div class="card"><div class="label">${t("lr_total_assets")}</div><div class="value pos">${m(totalAssets)}</div></div>
+    <div class="card"><div class="label">${t("lr_total_debts")}</div><div class="value ${totalDebts > 0 ? "neg" : ""}">${m(totalDebts)}</div></div>
+    <div class="card"><div class="label">${t("lr_net_worth")}</div><div class="value ${netWorth >= 0 ? "pos" : "neg"}">${m(netWorth)}</div></div>
+  </div>
+
+  ${sec(t("lr_section_income"),
+    [{ t: "Source" }, { t: "Amount", r: 1 }, { t: "Frequency" }, { t: "Monthly equiv.", r: 1 }],
+    incomeRows)}
+
+  ${sec(t("lr_section_expenses"),
+    [{ t: "Expense" }, { t: "Category" }, { t: "Amount", r: 1 }, { t: "Frequency" }, { t: "Monthly equiv.", r: 1 }],
+    expenseRows)}
+
+  ${sec(t("lr_section_debts"),
+    [{ t: "Liability" }, { t: "Outstanding balance", r: 1 }, { t: "Rate", r: 1 }, { t: "Monthly repayment", r: 1 }],
+    debtRows)}
+
+  ${sec(t("lr_section_assets"),
+    [{ t: "Asset" }, { t: "Value", r: 1 }],
+    assetRows)}
+
+  <div class="section">
+    <h3>${t("lr_section_summary")}</h3>
+    <table>
+      <tbody>
+        ${summaryRow(t("lr_total_income"), m(totalIncome))}
+        ${summaryRow(t("lr_total_expenses"), m(totalExpenses))}
+        ${summaryRow(t("lr_total_debt_pay"), m(totalDebtPay))}
+        ${summaryRow(t("lr_surplus"), m(surplus), true)}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">${t("lr_disclaimer")}</div>
+</body></html>`;
+
+    setSheet({
+      kind: "report",
+      title: t("exLender_title"),
+      desc: t("exLender_desc"),
+      content: html,
+      filename: `seedplanner-lender-report-${new Date().toISOString().slice(0, 10)}.html`,
+      mime: "text/html",
+    });
+  };
+
   const TABS = [
     ["dashboard", t("tab_dashboard"), LayoutDashboard],
     ["income", t("tab_income"), Wallet],
@@ -1146,6 +1331,11 @@ export default function App() {
                 style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
                 <FileText size={15} /> <span>PDF</span>
               </button>
+              <button onClick={exportLenderReport} title={t("exLender_btn")} aria-label={t("exLender_btn")}
+                className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
+                style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
+                <Landmark size={15} /> <span>{t("exLender_btn")}</span>
+              </button>
               <label title={t("import")} aria-label={t("import")}
                 className="flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
                 style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
@@ -1153,7 +1343,7 @@ export default function App() {
                 <input type="file" accept="application/json" onChange={importJSON} className="hidden" />
               </label>
             </div>
-            <MoreMenu className="sm:hidden" onExport={exportJSON} onExportPDF={exportPDF} onImport={importJSON} />
+            <MoreMenu className="sm:hidden" onExport={exportJSON} onExportPDF={exportPDF} onExportLender={exportLenderReport} onImport={importJSON} />
             <span aria-hidden style={{ width: 1, alignSelf: "stretch", margin: "2px 2px", background: C.line }} />
             <button onClick={signOut} title={t("signOut")} aria-label={t("signOut")}
               className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm"
@@ -2624,7 +2814,7 @@ function Segmented({ options, value, onChange, fluid }) {
   );
 }
 /* Overflow menu — holds data actions on small screens so the bar stays one row */
-function MoreMenu({ onExport, onExportPDF, onImport, className = "" }) {
+function MoreMenu({ onExport, onExportPDF, onExportLender, onImport, className = "" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -2667,6 +2857,10 @@ function MoreMenu({ onExport, onExportPDF, onImport, className = "" }) {
           <button role="menuitem" style={item} onMouseEnter={hoverOn} onMouseLeave={hoverOff}
             onClick={() => { setOpen(false); onExportPDF(); }}>
             <FileText size={15} /> PDF
+          </button>
+          <button role="menuitem" style={item} onMouseEnter={hoverOn} onMouseLeave={hoverOff}
+            onClick={() => { setOpen(false); onExportLender(); }}>
+            <Landmark size={15} /> {t("exLender_btn")}
           </button>
           <label role="menuitem" style={{ ...item }} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
             <Upload size={15} /> {t("import")}
