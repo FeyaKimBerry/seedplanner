@@ -137,8 +137,10 @@ const STR = {
     totalSpend: "Total spending", perDay: "/day", perWk: "/wk", perYr: "/yr", perFn: "/fortnight", perOnce: "one-off",
     unit_day: "Day", unit_week: "Week", unit_month: "Month", unit_year: "Year",
     incomeSources: "Where it comes from", totalIncome: "Total income",
-    emTitle: "Emergency fund", emDesc: "Kept separate from your goals — your buffer before anything else.",
+    emTitle: "Emergency fund", emDesc: "A safety net to cover essential living costs if your income stops. Kept separate from your savings goals.",
     emCurrent: "Current", emTarget: "Target", emFunded: "{pct}% funded · {a} of {b}",
+    emRule: "Most financial advisors recommend 3–6 months of essential expenses. 3 months is the minimum; 6 months is safer if you're self-employed or on a single income.",
+    emSuggest: "Based on your expenses:", em3mo: "3 months", em6mo: "6 months", emSetTo: "Set target to",
 
     setAssumptions: "Projection assumptions", setCurrency: "Currency", setStarting: "Starting savings",
     setYears: "Project forward (years)", setCons: "Conservative return %", setExp: "Expected return %",
@@ -268,8 +270,10 @@ const STR = {
     totalSpend: "รายจ่ายรวม", perDay: "/วัน", perWk: "/สัปดาห์", perYr: "/ปี", perFn: "/สองสัปดาห์", perOnce: "ครั้งเดียว",
     unit_day: "วัน", unit_week: "สัปดาห์", unit_month: "เดือน", unit_year: "ปี",
     incomeSources: "รายได้มาจากไหน", totalIncome: "รายได้รวม",
-    emTitle: "เงินสำรองฉุกเฉิน", emDesc: "แยกจากเป้าหมายอื่น — กันชนก่อนเรื่องอื่น",
+    emTitle: "เงินสำรองฉุกเฉิน", emDesc: "ตาข่ายความปลอดภัยสำหรับค่าใช้จ่ายจำเป็นหากรายได้หยุดชะงัก แยกจากเป้าหมายการออม",
     emCurrent: "ปัจจุบัน", emTarget: "เป้าหมาย", emFunded: "{pct}% แล้ว · {a} จาก {b}",
+    emRule: "ที่ปรึกษาการเงินส่วนใหญ่แนะนำ 3–6 เดือนของค่าใช้จ่ายจำเป็น 3 เดือนเป็นขั้นต่ำ 6 เดือนปลอดภัยกว่าหากทำงานฟรีแลนซ์หรือมีรายได้เดียว",
+    emSuggest: "จากค่าใช้จ่ายของคุณ:", em3mo: "3 เดือน", em6mo: "6 เดือน", emSetTo: "ตั้งเป้าหมายเป็น",
 
     setAssumptions: "สมมติฐานการคำนวณ", setCurrency: "สกุลเงิน", setStarting: "เงินออมเริ่มต้น",
     setYears: "คำนวณล่วงหน้า (ปี)", setCons: "ผลตอบแทนต่ำ %", setExp: "ผลตอบแทนคาดหวัง %",
@@ -398,8 +402,10 @@ const STR = {
     totalSpend: "Gesamtausgaben", perDay: "/Tag", perWk: "/Wo.", perYr: "/Jahr", perFn: "/2 Wo.", perOnce: "einmalig",
     unit_day: "Tag", unit_week: "Woche", unit_month: "Monat", unit_year: "Jahr",
     incomeSources: "Woher es kommt", totalIncome: "Gesamteinkommen",
-    emTitle: "Notgroschen", emDesc: "Getrennt von deinen Zielen – dein Puffer vor allem anderen.",
+    emTitle: "Notgroschen", emDesc: "Ein Sicherheitsnetz für wesentliche Lebenshaltungskosten, falls dein Einkommen wegfällt. Getrennt von deinen Sparzielen.",
     emCurrent: "Aktuell", emTarget: "Ziel", emFunded: "{pct}% gedeckt · {a} von {b}",
+    emRule: "Die meisten Finanzberater empfehlen 3–6 Monate wesentlicher Ausgaben. 3 Monate sind das Minimum; 6 Monate sind sicherer bei Selbstständigkeit oder Einzeleinkommen.",
+    emSuggest: "Basierend auf deinen Ausgaben:", em3mo: "3 Monate", em6mo: "6 Monate", emSetTo: "Ziel setzen auf",
 
     setAssumptions: "Annahmen der Prognose", setCurrency: "Währung", setStarting: "Anfangsersparnis",
     setYears: "Vorausberechnung (Jahre)", setCons: "Konservative Rendite %", setExp: "Erwartete Rendite %",
@@ -528,8 +534,10 @@ const STR = {
     totalSpend: "Dépenses totales", perDay: "/jour", perWk: "/sem.", perYr: "/an", perFn: "/quinzaine", perOnce: "ponctuel",
     unit_day: "Jour", unit_week: "Semaine", unit_month: "Mois", unit_year: "Année",
     incomeSources: "D'où ça vient", totalIncome: "Revenu total",
-    emTitle: "Fonds d'urgence", emDesc: "Séparé de vos objectifs – votre coussin avant tout le reste.",
+    emTitle: "Fonds d'urgence", emDesc: "Un filet de sécurité pour couvrir les dépenses essentielles si vos revenus s'arrêtent. Séparé de vos objectifs d'épargne.",
     emCurrent: "Actuel", emTarget: "Cible", emFunded: "{pct}% atteint · {a} sur {b}",
+    emRule: "La plupart des conseillers financiers recommandent 3 à 6 mois de dépenses essentielles. 3 mois est le minimum ; 6 mois est plus sûr si vous êtes indépendant ou avec un seul revenu.",
+    emSuggest: "D'après vos dépenses :", em3mo: "3 mois", em6mo: "6 mois", emSetTo: "Définir la cible à",
 
     setAssumptions: "Hypothèses de projection", setCurrency: "Devise", setStarting: "Épargne de départ",
     setYears: "Projeter sur (années)", setCons: "Rendement prudent %", setExp: "Rendement attendu %",
@@ -1422,7 +1430,7 @@ export default function App() {
 
         {tab === "balance" && (
           <>
-            <EmergencyCard emergency={state.emergency} setEmergency={(p) => set({ emergency: { ...state.emergency, ...p } })} fmt={fmt} />
+            <EmergencyCard emergency={state.emergency} setEmergency={(p) => set({ emergency: { ...state.emergency, ...p } })} fmt={fmt} monthlyExpenses={projection.monthlyExpense} />
             <ListSection
               title={t("title_assets")} subtitle={t("sub_assets")}
               items={filtered.assets} columns={assetCols()}
@@ -2482,8 +2490,12 @@ function GoalProgress({ goals, fmt, pool }) {
 /* ================================================================== *
  * Emergency fund
  * ================================================================== */
-function EmergencyCard({ emergency, setEmergency, fmt }) {
+function EmergencyCard({ emergency, setEmergency, fmt, monthlyExpenses }) {
   const pct = emergency.target ? Math.min(100, Math.round((emergency.current / emergency.target) * 100)) : 0;
+  const suggest3 = Math.round(monthlyExpenses * 3);
+  const suggest6 = Math.round(monthlyExpenses * 6);
+  const hasSuggestions = suggest3 > 0;
+
   return (
     <Card>
       <div className="flex items-center gap-2">
@@ -2491,7 +2503,33 @@ function EmergencyCard({ emergency, setEmergency, fmt }) {
         <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("emTitle")}</h2>
       </div>
       <p style={{ color: C.faint, fontSize: 12, marginTop: 2 }}>{t("emDesc")}</p>
-      <div className="mt-3 flex flex-wrap items-end gap-5">
+
+      {/* 3–6 month rule explainer */}
+      <div style={{ background: C.greenSoft, borderRadius: 8, padding: "9px 12px", marginTop: 10, fontSize: 12.5, color: C.ink, lineHeight: 1.55 }}>
+        {t("emRule")}
+      </div>
+
+      {/* Suggested targets based on their expenses */}
+      {hasSuggestions && (
+        <div style={{ marginTop: 10, fontSize: 12, color: C.sub }}>
+          <span style={{ fontWeight: 500 }}>{t("emSuggest")}</span>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {[{ label: t("em3mo"), value: suggest3 }, { label: t("em6mo"), value: suggest6 }].map(({ label, value }) => (
+              <button key={label} onClick={() => setEmergency({ target: value })}
+                style={{
+                  border: `1px solid ${emergency.target === value ? C.green : C.line}`,
+                  background: emergency.target === value ? C.greenSoft : C.card,
+                  color: emergency.target === value ? C.green : C.sub,
+                  borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", fontWeight: 500,
+                }}>
+                {label} — {fmt.format(value)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-wrap items-end gap-5">
         <Field label={t("emCurrent")}>
           <input type="number" value={emergency.current} onChange={(e) => setEmergency({ current: +e.target.value || 0 })}
             style={fieldStyle} />
@@ -2500,12 +2538,14 @@ function EmergencyCard({ emergency, setEmergency, fmt }) {
           <input type="number" value={emergency.target} onChange={(e) => setEmergency({ target: +e.target.value || 0 })}
             style={fieldStyle} />
         </Field>
-        <div style={{ flex: 1, minWidth: 180 }}>
-          <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>{t("emFunded", { pct, a: fmt.format(emergency.current), b: fmt.format(emergency.target) })}</div>
-          <div style={{ height: 8, background: C.line, borderRadius: 99 }}>
-            <div style={{ width: `${pct}%`, height: "100%", background: C.green, borderRadius: 99 }} />
+        {emergency.target > 0 && (
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>{t("emFunded", { pct, a: fmt.format(emergency.current), b: fmt.format(emergency.target) })}</div>
+            <div style={{ height: 8, background: C.line, borderRadius: 99 }}>
+              <div style={{ width: `${pct}%`, height: "100%", background: pct >= 100 ? C.green : C.optimistic, borderRadius: 99, transition: "width 0.3s" }} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Card>
   );
