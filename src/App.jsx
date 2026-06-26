@@ -1324,9 +1324,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     return filtered.plans
       .filter((p) => (p.amount || 0) > 0 && p.date)
       .map((p) => {
-        const [y, m, d] = p.date.split("-").map(Number);
-        const planDate = new Date(y, m - 1, d); // local midnight, not UTC
-        const months = Math.round((planDate - now) / (1000 * 60 * 60 * 24 * 30.44));
+        const months = monthsFromNow(p.date);
         const idx = Math.min(Math.max(0, months), projection.data.length - 1);
         return { id: p.id, label: p.label, target: p.amount, months, cum: projection.data[idx][chartKey] };
       })
