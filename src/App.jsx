@@ -1290,6 +1290,16 @@ function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
   );
 }
 
+/* Green bar with rounded top corners only when no plan sits on top,
+ * flat top when a red plan segment is stacked above it. */
+function GreenBar({ x, y, width, height, fill, payload }) {
+  if (!height || height <= 0) return null;
+  const hasPlan = payload?.planCost > 0;
+  if (hasPlan) return <rect x={x} y={y} width={width} height={height} fill={fill} />;
+  const r = Math.min(6, width / 2, height / 2);
+  return <path fill={fill} d={`M${x},${y+height} V${y+r} Q${x},${y} ${x+r},${y} H${x+width-r} Q${x+width},${y} ${x+width},${y+r} V${y+height} Z`} />;
+}
+
 /* ================================================================== *
  * Dashboard
  * ================================================================== */
@@ -1405,7 +1415,9 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     for (let y = 1; y <= state.settings.projectionYears; y++) {
       const p = projection.data[Math.min(y * 12, projection.data.length - 1)];
       const b = yearBuckets.find((bk) => bk.year === y);
-      out.push({ year: y, cal: String(calYear(y)), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(yearlyCtrl, y * 12), goalsHere: b?.goals, oneOffsHere: eventsByYear.get(y) });
+      const evY = eventsByYear.get(y) || [];
+      const planCostY = evY.reduce((s, e) => e.amount < 0 ? s + Math.abs(e.amount) : s, 0);
+      out.push({ year: y, cal: String(calYear(y)), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(yearlyCtrl, y * 12), goalsHere: b?.goals, oneOffsHere: evY, planCost: planCostY || 0 });
     }
     return out;
   }, [projection, chartKey, projYears, yearlyCtrl, yearBuckets, eventsByYear, baseYear]);
@@ -1424,7 +1436,9 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       const d = new Date();
       d.setMonth(d.getMonth() + m);
       const b = monthBuckets.find((bk) => bk.months === m);
-      out.push({ label: d.toLocaleString(undefined, { month: "short" }), cal: d.toLocaleString(undefined, { month: "short", year: "numeric" }), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(monthlyCtrl, m), goalsHere: b?.goals, oneOffsHere: eventsByMonth.get(m) });
+      const evM = eventsByMonth.get(m) || [];
+      const planCostM = evM.reduce((s, e) => e.amount < 0 ? s + Math.abs(e.amount) : s, 0);
+      out.push({ label: d.toLocaleString(undefined, { month: "short" }), cal: d.toLocaleString(undefined, { month: "short", year: "numeric" }), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(monthlyCtrl, m), goalsHere: b?.goals, oneOffsHere: evM, planCost: planCostM || 0 });
     }
     return out;
   }, [projection, chartKey, year, monthlyCtrl, monthBuckets, eventsByMonth]);
@@ -1523,11 +1537,12 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
                 cursor={{ fill: C.greenSoft, fillOpacity: 0.5 }}
                 content={<ChartTooltip fmt={fmt} isMonthly={isMonthly} year={year} />} />
 
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={38}>
+              <Bar dataKey="value" stackId="a" shape={<GreenBar />} maxBarSize={38}>
                 {chartData.map((d, i) => (
-                  <Cell key={i} fill={d.value >= retireTarget ? C.green : C.belowBar} />
+                  <Cell key={i} fill={d.value < 0 ? "#D95F5F" : d.value >= retireTarget ? C.green : C.belowBar} />
                 ))}
               </Bar>
+              <Bar dataKey="planCost" stackId="a" radius={[6, 6, 0, 0]} maxBarSize={38} fill="#D95F5F" fillOpacity={0.35} />
               {whatIf.active && (
                 <Bar dataKey="whatif" radius={[6, 6, 0, 0]} maxBarSize={38} fill={C.clay} fillOpacity={0.85} />
               )}
