@@ -1586,7 +1586,6 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       </Card>
 
       <WhatIf whatIf={whatIf} setWhatIf={setWhatIf} fmt={fmt} settings={state.settings} />
-      <PlansTracker plans={filtered.plans} fmt={fmt} pool={state.settings.startingSavings} />
     </div>
   );
 }
