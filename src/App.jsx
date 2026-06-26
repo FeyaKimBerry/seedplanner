@@ -109,6 +109,12 @@ const STR = {
     presetTitle: "Suggestions", presetHint: "Not sure what to record? Tap to add a common item, then fill in the amount.",
     welcome_title: "Welcome to Seedplanner", welcome_body: "Add your income and expenses to see your savings projection and when you could retire. Start from scratch, or explore with sample data first.",
     welcome_start: "Add my income", loadSample: "Try with sample data",
+    welcome_savings_q: "How much do you have saved right now?",
+    welcome_savings_hint: "This sets your starting point on the chart. You can update it anytime in Settings.",
+    welcome_savings_skip: "Skip for now", welcome_savings_next: "Continue",
+    nudge_savings_title: "Update your starting savings?",
+    nudge_savings_body: "Your savings balance was last set {n} days ago. Tap to update it so your projection stays accurate.",
+    nudge_savings_update: "Update now", nudge_savings_dismiss: "Dismiss",
     data_title: "Data", data_desc: "Load an example to explore, or wipe everything and start fresh.", clearData: "Clear all data",
     clearConfirm: "Clear all your data? This can't be undone.",
     cat_housing: "Housing", cat_food: "Food", cat_transport: "Transport",
@@ -221,6 +227,12 @@ const STR = {
     presetTitle: "รายการแนะนำ", presetHint: "ไม่รู้จะบันทึกอะไร? แตะเพื่อเพิ่มรายการที่พบบ่อย แล้วกรอกจำนวนเงิน",
     welcome_title: "ยินดีต้อนรับสู่ Seedplanner", welcome_body: "เพิ่มรายได้และรายจ่ายเพื่อดูการคาดการณ์เงินออมและว่าคุณจะเกษียณได้เมื่อไหร่ เริ่มจากศูนย์ หรือลองใช้ข้อมูลตัวอย่างก่อนก็ได้",
     welcome_start: "เพิ่มรายได้ของฉัน", loadSample: "ลองใช้ข้อมูลตัวอย่าง",
+    welcome_savings_q: "ตอนนี้คุณมีเงินออมเท่าไหร่?",
+    welcome_savings_hint: "นี่คือจุดเริ่มต้นบนกราฟ คุณสามารถอัพเดทได้ตลอดเวลาในการตั้งค่า",
+    welcome_savings_skip: "ข้ามตอนนี้", welcome_savings_next: "ต่อไป",
+    nudge_savings_title: "อัพเดทเงินออมเริ่มต้นของคุณ?",
+    nudge_savings_body: "ยอดเงินออมของคุณถูกตั้งค่าเมื่อ {n} วันที่แล้ว แตะเพื่ออัพเดทเพื่อให้การคาดการณ์แม่นยำ",
+    nudge_savings_update: "อัพเดทเดี๋ยวนี้", nudge_savings_dismiss: "ปิด",
     data_title: "ข้อมูล", data_desc: "โหลดตัวอย่างเพื่อลองใช้ หรือล้างทั้งหมดเพื่อเริ่มใหม่", clearData: "ล้างข้อมูลทั้งหมด",
     clearConfirm: "ล้างข้อมูลทั้งหมด? ไม่สามารถย้อนกลับได้",
     cat_housing: "ที่อยู่อาศัย", cat_food: "อาหาร", cat_transport: "การเดินทาง",
@@ -333,6 +345,12 @@ const STR = {
     presetTitle: "Vorschläge", presetHint: "Unsicher, was du erfassen sollst? Tippe, um einen üblichen Posten hinzuzufügen, und trage den Betrag ein.",
     welcome_title: "Willkommen bei Seedplanner", welcome_body: "Füge dein Einkommen und deine Ausgaben hinzu, um deine Sparprognose zu sehen und wann du in Rente gehen könntest. Beginne bei null oder erkunde zuerst mit Beispieldaten.",
     welcome_start: "Mein Einkommen hinzufügen", loadSample: "Mit Beispieldaten testen",
+    welcome_savings_q: "Wie viel hast du gerade gespart?",
+    welcome_savings_hint: "Das ist dein Startpunkt im Diagramm. Du kannst es jederzeit in den Einstellungen ändern.",
+    welcome_savings_skip: "Überspringen", welcome_savings_next: "Weiter",
+    nudge_savings_title: "Startersparnisse aktualisieren?",
+    nudge_savings_body: "Dein Sparguthaben wurde vor {n} Tagen zuletzt festgelegt. Tippe, um es zu aktualisieren.",
+    nudge_savings_update: "Jetzt aktualisieren", nudge_savings_dismiss: "Verwerfen",
     data_title: "Daten", data_desc: "Lade ein Beispiel zum Erkunden oder lösche alles und beginne neu.", clearData: "Alle Daten löschen",
     clearConfirm: "Alle deine Daten löschen? Das kann nicht rückgängig gemacht werden.",
     cat_housing: "Wohnen", cat_food: "Essen", cat_transport: "Transport",
@@ -445,6 +463,12 @@ const STR = {
     presetTitle: "Suggestions", presetHint: "Vous ne savez pas quoi enregistrer ? Touchez pour ajouter un poste courant, puis saisissez le montant.",
     welcome_title: "Bienvenue sur Seedplanner", welcome_body: "Ajoutez vos revenus et dépenses pour voir votre projection d'épargne et quand vous pourrez prendre votre retraite. Partez de zéro, ou explorez d'abord avec des données d'exemple.",
     welcome_start: "Ajouter mes revenus", loadSample: "Essayer avec des données d'exemple",
+    welcome_savings_q: "Combien avez-vous épargné en ce moment ?",
+    welcome_savings_hint: "C'est votre point de départ sur le graphique. Vous pouvez le modifier à tout moment dans les réglages.",
+    welcome_savings_skip: "Passer", welcome_savings_next: "Continuer",
+    nudge_savings_title: "Mettre à jour votre épargne de départ ?",
+    nudge_savings_body: "Votre solde a été défini il y a {n} jours. Touchez pour le mettre à jour.",
+    nudge_savings_update: "Mettre à jour", nudge_savings_dismiss: "Ignorer",
     data_title: "Données", data_desc: "Chargez un exemple pour explorer, ou effacez tout pour repartir à zéro.", clearData: "Effacer toutes les données",
     clearConfirm: "Effacer toutes vos données ? Action irréversible.",
     cat_housing: "Logement", cat_food: "Alimentation", cat_transport: "Transport",
@@ -587,6 +611,7 @@ const seed = {
     currency: "AUD",
     lang: "en",
     startingSavings: 25000,
+    startingSavingsUpdatedAt: new Date().toISOString().slice(0, 10),
     projectionYears: 30,
     returnConservative: 3,
     returnExpected: 6,
@@ -822,6 +847,7 @@ export default function App() {
   });
   const saveTimer = useRef(null);
   const [confirm, setConfirm] = useState(null); // { title, message, confirmLabel, danger, onConfirm }
+  const [savingsNudgeDismissed, setSavingsNudgeDismissed] = useState(false);
 
   useEffect(() => {
     store.load().then((s) => {
@@ -842,9 +868,11 @@ export default function App() {
 
   const loadSample = () => setState(clone(seed));
   // Seed a few common income/expense rows at $0 so a fresh user has a starting point.
-  const startWithPresets = () => {
+  const startWithPresets = (savingsAmount = 0) => {
+    const today = new Date().toISOString().slice(0, 10);
     setState((s) => ({
       ...s,
+      settings: { ...s.settings, startingSavings: savingsAmount, startingSavingsUpdatedAt: today },
       income: STARTER_INCOME.map((p) => ({ id: uid(), label: t(p.key), amount: 0, frequency: p.frequency })),
       expenses: STARTER_EXPENSES.map((p) => ({ id: uid(), label: t(p.key), amount: 0, frequency: p.frequency, category: t(p.catKey) })),
     }));
@@ -1156,7 +1184,8 @@ export default function App() {
             ? <WelcomeCard onLoadSample={loadSample} onStart={startWithPresets} />
             : <Dashboard {...{ state, projection, fmt, retireTarget, retireDate, retireMonths,
                 metric, setMetric, grain, setGrain, scaleMode, setScaleMode, pickYear, setPickYear,
-                whatIf, setWhatIf, chartKey, filtered }} />
+                whatIf, setWhatIf, chartKey, filtered, setSettings, setTab,
+                savingsNudgeDismissed, onDismissSavingsNudge: () => setSavingsNudgeDismissed(true) }} />
         )}
 
         {tab === "income" && (
@@ -1248,6 +1277,42 @@ export default function App() {
  * Welcome / empty state — shown until the user has any income or expenses
  * ================================================================== */
 function WelcomeCard({ onLoadSample, onStart }) {
+  const [step, setStep] = useState("intro"); // "intro" | "savings"
+  const [savings, setSavings] = useState("");
+
+  if (step === "savings") {
+    return (
+      <Card>
+        <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
+          <img src="/logo.png" alt="" style={{ height: 26, width: "auto" }} />
+        </div>
+        <h2 style={{ fontWeight: 600, fontSize: 17, marginBottom: 6 }}>{t("welcome_savings_q")}</h2>
+        <p style={{ color: C.sub, fontSize: 13.5, lineHeight: 1.6, maxWidth: 500, marginBottom: 16 }}>{t("welcome_savings_hint")}</p>
+        <input
+          type="number"
+          autoFocus
+          placeholder="0"
+          value={savings}
+          onChange={(e) => setSavings(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && onStart(+savings || 0)}
+          style={{ ...fieldStyle, fontSize: 22, fontWeight: 600, width: 220, marginBottom: 18 }}
+        />
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => onStart(+savings || 0)}
+            className="rounded-md px-4 py-2 text-sm"
+            style={{ background: C.green, color: "#fff", fontWeight: 600 }}>
+            {t("welcome_savings_next")}
+          </button>
+          <button onClick={() => onStart(0)}
+            className="rounded-md px-3 py-2 text-sm"
+            style={{ border: `1px solid ${C.line}`, color: C.sub, background: C.card }}>
+            {t("welcome_savings_skip")}
+          </button>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <div className="flex items-center gap-2">
@@ -1256,7 +1321,7 @@ function WelcomeCard({ onLoadSample, onStart }) {
       </div>
       <p style={{ color: C.sub, fontSize: 13.5, marginTop: 8, lineHeight: 1.6, maxWidth: 560 }}>{t("welcome_body")}</p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button onClick={onStart}
+        <button onClick={() => setStep("savings")}
           className="flex items-center gap-1 rounded-md px-3 py-2 text-sm"
           style={{ background: C.green, color: "#fff", fontWeight: 600 }}>
           <Plus size={15} /> {t("welcome_start")}
@@ -1312,7 +1377,14 @@ function GreenBar({ x, y, width, height, fill, payload }) {
 /* ================================================================== *
  * Dashboard
  * ================================================================== */
-function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMonths, metric, setMetric, grain, setGrain, scaleMode, setScaleMode, pickYear, setPickYear, whatIf, setWhatIf, chartKey, filtered }) {
+function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMonths, metric, setMetric, grain, setGrain, scaleMode, setScaleMode, pickYear, setPickYear, whatIf, setWhatIf, chartKey, filtered, setSettings, setTab, savingsNudgeDismissed, onDismissSavingsNudge }) {
+  // Show savings nudge if starting savings hasn't been updated in 30+ days
+  const savingsNudgeDays = (() => {
+    const updated = state.settings.startingSavingsUpdatedAt;
+    if (!updated) return null;
+    const days = Math.floor((Date.now() - new Date(updated).getTime()) / 86400000);
+    return days >= 30 ? days : null;
+  })();
   const milestones = [1, 2, 3, 5, 10].filter((y) => y <= state.settings.projectionYears);
   const pointAt = (y) => projection.data[Math.min(y * 12, projection.data.length - 1)];
   // Projection year y ends y calendar years from today — label everything by that real year.
@@ -1471,6 +1543,26 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
 
   return (
     <div className="flex flex-col gap-5">
+      {/* Savings nudge — shown after 30 days of stale starting savings */}
+      {savingsNudgeDays && !savingsNudgeDismissed && (
+        <div style={{ background: C.claySoft, border: `1px solid ${C.clay}`, borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 13.5, color: C.ink }}>{t("nudge_savings_title")}</div>
+            <div style={{ fontSize: 12.5, color: C.sub, marginTop: 2 }}>{t("nudge_savings_body", { n: savingsNudgeDays })}</div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setTab("settings")}
+              style={{ background: C.clay, color: "#fff", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              {t("nudge_savings_update")}
+            </button>
+            <button onClick={onDismissSavingsNudge}
+              style={{ background: "transparent", border: `1px solid ${C.clay}`, borderRadius: 8, padding: "6px 10px", fontSize: 13, color: C.clay, cursor: "pointer" }}>
+              {t("nudge_savings_dismiss")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* headline cards — grouped: cashflow now vs retirement outlook */}
       <div className="flex flex-col gap-4">
         <div>
@@ -2251,7 +2343,7 @@ function SettingsPanel({ state, setSettings, setState, onLoadSample, onClearData
             </select>
           </Field>
           <Field label={t("setStarting")}>
-            <input type="number" value={s.startingSavings} onChange={(e) => setSettings({ startingSavings: +e.target.value || 0 })} style={fieldStyle} />
+            <input type="number" value={s.startingSavings} onChange={(e) => setSettings({ startingSavings: +e.target.value || 0, startingSavingsUpdatedAt: new Date().toISOString().slice(0, 10) })} style={fieldStyle} />
           </Field>
           <Field label={t("setYears")}>
             <input type="number" value={s.projectionYears} onChange={(e) => setSettings({ projectionYears: Math.max(1, +e.target.value || 1) })} style={fieldStyle} />
