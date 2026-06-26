@@ -91,6 +91,7 @@ const STR = {
     goalsRankTitle: "Goal tracker", goalsRankSub: "Sorted by date — the goal due soonest is on top.",
     goalAutoHint: "Your savings now ({a}) applied to the soonest-due goal first.",
     g_focus: "Focus next", g_done: "Reached", g_overdue: "Overdue", g_need: "Save {a}/mo", g_needNoDate: "Add a date to track pace",
+    plan_on_track: "On track", plan_needs_attn: "Needs attention",
     tab_plans: "Plans", title_plans: "Plans", sub_plans: "Things you're saving toward or spending on — each one appears on your projection.",
     new_plan: "New plan", plan_type: "Type", plan_type_save: "Save toward", plan_type_spend: "One-off spend", col_plan: "Plan",
     title_assets: "Assets", sub_assets: "What you own — super, investments, property. Feeds the net-worth view.",
@@ -201,6 +202,7 @@ const STR = {
     goalsRankTitle: "ตัวติดตามเป้าหมาย", goalsRankSub: "เรียงตามวันที่ — เป้าหมายที่ถึงกำหนดก่อนจะอยู่บนสุด",
     goalAutoHint: "เงินออมตอนนี้ ({a}) นำไปใส่เป้าหมายที่ถึงกำหนดก่อน",
     g_focus: "โฟกัสต่อไป", g_done: "สำเร็จแล้ว", g_overdue: "เลยกำหนด", g_need: "ออม {a}/เดือน", g_needNoDate: "เพิ่มวันที่เพื่อติดตามจังหวะ",
+    plan_on_track: "อยู่ในเส้นทาง", plan_needs_attn: "ต้องใส่ใจ",
     tab_plans: "แผน", title_plans: "แผน", sub_plans: "สิ่งที่คุณกำลังออมหรือจะใช้จ่าย — แต่ละรายการจะแสดงในการคาดการณ์",
     new_plan: "แผนใหม่", plan_type: "ประเภท", plan_type_save: "ออมเพื่อ", plan_type_spend: "ใช้จ่ายครั้งเดียว", col_plan: "แผน",
     title_assets: "สินทรัพย์", sub_assets: "สิ่งที่คุณมี — กองทุนเลี้ยงชีพ การลงทุน อสังหาฯ ใช้ในมุมมองมูลค่าสุทธิ",
@@ -311,6 +313,7 @@ const STR = {
     goalsRankTitle: "Ziel-Tracker", goalsRankSub: "Nach Datum sortiert — das früheste Ziel steht oben.",
     goalAutoHint: "Deine aktuellen Ersparnisse ({a}) zuerst auf das früheste Ziel angewandt.",
     g_focus: "Als Nächstes", g_done: "Erreicht", g_overdue: "Überfällig", g_need: "{a}/Mon. sparen", g_needNoDate: "Datum hinzufügen, um das Tempo zu verfolgen",
+    plan_on_track: "Im Plan", plan_needs_attn: "Aufmerksamkeit nötig",
     tab_plans: "Pläne", title_plans: "Pläne", sub_plans: "Dinge, auf die du sparst oder die du ausgeben wirst — jedes erscheint in deiner Prognose.",
     new_plan: "Neuer Plan", plan_type: "Typ", plan_type_save: "Sparziel", plan_type_spend: "Einmalige Ausgabe", col_plan: "Plan",
     title_assets: "Vermögen", sub_assets: "Was du besitzt – Altersvorsorge, Investitionen, Immobilien. Fließt in die Nettovermögensansicht ein.",
@@ -421,6 +424,7 @@ const STR = {
     goalsRankTitle: "Suivi des objectifs", goalsRankSub: "Trié par date — l'objectif le plus proche est en haut.",
     goalAutoHint: "Votre épargne actuelle ({a}) appliquée d'abord à l'objectif le plus proche.",
     g_focus: "Priorité", g_done: "Atteint", g_overdue: "En retard", g_need: "Épargner {a}/mois", g_needNoDate: "Ajoutez une date pour suivre le rythme",
+    plan_on_track: "En bonne voie", plan_needs_attn: "Attention requise",
     tab_plans: "Plans", title_plans: "Plans", sub_plans: "Ce pour quoi vous épargnez ou dépenserez — chaque élément apparaît dans votre projection.",
     new_plan: "Nouveau plan", plan_type: "Type", plan_type_save: "Épargne pour", plan_type_spend: "Dépense ponctuelle", col_plan: "Plan",
     title_assets: "Actifs", sub_assets: "Ce que vous possédez – retraite, placements, immobilier. Alimente la vue valeur nette.",
@@ -1585,6 +1589,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       </Card>
 
       <WhatIf whatIf={whatIf} setWhatIf={setWhatIf} fmt={fmt} settings={state.settings} />
+      <PlansTracker plans={filtered.plans} fmt={fmt} monthlyNet={projection.monthlyNet} />
     </div>
   );
 }
@@ -2055,6 +2060,70 @@ function Breakdown({ items, groupBy, title, totalLabel, fmt }) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+      </div>
+    </Card>
+  );
+}
+
+/* ================================================================== *
+ * Plans tracker — overview card showing progress + status for each plan
+ * ================================================================== */
+function PlansTracker({ plans, fmt, monthlyNet }) {
+  if (!plans.length) return null;
+  const now = new Date();
+  const sorted = [...plans].sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999"));
+
+  return (
+    <Card>
+      <div className="flex items-center gap-2" style={{ marginBottom: 12 }}>
+        <Target size={16} color={C.green} />
+        <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("tab_plans")}</h2>
+      </div>
+      <div className="flex flex-col">
+        {sorted.map((p, i) => {
+          const target = p.amount || 0;
+          const current = p.current || 0;
+          const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+          const done = target > 0 && current >= target;
+          const monthsLeft = p.date ? Math.round((new Date(p.date) - now) / (1000 * 60 * 60 * 24 * 30.44)) : null;
+          const overdue = !done && monthsLeft !== null && monthsLeft <= 0;
+          const remaining = Math.max(0, target - current);
+          const perMonth = monthsLeft > 0 ? remaining / monthsLeft : null;
+          const onTrack = done || (perMonth !== null && monthlyNet >= perMonth);
+          const dateLabel = p.date ? new Date(p.date).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : null;
+
+          let statusLabel, statusColor;
+          if (done)        { statusLabel = t("g_done");          statusColor = C.green; }
+          else if (overdue){ statusLabel = t("g_overdue");        statusColor = "#D95F5F"; }
+          else if (onTrack){ statusLabel = t("plan_on_track");    statusColor = C.green; }
+          else             { statusLabel = t("plan_needs_attn");  statusColor = C.clay; }
+
+          const barColor = done ? C.green : onTrack ? C.optimistic : C.clay;
+
+          return (
+            <div key={p.id} style={{ borderTop: i ? `1px solid ${C.line}` : "none", paddingTop: i ? 14 : 0, marginTop: i ? 14 : 0 }}>
+              <div className="flex items-center justify-between gap-2" style={{ marginBottom: 6 }}>
+                <span style={{ fontWeight: 600, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.label || "—"}</span>
+                <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, color: statusColor,
+                  background: statusColor + "18", padding: "2px 8px", borderRadius: 99 }}>
+                  {statusLabel}
+                </span>
+              </div>
+              <div style={{ height: 6, background: C.line, borderRadius: 99 }}>
+                <div style={{ width: `${pct}%`, height: "100%", background: barColor, borderRadius: 99, transition: "width 0.3s" }} />
+              </div>
+              <div className="flex items-center justify-between" style={{ marginTop: 5, fontSize: 11 }}>
+                <span style={{ color: C.faint, ...num }}>{fmt.format(current)} / {fmt.format(target)}</span>
+                <span style={{ color: C.sub }}>
+                  {done ? dateLabel
+                    : overdue ? <span style={{ color: "#D95F5F" }}>{dateLabel}</span>
+                    : perMonth != null ? t("g_need", { a: fmt.format(Math.ceil(perMonth)) })
+                    : t("g_needNoDate")}
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </Card>
   );
