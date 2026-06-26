@@ -69,6 +69,7 @@ const STR = {
 
     projSavings: "Projected savings", projNetWorth: "Projected net worth",
     savings: "Savings", netWorth: "Net worth", yearly: "Yearly", monthly: "Monthly",
+    tooltip_remaining: "Remaining",
     scale_log: "Log", scale_linear: "Linear",
     descMonthly: "Month-by-month balance for the chosen year",
     descYearly: "One bar per year · solid green once you pass your retirement number",
@@ -177,6 +178,7 @@ const STR = {
 
     projSavings: "เงินออมที่คาดการณ์", projNetWorth: "มูลค่าสุทธิที่คาดการณ์",
     savings: "เงินออม", netWorth: "มูลค่าสุทธิ", yearly: "รายปี", monthly: "รายเดือน",
+    tooltip_remaining: "คงเหลือ",
     scale_log: "ลอการิทึม", scale_linear: "เชิงเส้น",
     descMonthly: "ยอดเงินรายเดือนของปีที่เลือก",
     descYearly: "หนึ่งแท่งต่อปี · เป็นสีเขียวเข้มเมื่อถึงเงินเกษียณ",
@@ -286,6 +288,7 @@ const STR = {
 
     projSavings: "Prognostizierte Ersparnisse", projNetWorth: "Prognostiziertes Nettovermögen",
     savings: "Ersparnisse", netWorth: "Nettovermögen", yearly: "Jährlich", monthly: "Monatlich",
+    tooltip_remaining: "Verbleibend",
     scale_log: "Log", scale_linear: "Linear",
     descMonthly: "Monatlicher Kontostand für das gewählte Jahr",
     descYearly: "Ein Balken pro Jahr · grün, sobald du deinen Rentenbetrag erreichst",
@@ -395,6 +398,7 @@ const STR = {
 
     projSavings: "Épargne projetée", projNetWorth: "Valeur nette projetée",
     savings: "Épargne", netWorth: "Valeur nette", yearly: "Annuel", monthly: "Mensuel",
+    tooltip_remaining: "Restant",
     scale_log: "Log", scale_linear: "Linéaire",
     descMonthly: "Solde mois par mois pour l'année choisie",
     descYearly: "Une barre par an · vert dès que vous dépassez votre montant retraite",
@@ -1269,25 +1273,15 @@ function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
       <div style={{ fontWeight: 600, marginBottom: 4 }}>{title}</div>
       {payload.filter((p) => p.dataKey !== "goalLine").map((p) => (
         <div key={p.dataKey} style={{ color: p.color }}>
-          {(p.dataKey === "whatif" ? t("whatif") : t("projected"))}: {fmt.format(p.value)}
+          {p.dataKey === "whatif" ? t("whatif") : t("tooltip_remaining")}: {fmt.format(p.value)}
         </div>
       ))}
-      {row.goalLine != null && (
-        <div style={{ color: C.clay }}>{t("tab_plans")}: {fmt.format(row.goalLine)}</div>
-      )}
-      {row.goalsHere && row.goalsHere.length > 0 && (
-        <div style={{ marginTop: 5, paddingTop: 5, borderTop: `1px solid ${C.line}` }}>
-          {row.goalsHere.map((g) => (
-            <div key={g.id} style={{ color: C.sub }}>• {g.label} — {fmt.format(g.target)}</div>
-          ))}
-        </div>
-      )}
       {row.oneOffsHere && row.oneOffsHere.length > 0 && (
         <div style={{ marginTop: 5, paddingTop: 5, borderTop: `1px solid ${C.line}` }}>
-          <div style={{ color: C.faint, fontSize: 11, marginBottom: 2 }}>{t("tab_plans")}</div>
           {row.oneOffsHere.map((o) => (
-            <div key={o.id} style={{ color: o.amount < 0 ? C.clay : C.green }}>
-              {o.amount < 0 ? "−" : "+"}{fmt.format(Math.abs(o.amount))} · {o.label}
+            <div key={o.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, color: o.amount < 0 ? C.clay : C.green }}>
+              <span>{o.label}</span>
+              <span>{o.amount < 0 ? "−" : "+"}{fmt.format(Math.abs(o.amount))}</span>
             </div>
           ))}
         </div>
