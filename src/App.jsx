@@ -1387,7 +1387,8 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     if (ctrl.length < 2) return null;
     if (month <= ctrl[0].m) return ctrl[0].v;
     const last = ctrl[ctrl.length - 1];
-    if (month >= last.m) return last.v;
+    if (month > last.m) return null;
+    if (month === last.m) return last.v;
     for (let i = 1; i < ctrl.length; i++) {
       if (month <= ctrl[i].m) {
         const a = ctrl[i - 1], b = ctrl[i];
@@ -1535,7 +1536,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
               {cumGoals.length > 0 && (
                 <Line type="linear" dataKey="goalLine"
                   stroke={C.clay} strokeWidth={2}
-                  dot={false} connectNulls isAnimationActive={false} />
+                  dot={false} connectNulls={false} isAnimationActive={false} />
               )}
               {/* one dot per bucket; clustered years show a goal count */}
               {goalDots.map((m) => (
