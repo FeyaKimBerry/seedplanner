@@ -1590,7 +1590,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       </Card>
 
       <WhatIf whatIf={whatIf} setWhatIf={setWhatIf} fmt={fmt} settings={state.settings} />
-      <PlansTracker plans={filtered.plans} fmt={fmt} monthlyNet={projection.monthlyNet} />
+      <PlansTracker plans={filtered.plans} fmt={fmt} pool={state.settings.startingSavings} />
     </div>
   );
 }
@@ -2069,10 +2069,19 @@ function Breakdown({ items, groupBy, title, totalLabel, fmt }) {
 /* ================================================================== *
  * Plans tracker — overview card showing progress + status for each plan
  * ================================================================== */
-function PlansTracker({ plans, fmt, monthlyNet }) {
+function PlansTracker({ plans, fmt, pool }) {
   if (!plans.length) return null;
   const now = new Date();
   const sorted = [...plans].sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999"));
+
+  // waterfall: pour current savings into goals soonest-due first
+  let remaining = pool || 0;
+  const allocated = {};
+  for (const p of sorted) {
+    const a = Math.max(0, Math.min(remaining, p.amount || 0));
+    allocated[p.id] = a;
+    remaining -= a;
+  }
 
   return (
     <Card>
@@ -2083,45 +2092,31 @@ function PlansTracker({ plans, fmt, monthlyNet }) {
       <div className="flex flex-col">
         {sorted.map((p, i) => {
           const target = p.amount || 0;
-          const current = p.current || 0;
+          const current = Math.min(target, (p.current || 0) + (allocated[p.id] || 0));
           const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
           const done = target > 0 && current >= target;
-          const planDate = p.date ? (() => { const [y,m,d] = p.date.split("-").map(Number); return new Date(y,m-1,d); })() : null;
-          const monthsLeft = planDate ? Math.round((planDate - now) / (1000 * 60 * 60 * 24 * 30.44)) : null;
-          const overdue = !done && monthsLeft !== null && monthsLeft <= 0;
-          const remaining = Math.max(0, target - current);
-          const perMonth = monthsLeft > 0 ? remaining / monthsLeft : null;
-          const onTrack = done || (perMonth !== null && monthlyNet >= perMonth);
-          const dateLabel = p.date ? new Date(p.date).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : null;
+          const [y, mo, d] = p.date ? p.date.split("-").map(Number) : [];
+          const planDate = p.date ? new Date(y, mo - 1, d) : null;
+          const overdue = !done && planDate && planDate < now;
+          const dateLabel = planDate ? planDate.toLocaleDateString(undefined, { month: "short", year: "numeric" }) : null;
 
           let statusLabel, statusColor;
-          if (done)        { statusLabel = t("g_done");          statusColor = C.green; }
-          else if (overdue){ statusLabel = t("g_overdue");        statusColor = "#D95F5F"; }
-          else if (onTrack){ statusLabel = t("plan_on_track");    statusColor = C.green; }
-          else             { statusLabel = t("plan_needs_attn");  statusColor = C.clay; }
-
-          const barColor = done ? C.green : onTrack ? C.optimistic : C.clay;
+          if (done)        { statusLabel = t("g_done");    statusColor = C.green; }
+          else if (overdue){ statusLabel = t("g_overdue"); statusColor = "#D95F5F"; }
+          else             { statusLabel = `${pct}%`;      statusColor = C.sub; }
 
           return (
             <div key={p.id} style={{ borderTop: i ? `1px solid ${C.line}` : "none", paddingTop: i ? 14 : 0, marginTop: i ? 14 : 0 }}>
               <div className="flex items-center justify-between gap-2" style={{ marginBottom: 6 }}>
                 <span style={{ fontWeight: 600, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.label || "—"}</span>
-                <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, color: statusColor,
-                  background: statusColor + "18", padding: "2px 8px", borderRadius: 99 }}>
-                  {statusLabel}
-                </span>
+                <span style={{ flexShrink: 0, fontSize: 12, color: overdue ? "#D95F5F" : C.sub }}>{dateLabel}</span>
               </div>
               <div style={{ height: 6, background: C.line, borderRadius: 99 }}>
-                <div style={{ width: `${pct}%`, height: "100%", background: barColor, borderRadius: 99, transition: "width 0.3s" }} />
+                <div style={{ width: `${pct}%`, height: "100%", background: done ? C.green : C.optimistic, borderRadius: 99, transition: "width 0.3s" }} />
               </div>
               <div className="flex items-center justify-between" style={{ marginTop: 5, fontSize: 11 }}>
                 <span style={{ color: C.faint, ...num }}>{fmt.format(current)} / {fmt.format(target)}</span>
-                <span style={{ color: C.sub }}>
-                  {done ? dateLabel
-                    : overdue ? <span style={{ color: "#D95F5F" }}>{dateLabel}</span>
-                    : perMonth != null ? t("g_need", { a: fmt.format(Math.ceil(perMonth)) })
-                    : t("g_needNoDate")}
-                </span>
+                <span style={{ fontWeight: 500, color: done ? C.green : overdue ? "#D95F5F" : C.sub }}>{statusLabel}</span>
               </div>
             </div>
           );
@@ -2157,8 +2152,10 @@ function GoalProgress({ goals, fmt, pool }) {
           const current = g.current != null ? Math.min(g.current + allocated[g.id], target) : allocated[g.id] || 0;
           const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
           const done = target > 0 && current >= target;
-          const overdue = !done && g.date && new Date(g.date) < now;
-          const dateLabel = g.date ? new Date(g.date).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "—";
+          const [gy, gmo, gd] = g.date ? g.date.split("-").map(Number) : [];
+          const planDate = g.date ? new Date(gy, gmo - 1, gd) : null;
+          const overdue = !done && planDate && planDate < now;
+          const dateLabel = planDate ? planDate.toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "—";
           return (
             <div key={g.id} style={{ borderTop: i ? `1px solid ${C.line}` : "none", paddingTop: i ? 12 : 0, marginTop: i ? 12 : 0 }}>
               <div className="flex items-center justify-between gap-2">
