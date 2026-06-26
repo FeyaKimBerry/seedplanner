@@ -5,7 +5,7 @@ import {
   ComposedChart, Line,
 } from "recharts";
 import {
-  Wallet, TrendingDown, CalendarClock, Target, Landmark, Settings as Cog,
+  Wallet, TrendingDown, Target, Landmark, Settings as Cog,
   LayoutDashboard, Plus, Trash2, Download, Upload, ShieldCheck,
   PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw,
   MoreHorizontal,
@@ -90,6 +90,8 @@ const STR = {
     goalsRankTitle: "Goal tracker", goalsRankSub: "Sorted by date — the goal due soonest is on top.",
     goalAutoHint: "Your savings now ({a}) applied to the soonest-due goal first.",
     g_focus: "Focus next", g_done: "Reached", g_overdue: "Overdue", g_need: "Save {a}/mo", g_needNoDate: "Add a date to track pace",
+    tab_plans: "Plans", title_plans: "Plans", sub_plans: "Things you're saving toward or spending on — each one appears on your projection.",
+    new_plan: "New plan", plan_type: "Type", plan_type_save: "Save toward", plan_type_spend: "One-off spend", col_plan: "Plan",
     title_assets: "Assets", sub_assets: "What you own — super, investments, property. Feeds the net-worth view.",
     title_debts: "Debts", sub_debts: "Loans amortise over the projection. Payments reduce your monthly surplus until they're cleared.",
 
@@ -197,6 +199,8 @@ const STR = {
     goalsRankTitle: "ตัวติดตามเป้าหมาย", goalsRankSub: "เรียงตามวันที่ — เป้าหมายที่ถึงกำหนดก่อนจะอยู่บนสุด",
     goalAutoHint: "เงินออมตอนนี้ ({a}) นำไปใส่เป้าหมายที่ถึงกำหนดก่อน",
     g_focus: "โฟกัสต่อไป", g_done: "สำเร็จแล้ว", g_overdue: "เลยกำหนด", g_need: "ออม {a}/เดือน", g_needNoDate: "เพิ่มวันที่เพื่อติดตามจังหวะ",
+    tab_plans: "แผน", title_plans: "แผน", sub_plans: "สิ่งที่คุณกำลังออมหรือจะใช้จ่าย — แต่ละรายการจะแสดงในการคาดการณ์",
+    new_plan: "แผนใหม่", plan_type: "ประเภท", plan_type_save: "ออมเพื่อ", plan_type_spend: "ใช้จ่ายครั้งเดียว", col_plan: "แผน",
     title_assets: "สินทรัพย์", sub_assets: "สิ่งที่คุณมี — กองทุนเลี้ยงชีพ การลงทุน อสังหาฯ ใช้ในมุมมองมูลค่าสุทธิ",
     title_debts: "หนี้สิน", sub_debts: "เงินกู้จะถูกผ่อนตามช่วงเวลา การผ่อนจะลดเงินเหลือต่อเดือนจนกว่าจะหมด",
 
@@ -304,6 +308,8 @@ const STR = {
     goalsRankTitle: "Ziel-Tracker", goalsRankSub: "Nach Datum sortiert — das früheste Ziel steht oben.",
     goalAutoHint: "Deine aktuellen Ersparnisse ({a}) zuerst auf das früheste Ziel angewandt.",
     g_focus: "Als Nächstes", g_done: "Erreicht", g_overdue: "Überfällig", g_need: "{a}/Mon. sparen", g_needNoDate: "Datum hinzufügen, um das Tempo zu verfolgen",
+    tab_plans: "Pläne", title_plans: "Pläne", sub_plans: "Dinge, auf die du sparst oder die du ausgeben wirst — jedes erscheint in deiner Prognose.",
+    new_plan: "Neuer Plan", plan_type: "Typ", plan_type_save: "Sparziel", plan_type_spend: "Einmalige Ausgabe", col_plan: "Plan",
     title_assets: "Vermögen", sub_assets: "Was du besitzt – Altersvorsorge, Investitionen, Immobilien. Fließt in die Nettovermögensansicht ein.",
     title_debts: "Schulden", sub_debts: "Kredite werden über den Zeitraum getilgt. Zahlungen senken deinen monatlichen Überschuss, bis sie abbezahlt sind.",
 
@@ -411,6 +417,8 @@ const STR = {
     goalsRankTitle: "Suivi des objectifs", goalsRankSub: "Trié par date — l'objectif le plus proche est en haut.",
     goalAutoHint: "Votre épargne actuelle ({a}) appliquée d'abord à l'objectif le plus proche.",
     g_focus: "Priorité", g_done: "Atteint", g_overdue: "En retard", g_need: "Épargner {a}/mois", g_needNoDate: "Ajoutez une date pour suivre le rythme",
+    tab_plans: "Plans", title_plans: "Plans", sub_plans: "Ce pour quoi vous épargnez ou dépenserez — chaque élément apparaît dans votre projection.",
+    new_plan: "Nouveau plan", plan_type: "Type", plan_type_save: "Épargne pour", plan_type_spend: "Dépense ponctuelle", col_plan: "Plan",
     title_assets: "Actifs", sub_assets: "Ce que vous possédez – retraite, placements, immobilier. Alimente la vue valeur nette.",
     title_debts: "Dettes", sub_debts: "Les prêts s'amortissent sur la période. Les paiements réduisent votre excédent mensuel jusqu'à leur remboursement.",
 
@@ -588,14 +596,12 @@ const seed = {
     { id: uid(), label: "Subscriptions", amount: 90, frequency: "monthly", category: "Lifestyle" },
     { id: uid(), label: "Transport", amount: 280, frequency: "monthly", category: "Transport" },
   ],
-  oneOffs: [
-    { id: uid(), label: "Japan honeymoon", amount: 12000, date: isoIn(8) },
-    { id: uid(), label: "Christmas gifts", amount: 1500, date: isoIn(6) },
-    { id: uid(), label: "New laptop", amount: 3000, date: isoIn(14) },
-  ],
-  goals: [
-    { id: uid(), label: "House deposit", target: 120000, current: 18000, date: isoIn(48) },
-    { id: uid(), label: "Travel fund", target: 20000, current: 4000, date: isoIn(24) },
+  plans: [
+    { id: uid(), label: "Japan honeymoon", amount: 12000, date: isoIn(8), type: "spend" },
+    { id: uid(), label: "Christmas gifts", amount: 1500, date: isoIn(6), type: "spend" },
+    { id: uid(), label: "New laptop", amount: 3000, date: isoIn(14), type: "spend" },
+    { id: uid(), label: "House deposit", amount: 120000, current: 18000, date: isoIn(48), type: "save" },
+    { id: uid(), label: "Travel fund", amount: 20000, current: 4000, date: isoIn(24), type: "save" },
   ],
   debts: [
     { id: uid(), label: "Car loan", balance: 18000, annualRate: 7, monthlyPayment: 600 },
@@ -610,7 +616,7 @@ const seed = {
 // is opt-in (via "Try with sample data"), never the silent default.
 const emptyState = {
   settings: { ...seed.settings, startingSavings: 0 },
-  income: [], expenses: [], oneOffs: [], goals: [], debts: [], assets: [],
+  income: [], expenses: [], plans: [], debts: [], assets: [],
   emergency: { target: 0, current: 0 },
 };
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -805,7 +811,20 @@ export default function App() {
   const [confirm, setConfirm] = useState(null); // { title, message, confirmLabel, danger, onConfirm }
 
   useEffect(() => {
-    store.load().then((s) => setState(s || clone(emptyState)));
+    store.load().then((s) => {
+      if (!s) { setState(clone(emptyState)); return; }
+      // migrate old oneOffs + goals → plans
+      if (!s.plans && (s.oneOffs || s.goals)) {
+        const migrated = [
+          ...(s.oneOffs || []).map((o) => ({ ...o, type: "spend" })),
+          ...(s.goals || []).map((g) => ({ id: g.id, label: g.label, amount: g.target || 0, date: g.date, type: "save", current: g.current || 0 })),
+        ];
+        const { oneOffs: _o, goals: _g, ...rest } = s;
+        setState({ ...rest, plans: migrated });
+      } else {
+        setState({ ...clone(emptyState), ...s });
+      }
+    });
   }, []);
 
   const loadSample = () => setState(clone(seed));
@@ -857,8 +876,7 @@ export default function App() {
     return {
       income: state.income,
       expenses: state.expenses,
-      oneOffs: state.oneOffs,
-      goals: state.goals,
+      plans: state.plans || [],
       debts: state.debts,
       assets: state.assets,
     };
@@ -870,7 +888,7 @@ export default function App() {
       settings: state.settings,
       income: filtered.income,
       expenses: filtered.expenses,
-      oneOffs: filtered.oneOffs,
+      oneOffs: filtered.plans.filter((p) => p.type === "spend"),
       debts: filtered.debts,
       assets: filtered.assets,
       whatIf,
@@ -981,10 +999,10 @@ export default function App() {
       `<tr><td>${i.label}</td><td class="r">${m(i.amount)}</td><td>${fr(i.frequency)}</td></tr>`);
     const expenseRows = filtered.expenses.map((e) =>
       `<tr><td>${e.label}</td><td class="r">${m(e.amount)}</td><td>${fr(e.frequency)}</td><td>${e.category}</td></tr>`);
-    const oneOffRows = filtered.oneOffs.map((o) =>
+    const oneOffRows = filtered.plans.filter((p) => p.type === "spend").map((o) =>
       `<tr><td>${o.label}</td><td class="r">${m(o.amount)}</td><td>${dt(o.date)}</td></tr>`);
-    const goalRows = filtered.goals.map((g) =>
-      `<tr><td>${g.label}</td><td class="r">${m(g.target)}</td><td>${dt(g.date)}</td></tr>`);
+    const goalRows = filtered.plans.filter((p) => p.type === "save").map((g) =>
+      `<tr><td>${g.label}</td><td class="r">${m(g.amount)}</td><td>${dt(g.date)}</td></tr>`);
     const debtRows = filtered.debts.map((d) =>
       `<tr><td>${d.label}</td><td class="r">${m(d.balance)}</td><td class="r">${d.annualRate}%</td><td class="r">${m(d.monthlyPayment)}</td></tr>`);
     const assetRows = filtered.assets.map((a) =>
@@ -1033,8 +1051,8 @@ export default function App() {
   <table><thead><tr><th>${t("col_when")}</th><th class="r">${t("savings")}</th><th class="r">${t("netWorth")}</th></tr></thead><tbody>${rows.join("")}</tbody></table>
   ${section(t("title_income"), [{ t: t("col_source") }, { t: t("col_amount"), r: 1 }, { t: t("col_howOften") }], incomeRows)}
   ${section(t("title_expenses"), [{ t: t("col_item") }, { t: t("col_amount"), r: 1 }, { t: t("col_howOften") }, { t: t("col_category") }], expenseRows)}
-  ${section(t("title_oneOffs"), [{ t: t("col_what") }, { t: t("col_cost"), r: 1 }, { t: t("col_when") }], oneOffRows)}
-  ${section(t("title_goals"), [{ t: t("col_goal") }, { t: t("col_target"), r: 1 }, { t: t("col_byWhen") }], goalRows)}
+  ${section(t("tab_plans") + " — " + t("plan_type_spend"), [{ t: t("col_plan") }, { t: t("col_amount"), r: 1 }, { t: t("col_when") }], oneOffRows)}
+  ${section(t("tab_plans") + " — " + t("plan_type_save"), [{ t: t("col_plan") }, { t: t("col_amount"), r: 1 }, { t: t("col_when") }], goalRows)}
   ${section(t("title_debts"), [{ t: t("col_debt") }, { t: t("col_balance"), r: 1 }, { t: t("col_rate") }, { t: t("col_monthlyPay"), r: 1 }], debtRows)}
   ${section(t("title_assets"), [{ t: t("col_asset") }, { t: t("col_value"), r: 1 }], assetRows)}
   <h3>${t("rep_emergency")}</h3>
@@ -1056,8 +1074,7 @@ export default function App() {
     ["dashboard", t("tab_dashboard"), LayoutDashboard],
     ["income", t("tab_income"), Wallet],
     ["expenses", t("tab_expenses"), TrendingDown],
-    ["oneOffs", t("tab_oneOffs"), CalendarClock],
-    ["goals", t("tab_goals"), Target],
+    ["plans", t("tab_plans"), Target],
     ["balance", t("tab_balance"), Landmark],
     ["settings", t("tab_settings"), Cog],
   ];
@@ -1159,24 +1176,15 @@ export default function App() {
           </>
         )}
 
-        {tab === "oneOffs" && (
-          <ListSection
-            title={t("title_oneOffs")} subtitle={t("sub_oneOffs")}
-            items={filtered.oneOffs} columns={oneOffCols()}
-            onAdd={() => addItem("oneOffs", { id: uid(), label: t("new_expense"), amount: 0, date: isoIn(6) })}
-            onUpdate={(id, p) => updItem("oneOffs", id, p)}
-            onDelete={(id) => delItem("oneOffs", id)} fmt={fmt} sortByDate />
-        )}
-
-        {tab === "goals" && (
+        {tab === "plans" && (
           <>
             <ListSection
-              title={t("title_goals")} subtitle={t("sub_goals")}
-              items={filtered.goals} columns={goalCols()}
-              onAdd={() => addItem("goals", { id: uid(), label: t("new_goal"), target: 10000, date: isoIn(24) })}
-              onUpdate={(id, p) => updItem("goals", id, p)}
-              onDelete={(id) => delItem("goals", id)} fmt={fmt} sortByDate />
-            <GoalProgress goals={filtered.goals} fmt={fmt} pool={state.settings.startingSavings} />
+              title={t("title_plans")} subtitle={t("sub_plans")}
+              items={filtered.plans} columns={planCols()}
+              onAdd={() => addItem("plans", { id: uid(), label: t("new_plan"), amount: 0, date: isoIn(12), type: "save", current: 0 })}
+              onUpdate={(id, p) => updItem("plans", id, p)}
+              onDelete={(id) => delItem("plans", id)} fmt={fmt} sortByDate />
+            <GoalProgress goals={filtered.plans.filter((p) => p.type === "save")} fmt={fmt} pool={state.settings.startingSavings} />
           </>
         )}
 
@@ -1265,7 +1273,7 @@ function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
         </div>
       ))}
       {row.goalLine != null && (
-        <div style={{ color: C.clay }}>{t("tab_goals")}: {fmt.format(row.goalLine)}</div>
+        <div style={{ color: C.clay }}>{t("tab_plans")}: {fmt.format(row.goalLine)}</div>
       )}
       {row.goalsHere && row.goalsHere.length > 0 && (
         <div style={{ marginTop: 5, paddingTop: 5, borderTop: `1px solid ${C.line}` }}>
@@ -1276,7 +1284,7 @@ function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
       )}
       {row.oneOffsHere && row.oneOffsHere.length > 0 && (
         <div style={{ marginTop: 5, paddingTop: 5, borderTop: `1px solid ${C.line}` }}>
-          <div style={{ color: C.faint, fontSize: 11, marginBottom: 2 }}>{t("tab_oneOffs")}</div>
+          <div style={{ color: C.faint, fontSize: 11, marginBottom: 2 }}>{t("tab_plans")}</div>
           {row.oneOffsHere.map((o) => (
             <div key={o.id} style={{ color: o.amount < 0 ? C.clay : C.green }}>
               {o.amount < 0 ? "−" : "+"}{fmt.format(Math.abs(o.amount))} · {o.label}
@@ -1300,21 +1308,19 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
 
   const startBal = projection.data[0][chartKey];
 
-  // Goals as cumulative points, ordered chronologically. Each goal's dot sits at the
-  // running total of every goal target up to and including it (wedding 50k → 50k,
-  // honeymoon 10k → 60k). The line connects today's savings to each dot in turn,
-  // then runs flat to the right after the last goal.
+  // Save-type plans as cumulative points, ordered chronologically. Each plan's dot sits
+  // at the running total of every save target up to and including it.
   const cumGoals = useMemo(() => {
     const now = new Date();
     let cum = 0;
-    return filtered.goals
-      .filter((g) => (g.target || 0) > 0 && g.date)
-      .map((g) => ({ id: g.id, label: g.label, target: g.target,
-        months: Math.round((new Date(g.date) - now) / (1000 * 60 * 60 * 24 * 30.44)) }))
-      .filter((g) => g.months > 0)
+    return filtered.plans
+      .filter((p) => p.type === "save" && (p.amount || 0) > 0 && p.date)
+      .map((p) => ({ id: p.id, label: p.label, target: p.amount,
+        months: Math.round((new Date(p.date) - now) / (1000 * 60 * 60 * 24 * 30.44)) }))
+      .filter((p) => p.months > 0)
       .sort((a, b) => a.months - b.months)
-      .map((g) => { cum += g.target; return { ...g, cum }; });
-  }, [filtered.goals]);
+      .map((p) => { cum += p.target; return { ...p, cum }; });
+  }, [filtered.plans]);
 
   const projYears = state.settings.projectionYears;
 
@@ -1343,12 +1349,11 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
     return [...map.values()].sort((a, b) => a.months - b.months);
   }, [cumGoals]);
 
-  // Upcoming one-off events, so the tooltip can explain a dip: the "Upcoming" expenses
-  // count as negative, any one-off income as positive. Keyed the same way the projection
-  // applies them (monthsFromNow), so they line up with where the balance actually moves.
+  // Spend-type plans as one-off events so the tooltip can explain a dip in the curve.
+  // One-off income also appears here as a positive delta.
   const oneOffEvents = useMemo(() => {
     const ev = [];
-    filtered.oneOffs.forEach((o) => {
+    filtered.plans.filter((p) => p.type === "spend").forEach((o) => {
       const m = monthsFromNow(o.date);
       if (m >= 1) ev.push({ id: o.id, m, label: o.label, amount: -(o.amount || 0) });
     });
@@ -1357,7 +1362,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
       if (m >= 1) ev.push({ id: i.id, m, label: i.label, amount: +(i.amount || 0) });
     });
     return ev;
-  }, [filtered.oneOffs, filtered.income]);
+  }, [filtered.plans, filtered.income]);
   const eventsByYear = useMemo(() => {
     const map = new Map();
     oneOffEvents.forEach((e) => {
@@ -1965,15 +1970,17 @@ const expenseCols = (items = []) => {
     { key: "category", label: t("col_category"), render: (it, u) => <CategoryCell value={it.category} extra={usedCats} onChange={(v) => u({ category: v })} /> },
   ];
 };
-const oneOffCols = () => [
-  { key: "label", label: t("col_what"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
-  { key: "amount", label: t("col_cost"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
+const planCols = () => [
+  { key: "label", label: t("col_plan"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
+  { key: "type", label: t("plan_type"), render: (it, u) => selectCell(it.type || "save", (v) => u({ type: v }), [
+    { value: "save", label: t("plan_type_save") },
+    { value: "spend", label: t("plan_type_spend") },
+  ]) },
+  { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
   { key: "date", label: t("col_when"), render: (it, u) => inputCell(it.date, (v) => u({ date: v }), { type: "date", w: 140 }) },
-];
-const goalCols = () => [
-  { key: "label", label: t("col_goal"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
-  { key: "target", label: t("col_target"), render: (it, u) => moneyCell(it.target, (v) => u({ target: v })) },
-  { key: "date", label: t("col_byWhen"), render: (it, u) => inputCell(it.date, (v) => u({ date: v }), { type: "date", w: 140 }) },
+  { key: "current", label: t("col_saved"), render: (it, u) => it.type === "save"
+    ? moneyCell(it.current || 0, (v) => u({ current: v }))
+    : <span style={{ color: C.faint }}>—</span> },
 ];
 const assetCols = () => [
   { key: "label", label: t("col_asset"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
@@ -2060,7 +2067,7 @@ function GoalProgress({ goals, fmt, pool }) {
   let remaining = pool || 0;
   const allocated = {};
   for (const g of sorted) {
-    const a = Math.max(0, Math.min(remaining, g.target || 0));
+    const a = Math.max(0, Math.min(remaining, g.amount || 0));
     allocated[g.id] = a;
     remaining -= a;
   }
@@ -2070,8 +2077,8 @@ function GoalProgress({ goals, fmt, pool }) {
       <p style={{ color: C.faint, fontSize: 12, marginTop: 2 }}>{t("goalAutoHint", { a: fmt.format(pool || 0) })}</p>
       <div className="mt-3 flex flex-col">
         {sorted.map((g, i) => {
-          const target = g.target || 0;
-          const current = allocated[g.id] || 0;
+          const target = g.amount || 0;
+          const current = g.current != null ? Math.min(g.current + allocated[g.id], target) : allocated[g.id] || 0;
           const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
           const done = target > 0 && current >= target;
           const overdue = !done && g.date && new Date(g.date) < now;
