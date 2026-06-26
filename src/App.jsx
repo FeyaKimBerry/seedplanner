@@ -61,7 +61,7 @@ const STR = {
     stat_surplus: "Monthly surplus", stat_retireNum: "Retirement number",
     stat_income: "Monthly income", stat_expense: "Monthly expenses", stat_savingsNow: "Savings now",
     ov_now: "Right now", ov_retire: "Retirement outlook",
-    goalPaceAll: "Plans on track", goalPaceHint: "The line traces your projected savings through each plan — dots show where your balance lands after each plan is paid. If the bars follow the line, you're on track.",
+    goalPaceAll: "Plans on track", goalPaceHint: "Each dot marks a plan's target amount — if your green bar is above the dot on that date, you have enough saved for it.",
     stat_retireOn: "On track to retire", stat_balanceIn: "Balance in {n} yrs",
     inout: "{in} in · {out} out", setManually: "set manually", xAnnual: "{n}× annual expenses",
     inYrs: "in {n} yrs", beyond: "beyond horizon — adjust inputs",
@@ -171,7 +171,7 @@ const STR = {
     stat_surplus: "เงินเหลือต่อเดือน", stat_retireNum: "เงินเกษียณที่ต้องมี",
     stat_income: "รายได้ต่อเดือน", stat_expense: "รายจ่ายต่อเดือน", stat_savingsNow: "เงินออมตอนนี้",
     ov_now: "ตอนนี้", ov_retire: "แนวโน้มการเกษียณ",
-    goalPaceAll: "แผนตามเป้า", goalPaceHint: "เส้นติดตามเงินออมที่คาดการณ์ผ่านแต่ละแผน — จุดแสดงยอดเงินหลังจ่ายแผนนั้น ถ้าแท่งกราฟไล่ตามเส้น แสดงว่าคุณอยู่ในเส้นทางที่ถูกต้อง",
+    goalPaceAll: "แผนตามเป้า", goalPaceHint: "เส้นแสดงค่าใช้จ่ายสะสมของแผนทั้งหมดถึงแต่ละวันที่ — จุดหมายถึงยอดรวมของแต่ละแผน ถ้าแท่งกราฟสีเขียวอยู่เหนือเส้น แสดงว่าคุณมีเงินเพียงพอ",
     stat_retireOn: "คาดว่าจะเกษียณ", stat_balanceIn: "ยอดเงินใน {n} ปี",
     inout: "{in} เข้า · {out} ออก", setManually: "ตั้งเอง", xAnnual: "{n}× ค่าใช้จ่ายต่อปี",
     inYrs: "อีก {n} ปี", beyond: "เกินช่วงที่คำนวณ — ปรับข้อมูล",
@@ -282,7 +282,7 @@ const STR = {
     stat_surplus: "Monatlicher Überschuss", stat_retireNum: "Rentenbetrag",
     stat_income: "Monatliches Einkommen", stat_expense: "Monatliche Ausgaben", stat_savingsNow: "Aktuelle Ersparnisse",
     ov_now: "Aktuell", ov_retire: "Renten-Ausblick",
-    goalPaceAll: "Pläne im Plan", goalPaceHint: "Die Linie verfolgt deine prognostizierten Ersparnisse durch jeden Plan — Punkte zeigen, wo dein Saldo nach jedem Plan landet. Wenn die Balken der Linie folgen, bist du auf Kurs.",
+    goalPaceAll: "Pläne im Plan", goalPaceHint: "Die Linie zeigt die kumulierten Kosten deiner Pläne bis zum jeweiligen Datum — Punkte markieren den Gesamtbetrag jedes Plans. Wenn deine grünen Balken über der Linie liegen, hast du genug gespart.",
     stat_retireOn: "Rente voraussichtlich", stat_balanceIn: "Stand in {n} Jahren",
     inout: "{in} ein · {out} aus", setManually: "manuell gesetzt", xAnnual: "{n}× Jahresausgaben",
     inYrs: "in {n} Jahren", beyond: "außerhalb des Zeitraums – Eingaben anpassen",
@@ -393,7 +393,7 @@ const STR = {
     stat_surplus: "Excédent mensuel", stat_retireNum: "Montant retraite",
     stat_income: "Revenu mensuel", stat_expense: "Dépenses mensuelles", stat_savingsNow: "Épargne actuelle",
     ov_now: "En ce moment", ov_retire: "Perspective retraite",
-    goalPaceAll: "Plans en bonne voie", goalPaceHint: "La ligne trace votre épargne projetée à travers chaque plan — les points montrent où se situe votre solde après chaque plan payé. Si les barres suivent la ligne, vous êtes en bonne voie.",
+    goalPaceAll: "Plans en bonne voie", goalPaceHint: "La ligne montre le coût cumulé de vos plans à chaque date — les points marquent le total de chaque plan. Si vos barres vertes sont au-dessus de la ligne, vous avez suffisamment épargné.",
     stat_retireOn: "Retraite prévue", stat_balanceIn: "Solde dans {n} ans",
     inout: "{in} entrée · {out} sortie", setManually: "défini manuellement", xAnnual: "{n}× dépenses annuelles",
     inYrs: "dans {n} ans", beyond: "au-delà de la période – ajustez les données",
@@ -1321,17 +1321,13 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
   // Using the real projection value (which already dips at each plan) means the line
   // rises between plans and drops when a plan hits — matching the green bars' shape.
   const cumGoals = useMemo(() => {
-    const now = new Date();
-    return filtered.plans
+    const sorted = filtered.plans
       .filter((p) => (p.amount || 0) > 0 && p.date)
-      .map((p) => {
-        const months = monthsFromNow(p.date);
-        const idx = Math.min(Math.max(0, months), projection.data.length - 1);
-        return { id: p.id, label: p.label, target: p.amount, months, cum: projection.data[idx][chartKey] };
-      })
+      .map((p) => ({ id: p.id, label: p.label, target: p.amount, months: monthsFromNow(p.date) }))
       .filter((p) => p.months > 0)
       .sort((a, b) => a.months - b.months);
-  }, [filtered.plans, projection, chartKey]);
+    return sorted.map((p) => ({ ...p, cum: p.target }));
+  }, [filtered.plans]);
 
   const projYears = state.settings.projectionYears;
 
