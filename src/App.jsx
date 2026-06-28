@@ -747,7 +747,9 @@ function monthlyOf(amount, frequency) {
 function buildProjection({ settings, income, expenses, oneOffs, debts, assets, whatIf }) {
   const months = settings.projectionYears * 12;
 
-  const wi = !!whatIf?.active;
+  // When what-if is active, exclude plans the user has toggled off.
+  const disabledIds = new Set(whatIf?.active ? (whatIf.disabledPlanIds || []) : []);
+  const activePlans = oneOffs.filter((o) => !disabledIds.has(o.id));
 
   const monthlyIncome = income
     .filter((i) => i.frequency !== "oneoff")
@@ -755,14 +757,11 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
   const monthlyExpense = expenses.reduce((s, e) => s + monthlyOf(e.amount, e.frequency), 0);
   const monthlyDebtPay = debts.reduce((s, d) => s + (d.monthlyPayment || 0), 0);
 
-  // Baseline monthly surplus — what-if deltas must NOT change this.
   const baseNet = monthlyIncome - monthlyExpense - monthlyDebtPay;
-  // What-if surplus = baseline plus the income/expense deltas. Drives only the what-if series.
-  const whatIfNet = baseNet + (wi ? (whatIf.incomeDelta || 0) - (whatIf.expenseDelta || 0) : 0);
 
-  // one-off events keyed by month index
+  // one-off events — only active plans (respects what-if toggles)
   const oneOffByMonth = {};
-  oneOffs.forEach((o) => {
+  activePlans.forEach((o) => {
     const m = monthsFromNow(o.date);
     if (m >= 0 && m <= months) oneOffByMonth[m] = (oneOffByMonth[m] || 0) + o.amount;
   });
@@ -771,12 +770,6 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
     const m = monthsFromNow(i.date);
     if (m >= 0 && m <= months) oneOffByMonth[m] = (oneOffByMonth[m] || 0) - i.amount;
   });
-  // What-if one-offs live in their own map so they don't dip the baseline bars.
-  const whatIfOneOffByMonth = { ...oneOffByMonth };
-  if (wi && whatIf.oneOffAmount) {
-    const m = whatIf.oneOffMonth || 0;
-    whatIfOneOffByMonth[m] = (whatIfOneOffByMonth[m] || 0) + whatIf.oneOffAmount;
-  }
 
   const assetTotal = assets.reduce((s, a) => s + (a.value || 0), 0);
 
@@ -785,15 +778,11 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
     expected: settings.returnExpected / 100,
     optimistic: settings.returnOptimistic / 100,
   };
-  // What-if uses its own return rate when set, otherwise the baseline expected rate.
-  const whatIfRate = (wi && whatIf.returnRate != null ? whatIf.returnRate : settings.returnExpected) / 100;
 
-  // run three scenarios + track debt amortisation (shared across rates)
   const bal = {
     conservative: settings.startingSavings,
     expected: settings.startingSavings,
     optimistic: settings.startingSavings,
-    whatif: settings.startingSavings,
   };
   let debtState = debts.map((d) => ({ ...d, rem: d.balance }));
 
@@ -805,16 +794,10 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
       for (const k of ["conservative", "expected", "optimistic"]) {
         bal[k] = bal[k] * (1 + rates[k] / 12) + baseNet - (oneOffByMonth[m] || 0);
       }
-      if (wi) {
-        bal.whatif = bal.whatif * (1 + whatIfRate / 12) + whatIfNet - (whatIfOneOffByMonth[m] || 0);
-      }
-      // amortise debt
-      let totalRem = 0;
       debtState = debtState.map((d) => {
         let rem = d.rem;
         rem = rem + (rem * (d.annualRate / 100)) / 12 - (d.monthlyPayment || 0);
         rem = Math.max(0, rem);
-        totalRem += rem;
         return { ...d, rem };
       });
     }
@@ -822,19 +805,16 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
     const deflator = settings.inflationAdjust ? Math.pow(1 + infl / 12, m) : 1;
     const debtRem = debtState.reduce((s, d) => s + d.rem, 0);
 
-    const row = {
+    data.push({
       month: m,
       year: +(m / 12).toFixed(2),
       conservative: Math.round(bal.conservative / deflator),
       expected: Math.round(bal.expected / deflator),
       optimistic: Math.round(bal.optimistic / deflator),
       netWorth: Math.round((bal.expected + assetTotal - debtRem) / deflator),
-    };
-    if (wi) row.whatif = Math.round(bal.whatif / deflator);
-    data.push(row);
+    });
   }
 
-  // monthly figures for the summary cards
   return {
     data,
     monthlyIncome,
@@ -899,10 +879,7 @@ export default function App() {
   const [grain, setGrain] = useState("monthly"); // yearly | monthly
   const [scaleMode, setScaleMode] = useState("log"); // log | linear
   const [pickYear, setPickYear] = useState(1); // chosen year in the monthly view
-  const [whatIf, setWhatIf] = useState({
-    active: false, incomeDelta: 0, expenseDelta: 0, returnRate: null,
-    oneOffAmount: 0, oneOffMonth: 12,
-  });
+  const [whatIf, setWhatIf] = useState({ active: false, disabledPlanIds: [] });
   const [sheet, setSheet] = useState(null);
   const [authed, setAuthed] = useState(() => {
     try { return localStorage.getItem(AUTH_KEY) === "1"; } catch { return false; }
@@ -1601,13 +1578,15 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
   // Using the real projection value (which already dips at each plan) means the line
   // rises between plans and drops when a plan hits — matching the green bars' shape.
   const cumGoals = useMemo(() => {
+    const disabledIds = new Set(whatIf.active ? (whatIf.disabledPlanIds || []) : []);
     const sorted = filtered.plans
+      .filter((p) => !disabledIds.has(p.id))
       .filter((p) => (p.amount || 0) > 0 && p.date)
       .map((p) => ({ id: p.id, label: p.label, target: p.amount, months: monthsFromNow(p.date) }))
       .filter((p) => p.months > 0)
       .sort((a, b) => a.months - b.months);
     return sorted.map((p) => ({ ...p, cum: p.target }));
-  }, [filtered.plans]);
+  }, [filtered.plans, whatIf.active, whatIf.disabledPlanIds]);
 
   const projYears = state.settings.projectionYears;
 
@@ -1847,7 +1826,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
 
         <div style={{ width: "100%", height: 300 }}>
           <ResponsiveContainer>
-            <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 4 }} barCategoryGap={whatIf.active ? "12%" : "22%"}>
+            <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 4 }} barCategoryGap="22%">
               <CartesianGrid stroke={C.line} vertical={false} />
               <XAxis dataKey={xKey} stroke={C.faint} fontSize={11} tickLine={false} axisLine={false}
                 interval={tickEvery - 1} tickFormatter={(v) => (isMonthly ? v : String(calYear(v)))} />
@@ -1863,10 +1842,6 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
                 ))}
               </Bar>
               <Bar dataKey="planCost" stackId="a" radius={[6, 6, 0, 0]} maxBarSize={38} fill="#D95F5F" fillOpacity={0.35} />
-              {whatIf.active && (
-                <Bar dataKey="whatif" radius={[6, 6, 0, 0]} maxBarSize={38} fill={C.clay} fillOpacity={0.85} />
-              )}
-
               {/* cumulative goals line: today's savings → each goal total → flat */}
               {cumGoals.length > 0 && (
                 <Line type="linear" dataKey="goalLine"
@@ -1904,18 +1879,28 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
         </div>
       </Card>
 
-      <WhatIf whatIf={whatIf} setWhatIf={setWhatIf} fmt={fmt} settings={state.settings} />
+      <WhatIf whatIf={whatIf} setWhatIf={setWhatIf} fmt={fmt} plans={filtered.plans} onGoToPlans={() => setTab("plans")} />
     </div>
   );
 }
 
 /* ================================================================== *
- * What-if panel
+ * What-if panel — master toggle + per-plan toggles
  * ================================================================== */
-function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
+function WhatIf({ whatIf, setWhatIf, fmt, plans = [], onGoToPlans }) {
   const up = (p) => setWhatIf((w) => ({ ...w, ...p }));
-  const reset = () => up({ incomeDelta: 0, expenseDelta: 0, returnRate: null, oneOffAmount: 0, oneOffMonth: 12 });
-  const dirty = whatIf.incomeDelta || whatIf.expenseDelta || whatIf.oneOffAmount || whatIf.returnRate != null;
+
+  const togglePlan = (id) => {
+    const current = whatIf.disabledPlanIds || [];
+    const next = current.includes(id)
+      ? current.filter((x) => x !== id)
+      : [...current, id];
+    up({ disabledPlanIds: next });
+  };
+
+  const disabledIds = new Set(whatIf.disabledPlanIds || []);
+  const disabledCount = plans.filter((p) => disabledIds.has(p.id)).length;
+
   return (
     <Card>
       <div className="flex items-center justify-between">
@@ -1923,36 +1908,83 @@ function WhatIf({ whatIf, setWhatIf, fmt, settings }) {
           <GitCompare size={16} color={C.clay} />
           <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("whatifTitle")}</h2>
         </div>
-        <div className="flex items-center gap-3">
-          {whatIf.active && dirty && (
-            <button onClick={reset}
+        <div className="flex items-center gap-2">
+          {whatIf.active && disabledCount > 0 && (
+            <button onClick={() => up({ disabledPlanIds: [] })}
               className="flex items-center gap-1 rounded-md px-2 py-1"
-              style={{ border: `1px solid ${C.line}`, color: C.sub, fontSize: 12.5 }}>
-              <RotateCcw size={13} /> {t("wiReset")}
+              style={{ border: `1px solid ${C.line}`, color: C.sub, fontSize: 12 }}>
+              <RotateCcw size={13} /> Reset
             </button>
           )}
           <Toggle on={whatIf.active} onChange={(v) => up({ active: v })} />
         </div>
       </div>
+
       <p style={{ color: C.faint, fontSize: 12, marginTop: 4 }}>
-        {t("whatifDesc")}
+        {whatIf.active
+          ? "Toggle plans on/off below — the graph updates live."
+          : "Turn on to explore how removing planned expenses affects your projection."}
       </p>
+
       <AnimatePresence initial={false}>
-      {whatIf.active && (
-        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }} transition={SNAP} style={{ overflow: "hidden" }}>
-          <div className="mt-4 grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px,1fr))" }}>
-            <Slider label={t("wiIncome")} value={whatIf.incomeDelta} min={-4000} max={6000} step={100}
-              onChange={(v) => up({ incomeDelta: v })} fmt={(v) => (v >= 0 ? "+" : "") + fmt.format(v)} />
-            <Slider label={t("wiExpense")} value={whatIf.expenseDelta} min={-3000} max={5000} step={100}
-              onChange={(v) => up({ expenseDelta: v })} fmt={(v) => (v >= 0 ? "+" : "") + fmt.format(v)} />
-            <Slider label={t("wiReturn")} value={whatIf.returnRate ?? settings.returnExpected} min={0} max={12} step={0.5}
-              onChange={(v) => up({ returnRate: v })} fmt={(v) => v + "%"} />
-            <Slider label={t("wiOneOff")} value={whatIf.oneOffAmount} min={0} max={80000} step={1000}
-              onChange={(v) => up({ oneOffAmount: v })} fmt={(v) => fmt.format(v)} />
-          </div>
-        </motion.div>
-      )}
+        {whatIf.active && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={SNAP} style={{ overflow: "hidden" }}>
+
+            {plans.length === 0 ? (
+              <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 12, background: C.bg, border: `1px solid ${C.line}` }}>
+                <p style={{ fontSize: 13, color: C.faint }}>
+                  No plans yet.{" "}
+                  <button onClick={onGoToPlans}
+                    style={{ color: C.green, fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 13 }}>
+                    Add plans →
+                  </button>
+                </p>
+              </div>
+            ) : (
+              <div className="mt-3 flex flex-col" style={{ gap: 6 }}>
+                {plans.map((p) => {
+                  const on = !disabledIds.has(p.id);
+                  const dateLabel = p.date
+                    ? new Date(p.date).toLocaleDateString(undefined, { month: "short", year: "numeric" })
+                    : null;
+                  return (
+                    <div key={p.id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "9px 12px", borderRadius: 11,
+                        border: `1px solid ${on ? C.line : C.claySoft}`,
+                        background: on ? C.bg : C.claySoft,
+                        opacity: on ? 1 : 0.7,
+                        transition: "background 0.2s, opacity 0.2s",
+                      }}>
+                      <Toggle on={on} onChange={() => togglePlan(p.id)} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: on ? C.ink : C.sub }}>
+                          {p.label || "Untitled"}
+                        </div>
+                        {(dateLabel || p.amount) && (
+                          <div style={{ fontSize: 11.5, color: C.faint, marginTop: 1, ...num }}>
+                            {dateLabel && <span>{dateLabel}</span>}
+                            {dateLabel && p.amount ? " · " : ""}
+                            {p.amount ? fmt.format(p.amount) : ""}
+                          </div>
+                        )}
+                      </div>
+                      {!on && (
+                        <span style={{ fontSize: 11, fontWeight: 600, color: C.clay, whiteSpace: "nowrap" }}>excluded</span>
+                      )}
+                    </div>
+                  );
+                })}
+                <button onClick={onGoToPlans}
+                  style={{ marginTop: 4, fontSize: 12, color: C.sub, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: "2px 0" }}>
+                  Manage plans →
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
       </AnimatePresence>
     </Card>
   );
