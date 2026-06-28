@@ -971,11 +971,17 @@ export default function App() {
 
   const projection = useMemo(() => {
     if (!state || !filtered) return null;
+    // Plans with sub-items: use sub-items as independent one-offs; plan amount is just the budget cap
+    const planOneOffs = filtered.plans.flatMap((p) =>
+      p.items && p.items.length > 0
+        ? p.items.map((it) => ({ ...it, _planId: p.id }))
+        : [p]
+    );
     return buildProjection({
       settings: state.settings,
       income: filtered.income,
       expenses: filtered.expenses,
-      oneOffs: filtered.plans,
+      oneOffs: planOneOffs,
       debts: filtered.debts,
       assets: filtered.assets,
       whatIf,
@@ -1434,12 +1440,13 @@ export default function App() {
 
         {tab === "plans" && (
           <>
-            <ListSection
-              title={t("title_plans")} subtitle={t("sub_plans")}
-              items={filtered.plans} columns={planCols()}
-              onAdd={() => addItem("plans", { id: uid(), label: "", amount: 0, date: new Date().toISOString().slice(0, 10), current: 0 })}
+            <PlansSection
+              plans={filtered.plans}
+              onAdd={() => addItem("plans", { id: uid(), label: "", amount: 0, date: new Date().toISOString().slice(0, 10), current: 0, items: [] })}
               onUpdate={(id, p) => updItem("plans", id, p)}
-              onDelete={(id) => delItem("plans", id)} fmt={fmt} sortByDate />
+              onDelete={(id) => delItem("plans", id)}
+              fmt={fmt}
+            />
             <GoalProgress goals={filtered.plans} fmt={fmt} pool={state.settings.startingSavings} />
           </>
         )}
@@ -2091,6 +2098,182 @@ function WhatIf({ whatIf, setWhatIf, fmt, plans = [], onGoToPlans }) {
         )}
       </AnimatePresence>
     </>
+  );
+}
+
+/* ================================================================== *
+ * Plans section — plans with optional sub-item breakdown
+ * ================================================================== */
+function PlansSection({ plans, onAdd, onUpdate, onDelete, fmt }) {
+  const [openId, setOpenId] = useState(null);
+  const prevIds = useRef(new Set(plans.map((p) => p.id)));
+
+  useEffect(() => {
+    const added = plans.find((p) => !prevIds.current.has(p.id));
+    if (added) setOpenId(added.id);
+    prevIds.current = new Set(plans.map((p) => p.id));
+  }, [plans]);
+
+  const sorted = [...plans].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+  const addSubItem = (plan) => {
+    const newItem = { id: uid(), label: "", amount: 0, date: plan.date || new Date().toISOString().slice(0, 10) };
+    onUpdate(plan.id, { items: [...(plan.items || []), newItem] });
+  };
+  const updateSubItem = (plan, itemId, patch) =>
+    onUpdate(plan.id, { items: (plan.items || []).map((it) => it.id === itemId ? { ...it, ...patch } : it) });
+  const deleteSubItem = (plan, itemId) =>
+    onUpdate(plan.id, { items: (plan.items || []).filter((it) => it.id !== itemId) });
+
+  return (
+    <Card>
+      <div className="mb-3 flex items-start justify-between">
+        <div>
+          <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("title_plans")}</h2>
+          <p style={{ color: C.faint, fontSize: 12, marginTop: 2 }}>{t("sub_plans")}</p>
+        </div>
+        <button onClick={onAdd}
+          className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm"
+          style={{ background: C.green, color: "#fff" }}>
+          <Plus size={15} /> {t("add")}
+        </button>
+      </div>
+
+      {plans.length === 0 && (
+        <p style={{ color: C.faint, fontSize: 13, padding: "8px 0" }}>{t("empty")}</p>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {sorted.map((plan) => {
+          const isOpen = openId === plan.id;
+          const items = plan.items || [];
+          const hasItems = items.length > 0;
+          const committed = items.reduce((s, it) => s + (it.amount || 0), 0);
+          const budget = plan.amount || 0;
+          const remaining = budget - committed;
+          const pct = budget > 0 ? Math.min(1, committed / budget) : 0;
+
+          return (
+            <div key={plan.id} style={{
+              borderTop: `1px solid ${C.line}`,
+              background: isOpen ? C.bg : "transparent",
+              borderRadius: isOpen ? 12 : 0,
+              margin: isOpen ? "6px 0" : 0,
+              padding: isOpen ? "0 12px" : 0,
+              border: isOpen ? `1px solid ${C.line}` : undefined,
+              borderTop: isOpen ? undefined : `1px solid ${C.line}`,
+            }}>
+              {/* Plan header row */}
+              <button onClick={() => setOpenId(isOpen ? null : plan.id)}
+                className="flex w-full items-center justify-between gap-2 py-3 text-left">
+                <span style={{ fontWeight: isOpen ? 600 : 500, fontSize: 14, color: isOpen ? C.green : C.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                  {plan.label || "—"}
+                  {hasItems && (
+                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 500, color: C.faint }}>
+                      {items.length} item{items.length !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </span>
+                <span className="flex shrink-0 items-center gap-2" style={{ color: C.sub, fontSize: 13 }}>
+                  <span style={num}>{fmt.format(hasItems ? committed : budget)}</span>
+                  {hasItems && budget > 0 && (
+                    <span style={{ fontSize: 11, color: remaining < 0 ? "#D95F5F" : C.green, fontWeight: 600, ...num }}>
+                      / {fmt.format(budget)}
+                    </span>
+                  )}
+                  <ChevronDown size={16} style={{ color: isOpen ? C.green : C.faint, transition: "transform .15s", transform: isOpen ? "rotate(180deg)" : "none" }} />
+                </span>
+              </button>
+
+              {/* Expanded content */}
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }} transition={SNAP} style={{ overflow: "hidden" }}>
+                    <div style={{ borderTop: `1px solid ${C.line}`, paddingTop: 12, paddingBottom: 14 }}>
+
+                      {/* Plan fields */}
+                      <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px,1fr))", marginBottom: 14 }}>
+                        <div>
+                          <div style={{ fontSize: 12, color: C.faint, marginBottom: 4 }}>{t("col_plan")}</div>
+                          <input value={plan.label} onChange={(e) => onUpdate(plan.id, { label: e.target.value })}
+                            placeholder={t("col_plan")}
+                            style={{ width: "100%", fontSize: 13, border: `1px solid ${C.line}`, borderRadius: 9, padding: "6px 10px", background: C.card, color: C.ink }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, color: C.faint, marginBottom: 4 }}>{hasItems ? "Budget" : t("col_amount")}</div>
+                          <input type="number" value={plan.amount || ""} onChange={(e) => onUpdate(plan.id, { amount: parseFloat(e.target.value) || 0 })}
+                            style={{ width: "100%", fontSize: 13, border: `1px solid ${C.line}`, borderRadius: 9, padding: "6px 10px", background: C.card, color: C.ink, textAlign: "right", ...num }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, color: C.faint, marginBottom: 4 }}>{t("col_when")}</div>
+                          <input type="date" value={plan.date || ""} onChange={(e) => onUpdate(plan.id, { date: e.target.value })}
+                            style={{ width: "100%", fontSize: 13, border: `1px solid ${C.line}`, borderRadius: 9, padding: "6px 10px", background: C.card, color: C.ink }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, color: C.faint, marginBottom: 4 }}>{t("col_saved")}</div>
+                          <input type="number" value={plan.current || ""} onChange={(e) => onUpdate(plan.id, { current: parseFloat(e.target.value) || 0 })}
+                            style={{ width: "100%", fontSize: 13, border: `1px solid ${C.line}`, borderRadius: 9, padding: "6px 10px", background: C.card, color: C.ink, textAlign: "right", ...num }} />
+                        </div>
+                      </div>
+
+                      {/* Sub-items section */}
+                      {hasItems && (
+                        <>
+                          {/* Progress bar */}
+                          <div style={{ marginBottom: 10 }}>
+                            <div style={{ height: 6, borderRadius: 99, background: C.line, overflow: "hidden" }}>
+                              <motion.div animate={{ width: `${pct * 100}%` }} transition={{ type: "spring", stiffness: 200, damping: 28 }}
+                                style={{ height: "100%", borderRadius: 99, background: pct >= 1 ? "#D95F5F" : C.green }} />
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                              <span style={{ fontSize: 12, color: C.faint, ...num }}>{fmt.format(committed)} committed</span>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: remaining < 0 ? "#D95F5F" : C.green, ...num }}>
+                                {remaining < 0 ? "−" : ""}{fmt.format(Math.abs(remaining))} {remaining < 0 ? "over budget" : "remaining"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Sub-item rows */}
+                          <div style={{ borderRadius: 10, border: `1px solid ${C.line}`, overflow: "hidden", marginBottom: 8 }}>
+                            {items.map((it, i) => (
+                              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderTop: i === 0 ? "none" : `1px solid ${C.line}`, background: C.card }}>
+                                <input value={it.label} onChange={(e) => updateSubItem(plan, it.id, { label: e.target.value })}
+                                  placeholder="Item"
+                                  style={{ flex: 1, fontSize: 13, border: "none", background: "transparent", outline: "none", color: C.ink, minWidth: 60 }} />
+                                <input type="number" value={it.amount || ""} onChange={(e) => updateSubItem(plan, it.id, { amount: parseFloat(e.target.value) || 0 })}
+                                  placeholder="0"
+                                  style={{ width: 80, fontSize: 13, border: `1px solid ${C.line}`, borderRadius: 7, padding: "4px 8px", background: C.bg, color: C.ink, textAlign: "right", ...num }} />
+                                <input type="date" value={it.date || ""} onChange={(e) => updateSubItem(plan, it.id, { date: e.target.value })}
+                                  style={{ fontSize: 12, border: `1px solid ${C.line}`, borderRadius: 7, padding: "4px 8px", background: C.bg, color: C.ink }} />
+                                <button onClick={() => deleteSubItem(plan, it.id)} style={{ color: C.faint, background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}>
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <button onClick={() => addSubItem(plan)}
+                          className="flex items-center gap-1 text-sm"
+                          style={{ color: C.green, fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
+                          <Plus size={13} /> Add sub-expense
+                        </button>
+                        <button onClick={() => onDelete(plan.id)} className="flex items-center gap-1 text-sm" style={{ color: C.faint, background: "none", border: "none", cursor: "pointer" }}>
+                          <Trash2 size={14} /> {t("delete")}
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
