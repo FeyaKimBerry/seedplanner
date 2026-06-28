@@ -1427,7 +1427,7 @@ export default function App() {
             <ListSection
               title={t("title_plans")} subtitle={t("sub_plans")}
               items={filtered.plans} columns={planCols()}
-              onAdd={() => addItem("plans", { id: uid(), label: t("new_plan"), amount: 0, date: isoIn(12), current: 0 })}
+              onAdd={() => addItem("plans", { id: uid(), label: t("new_plan"), amount: 0, date: new Date().toISOString().slice(0, 10), current: 0 })}
               onUpdate={(id, p) => updItem("plans", id, p)}
               onDelete={(id) => delItem("plans", id)} fmt={fmt} sortByDate />
             <GoalProgress goals={filtered.plans} fmt={fmt} pool={state.settings.startingSavings} />
