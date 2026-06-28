@@ -102,7 +102,7 @@ const STR = {
     col_item: "Item", col_category: "Category", col_what: "What", col_cost: "Cost",
     col_when: "When", col_goal: "Goal", col_target: "Target", col_byWhen: "By when", col_asset: "Asset",
     col_value: "Value", col_debt: "Debt", col_balance: "Balance", col_rate: "Rate %", col_monthlyPay: "Monthly pay",
-    freq_monthly: "Monthly", freq_fortnightly: "Fortnightly", freq_annual: "Annual", freq_weekly: "Weekly", freq_daily: "Daily", freq_oneoff: "One-off",
+    freq_monthly: "Monthly", freq_fortnightly: "Fortnightly", freq_annual: "Annual", freq_quarterly: "Quarterly", freq_weekly: "Weekly", freq_daily: "Daily", freq_oneoff: "One-off",
     new_income: "New income", new_expense: "New expense", new_goal: "New goal",
     new_asset: "New asset", new_debt: "New debt",
 
@@ -132,6 +132,7 @@ const STR = {
     p_carloan: "Car loan", p_homeloan: "Home loan / mortgage", p_bnpl: "Buy now, pay later",
     p_healthins: "Health insurance", p_gym: "Gym & fitness", p_subs: "Subscriptions", p_childcare: "Childcare",
     p_savings: "Savings / investing", p_insurance: "Life insurance",
+    p_gifts: "Gifts & shopping", p_strata: "Strata fees",
 
     whereGoes: "Where it goes", perMo: "/mo",
     totalSpend: "Total spending", perDay: "/day", perWk: "/wk", perYr: "/yr", perFn: "/fortnight", perOnce: "one-off",
@@ -235,7 +236,7 @@ const STR = {
     col_item: "รายการ", col_category: "หมวดหมู่", col_what: "รายการ", col_cost: "จำนวนเงิน",
     col_when: "เมื่อไร", col_goal: "เป้าหมาย", col_target: "ยอดเป้าหมาย", col_byWhen: "ภายในเมื่อ", col_asset: "สินทรัพย์",
     col_value: "มูลค่า", col_debt: "หนี้", col_balance: "ยอดคงเหลือ", col_rate: "ดอกเบี้ย %", col_monthlyPay: "ผ่อนต่อเดือน",
-    freq_monthly: "รายเดือน", freq_fortnightly: "รายสองสัปดาห์", freq_annual: "รายปี", freq_weekly: "รายสัปดาห์", freq_daily: "รายวัน", freq_oneoff: "ครั้งเดียว",
+    freq_monthly: "รายเดือน", freq_fortnightly: "รายสองสัปดาห์", freq_annual: "รายปี", freq_quarterly: "รายไตรมาส", freq_weekly: "รายสัปดาห์", freq_daily: "รายวัน", freq_oneoff: "ครั้งเดียว",
     new_income: "รายได้ใหม่", new_expense: "รายจ่ายใหม่", new_goal: "เป้าหมายใหม่",
     new_asset: "สินทรัพย์ใหม่", new_debt: "หนี้ใหม่",
 
@@ -265,6 +266,7 @@ const STR = {
     p_carloan: "ผ่อนรถ", p_homeloan: "สินเชื่อบ้าน", p_bnpl: "ซื้อก่อนจ่ายทีหลัง",
     p_healthins: "ประกันสุขภาพ", p_gym: "ฟิตเนส", p_subs: "ค่าสมาชิกรายเดือน", p_childcare: "ค่าเลี้ยงเด็ก",
     p_savings: "ออม / ลงทุน", p_insurance: "ประกันชีวิต",
+    p_gifts: "ของขวัญและช้อปปิ้ง", p_strata: "ค่าส่วนกลาง",
 
     whereGoes: "เงินไปไหนบ้าง", perMo: "/เดือน",
     totalSpend: "รายจ่ายรวม", perDay: "/วัน", perWk: "/สัปดาห์", perYr: "/ปี", perFn: "/สองสัปดาห์", perOnce: "ครั้งเดียว",
@@ -367,7 +369,7 @@ const STR = {
     col_item: "Posten", col_category: "Kategorie", col_what: "Was", col_cost: "Kosten",
     col_when: "Wann", col_goal: "Ziel", col_target: "Zielbetrag", col_byWhen: "Bis wann", col_asset: "Vermögenswert",
     col_value: "Wert", col_debt: "Schuld", col_balance: "Saldo", col_rate: "Zins %", col_monthlyPay: "Monatl. Rate",
-    freq_monthly: "Monatlich", freq_fortnightly: "Vierzehntägig", freq_annual: "Jährlich", freq_weekly: "Wöchentlich", freq_daily: "Täglich", freq_oneoff: "Einmalig",
+    freq_monthly: "Monatlich", freq_fortnightly: "Vierzehntägig", freq_annual: "Jährlich", freq_quarterly: "Vierteljährlich", freq_weekly: "Wöchentlich", freq_daily: "Täglich", freq_oneoff: "Einmalig",
     new_income: "Neues Einkommen", new_expense: "Neue Ausgabe", new_goal: "Neues Ziel",
     new_asset: "Neuer Vermögenswert", new_debt: "Neue Schuld",
 
@@ -397,6 +399,7 @@ const STR = {
     p_carloan: "Autokredit", p_homeloan: "Immobilienkredit", p_bnpl: "Jetzt kaufen, später zahlen",
     p_healthins: "Krankenversicherung", p_gym: "Fitnessstudio", p_subs: "Abonnements", p_childcare: "Kinderbetreuung",
     p_savings: "Sparen / Anlegen", p_insurance: "Lebensversicherung",
+    p_gifts: "Geschenke & Einkaufen", p_strata: "Hausverwaltungsgebühren",
 
     whereGoes: "Wohin es geht", perMo: "/Mon.",
     totalSpend: "Gesamtausgaben", perDay: "/Tag", perWk: "/Wo.", perYr: "/Jahr", perFn: "/2 Wo.", perOnce: "einmalig",
@@ -499,7 +502,7 @@ const STR = {
     col_item: "Poste", col_category: "Catégorie", col_what: "Quoi", col_cost: "Coût",
     col_when: "Quand", col_goal: "Objectif", col_target: "Cible", col_byWhen: "Pour quand", col_asset: "Actif",
     col_value: "Valeur", col_debt: "Dette", col_balance: "Solde", col_rate: "Taux %", col_monthlyPay: "Paiement mensuel",
-    freq_monthly: "Mensuel", freq_fortnightly: "Bimensuel", freq_annual: "Annuel", freq_weekly: "Hebdomadaire", freq_daily: "Quotidien", freq_oneoff: "Ponctuel",
+    freq_monthly: "Mensuel", freq_fortnightly: "Bimensuel", freq_annual: "Annuel", freq_quarterly: "Trimestriel", freq_weekly: "Hebdomadaire", freq_daily: "Quotidien", freq_oneoff: "Ponctuel",
     new_income: "Nouveau revenu", new_expense: "Nouvelle dépense", new_goal: "Nouvel objectif",
     new_asset: "Nouvel actif", new_debt: "Nouvelle dette",
 
@@ -529,6 +532,7 @@ const STR = {
     p_carloan: "Prêt auto", p_homeloan: "Crédit immobilier", p_bnpl: "Paiement différé",
     p_healthins: "Assurance santé", p_gym: "Sport & fitness", p_subs: "Abonnements", p_childcare: "Garde d'enfants",
     p_savings: "Épargne / investissement", p_insurance: "Assurance vie",
+    p_gifts: "Cadeaux & shopping", p_strata: "Charges de copropriété",
 
     whereGoes: "Où va l'argent", perMo: "/mois",
     totalSpend: "Dépenses totales", perDay: "/jour", perWk: "/sem.", perYr: "/an", perFn: "/quinzaine", perOnce: "ponctuel",
@@ -733,6 +737,7 @@ function monthsFromNow(iso) {
  * ------------------------------------------------------------------ */
 function monthlyOf(amount, frequency) {
   if (frequency === "annual") return amount / 12;
+  if (frequency === "quarterly") return amount / 3;
   if (frequency === "fortnightly") return (amount * 26) / 12;
   if (frequency === "weekly") return (amount * 52) / 12;
   if (frequency === "daily") return (amount * 365) / 12;
@@ -1173,6 +1178,7 @@ export default function App() {
     const fr = (f) => t("freq_" + f) || f;
     const toMonthly = (amt, freq) => {
       if (freq === "annual") return amt / 12;
+      if (freq === "quarterly") return amt / 3;
       if (freq === "fortnightly") return (amt * 26) / 12;
       if (freq === "weekly") return (amt * 52) / 12;
       if (freq === "daily") return (amt * 365) / 12;
@@ -2137,7 +2143,7 @@ function ListSection({ title, subtitle, items, columns, onAdd, onUpdate, onDelet
 }
 
 // Short period label shown after an amount, e.g. "/mo", "/wk".
-const FREQ_SUFFIX = { monthly: "perMo", weekly: "perWk", annual: "perYr", daily: "perDay", fortnightly: "perFn", oneoff: "perOnce" };
+const FREQ_SUFFIX = { monthly: "perMo", weekly: "perWk", quarterly: "perYr", annual: "perYr", daily: "perDay", fortnightly: "perFn", oneoff: "perOnce" };
 const freqSuffix = (frequency) => (FREQ_SUFFIX[frequency] ? t(FREQ_SUFFIX[frequency]) : "");
 
 /* ---- column definitions ---- */
@@ -2193,6 +2199,7 @@ function CategoryCell({ value, extra, onChange }) {
 const freqOpts = () => [
   { value: "monthly", label: t("freq_monthly") },
   { value: "fortnightly", label: t("freq_fortnightly") },
+  { value: "quarterly", label: t("freq_quarterly") },
   { value: "annual", label: t("freq_annual") },
   { value: "weekly", label: t("freq_weekly") },
   { value: "daily", label: t("freq_daily") },
@@ -2258,9 +2265,12 @@ const EXPENSE_PRESETS = [
   // Health
   { key: "p_healthins", catKey: "cat_health", frequency: "monthly" },
   { key: "p_gym", catKey: "cat_health", frequency: "monthly" },
+  // Housing extras
+  { key: "p_strata", catKey: "cat_housing", frequency: "quarterly" },
   // Lifestyle
   { key: "p_subs", catKey: "cat_lifestyle", frequency: "monthly" },
   { key: "p_childcare", catKey: "cat_lifestyle", frequency: "monthly" },
+  { key: "p_gifts", catKey: "cat_lifestyle", frequency: "monthly" },
   { key: "p_insurance", catKey: "cat_health", frequency: "monthly" },
   { key: "p_savings", catKey: "cat_lifestyle", frequency: "monthly" },
 ];
