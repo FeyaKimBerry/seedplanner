@@ -825,11 +825,19 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
 }
 
 /* ------------------------------------------------------------------ *
- * Auth gate — placeholder Google sign-in. No real OAuth yet: the full
- * build swaps onSignIn for the Google Identity flow that unlocks the
- * Drive appDataFolder sync. Until then it just sets a local flag.
+ * Auth — Google Identity Services (GIS).
+ * Set VITE_GOOGLE_CLIENT_ID in your .env file to enable real sign-in.
+ * Without it the button shows but clicking does nothing useful.
  * ------------------------------------------------------------------ */
 const AUTH_KEY = "horizon_authed_v1";
+
+function parseJwt(token) {
+  try {
+    return JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    return {};
+  }
+}
 
 function GoogleG({ size = 18 }) {
   return (
@@ -842,7 +850,48 @@ function GoogleG({ size = 18 }) {
   );
 }
 
-function LoginScreen({ onSignIn }) {
+function LoginScreen({ onCredential, onContinueLocal }) {
+  const btnRef = useRef(null);
+  const [gisReady, setGisReady] = useState(false);
+  const [hasLocalData] = useState(() => {
+    try { return !!localStorage.getItem(STORE_KEY); } catch { return false; }
+  });
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const init = () => {
+      if (!window.google?.accounts?.id) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (res) => onCredential(res.credential),
+        auto_select: false,
+      });
+      setGisReady(true);
+    };
+
+    if (window.google?.accounts?.id) {
+      init();
+    } else {
+      const script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+      if (script) script.addEventListener("load", init, { once: true });
+    }
+  }, [onCredential]);
+
+  useEffect(() => {
+    if (!gisReady || !btnRef.current) return;
+    window.google.accounts.id.renderButton(btnRef.current, {
+      theme: "outline",
+      size: "large",
+      text: "signin_with",
+      shape: "rectangular",
+      width: Math.min(btnRef.current.offsetWidth || 320, 400),
+    });
+  }, [gisReady]);
+
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
   return (
     <div style={{ background: C.sky, backgroundColor: C.bg, minHeight: "100vh", display: "grid", placeItems: "center", color: C.ink, fontFamily: FONT, padding: 20 }}>
       <div style={{ background: C.card, borderRadius: 20, boxShadow: shadow, padding: "36px 30px", width: "100%", maxWidth: 380, textAlign: "center" }}>
@@ -851,12 +900,28 @@ function LoginScreen({ onSignIn }) {
         </div>
         <h1 style={{ fontSize: 19, fontWeight: 600, margin: "0 0 6px" }}>{t("login_title")}</h1>
         <p style={{ color: C.sub, fontSize: 14, lineHeight: 1.5, margin: "0 0 26px" }}>{t("login_subtitle")}</p>
-        <button onClick={onSignIn} type="button"
-          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, background: "#fff", color: C.ink, fontFamily: FONT, fontSize: 15, fontWeight: 600, cursor: "pointer", boxShadow: shadowSoft }}>
-          <GoogleG size={18} /> {t("login_google")}
-        </button>
-        <p style={{ color: C.faint, fontSize: 12, lineHeight: 1.5, margin: "20px 0 0" }}>{t("login_note")}</p>
-        <p style={{ fontSize: 12, margin: "16px 0 0" }}>
+        {clientId ? (
+          <div ref={btnRef} style={{ width: "100%", minHeight: 44, display: "flex", justifyContent: "center" }} />
+        ) : (
+          <div style={{ padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, background: C.claySoft, color: C.clay, fontSize: 13, lineHeight: 1.5 }}>
+            Set <code>VITE_GOOGLE_CLIENT_ID</code> in your <code>.env</code> file to enable Google sign-in.
+          </div>
+        )}
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 14px", color: C.faint, fontSize: 12 }}>
+            <div style={{ flex: 1, height: 1, background: C.line }} />
+            <span>or</span>
+            <div style={{ flex: 1, height: 1, background: C.line }} />
+          </div>
+          <button onClick={onContinueLocal} type="button"
+            style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, background: "#fff", color: C.sub, fontFamily: FONT, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
+            {hasLocalData ? "Continue with my saved data" : "Use without signing in"}
+          </button>
+          <p style={{ color: C.faint, fontSize: 12, lineHeight: 1.5, margin: "8px 0 0" }}>
+            {hasLocalData ? "Your existing data stays on this device." : "Your data is saved locally on this device only."}
+          </p>
+        </div>
+        <p style={{ fontSize: 12, margin: "20px 0 0" }}>
           <a href="/home.html" style={{ color: C.sub, textDecoration: "none" }}>{t("nav_home")}</a>
           <span style={{ color: C.faint }}> · </span>
           <a href="/privacy.html" style={{ color: C.sub, textDecoration: "none" }}>{t("nav_privacy")}</a>
@@ -882,7 +947,7 @@ export default function App() {
   const [whatIf, setWhatIf] = useState({ active: false, disabledPlanIds: [] });
   const [sheet, setSheet] = useState(null);
   const [authed, setAuthed] = useState(() => {
-    try { return localStorage.getItem(AUTH_KEY) === "1"; } catch { return false; }
+    try { return !!localStorage.getItem(AUTH_KEY); } catch { return false; }
   });
   const saveTimer = useRef(null);
   const [confirm, setConfirm] = useState(null); // { title, message, confirmLabel, danger, onConfirm }
@@ -988,13 +1053,19 @@ export default function App() {
     });
   }, [state, filtered, whatIf]);
 
-  /* ---- placeholder auth gate: show login until signed in ---- */
+  /* ---- auth gate: show login until signed in ---- */
   LANG = state?.settings?.lang || "en";
   if (!authed) {
     return (
       <LoginScreen
-        onSignIn={() => {
-          try { localStorage.setItem(AUTH_KEY, "1"); } catch {}
+        onCredential={(credential) => {
+          const payload = parseJwt(credential);
+          const user = { name: payload.name, email: payload.email, picture: payload.picture };
+          try { localStorage.setItem(AUTH_KEY, JSON.stringify(user)); } catch {}
+          setAuthed(true);
+        }}
+        onContinueLocal={() => {
+          try { localStorage.setItem(AUTH_KEY, JSON.stringify({ local: true })); } catch {}
           setAuthed(true);
         }}
       />
@@ -1031,14 +1102,16 @@ export default function App() {
   const delItem = (key, id) =>
     setState((s) => ({ ...s, [key]: s[key].filter((i) => i.id !== id) }));
 
-  /* ---- placeholder sign-out: clears the auth flag, returns to login ---- */
   const signOut = () => setConfirm({
     title: t("signOut"),
     message: t("signOutConfirm"),
     confirmLabel: t("signOut"),
     danger: true,
     onConfirm: () => {
-      try { localStorage.removeItem(AUTH_KEY); } catch {}
+      try {
+        if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
+        localStorage.removeItem(AUTH_KEY);
+      } catch {}
       setAuthed(false);
     },
   });
