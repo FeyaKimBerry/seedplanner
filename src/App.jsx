@@ -1900,6 +1900,11 @@ function WhatIf({ whatIf, setWhatIf, fmt, plans = [], onGoToPlans }) {
   const up = (p) => setWhatIf((w) => ({ ...w, ...p }));
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
   const togglePlan = (id) => {
     const current = whatIf.disabledPlanIds || [];
     const next = current.includes(id)
