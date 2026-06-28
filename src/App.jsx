@@ -1397,7 +1397,7 @@ export default function App() {
             <ListSection
               title={t("title_income")} subtitle={t("sub_income")}
               items={filtered.income} columns={incomeCols()}
-              onAdd={() => addItem("income", { id: uid(), label: t("new_income"), amount: 0, frequency: "monthly" })}
+              onAdd={() => addItem("income", { id: uid(), label: "", amount: 0, frequency: "monthly" })}
               onUpdate={(id, p) => updItem("income", id, p)}
               onDelete={(id) => delItem("income", id)} fmt={fmt} sortByDate
               presets={INCOME_PRESETS}
@@ -1412,7 +1412,7 @@ export default function App() {
             <ListSection
               title={t("title_expenses")} subtitle={t("sub_expenses")}
               items={filtered.expenses} columns={expenseCols(state.expenses)}
-              onAdd={() => addItem("expenses", { id: uid(), label: t("new_expense"), amount: 0, frequency: "monthly", category: t("cat_other") })}
+              onAdd={() => addItem("expenses", { id: uid(), label: "", amount: 0, frequency: "monthly", category: t("cat_other") })}
               onUpdate={(id, p) => updItem("expenses", id, p)}
               onDelete={(id) => delItem("expenses", id)} fmt={fmt} sortByDate
               presets={EXPENSE_PRESETS}
@@ -1427,7 +1427,7 @@ export default function App() {
             <ListSection
               title={t("title_plans")} subtitle={t("sub_plans")}
               items={filtered.plans} columns={planCols()}
-              onAdd={() => addItem("plans", { id: uid(), label: t("new_plan"), amount: 0, date: new Date().toISOString().slice(0, 10), current: 0 })}
+              onAdd={() => addItem("plans", { id: uid(), label: "", amount: 0, date: new Date().toISOString().slice(0, 10), current: 0 })}
               onUpdate={(id, p) => updItem("plans", id, p)}
               onDelete={(id) => delItem("plans", id)} fmt={fmt} sortByDate />
             <GoalProgress goals={filtered.plans} fmt={fmt} pool={state.settings.startingSavings} />
@@ -1440,13 +1440,13 @@ export default function App() {
             <ListSection
               title={t("title_assets")} subtitle={t("sub_assets")}
               items={filtered.assets} columns={assetCols()}
-              onAdd={() => addItem("assets", { id: uid(), label: t("new_asset"), value: 0 })}
+              onAdd={() => addItem("assets", { id: uid(), label: "", value: 0 })}
               onUpdate={(id, p) => updItem("assets", id, p)}
               onDelete={(id) => delItem("assets", id)} fmt={fmt} />
             <ListSection
               title={t("title_debts")} subtitle={t("sub_debts")}
               items={filtered.debts} columns={debtCols()}
-              onAdd={() => addItem("debts", { id: uid(), label: t("new_debt"), balance: 0, annualRate: 6, monthlyPayment: 0 })}
+              onAdd={() => addItem("debts", { id: uid(), label: "", balance: 0, annualRate: 0, monthlyPayment: 0 })}
               onUpdate={(id, p) => updItem("debts", id, p)}
               onDelete={(id) => delItem("debts", id)} fmt={fmt} />
           </>
@@ -2153,7 +2153,8 @@ const inputCell = (val, onChange, props = {}) => (
     {...props} />
 );
 const moneyCell = (val, onChange) => (
-  <input type="number" value={val} onChange={(e) => onChange(+e.target.value || 0)}
+  <input type="number" value={val === 0 ? "" : val} placeholder="0"
+    onChange={(e) => onChange(+e.target.value || 0)}
     style={{ border: `1px solid ${C.line}`, borderRadius: 9, padding: "5px 8px", width: 110, fontSize: 13, textAlign: "right", ...num }} />
 );
 const selectCell = (val, onChange, opts) => (
@@ -2290,7 +2291,7 @@ const STARTER_EXPENSES = [
 ];
 
 const incomeCols = () => [
-  { key: "label", label: t("col_source"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
+  { key: "label", label: t("col_source"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150, placeholder: t("col_source") }) },
   { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
   { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), freqOpts()) },
   { key: "date", label: t("col_dateOneoff"), render: (it, u) => it.frequency === "oneoff" ? inputCell(it.date || isoIn(3), (v) => u({ date: v }), { type: "date", w: 140 }) : <span style={{ color: C.faint }}>—</span> },
@@ -2299,24 +2300,24 @@ const expenseCols = (items = []) => {
   // categories already in use (incl. custom ones) so they appear in every row's dropdown
   const usedCats = [...new Set(items.map((i) => i.category).filter(Boolean))];
   return [
-    { key: "label", label: t("col_item"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
+    { key: "label", label: t("col_item"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150, placeholder: t("col_item") }) },
     { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
     { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), recurringFreqOpts()) },
     { key: "category", label: t("col_category"), render: (it, u) => <CategoryCell value={it.category} extra={usedCats} onChange={(v) => u({ category: v })} /> },
   ];
 };
 const planCols = () => [
-  { key: "label", label: t("col_plan"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
+  { key: "label", label: t("col_plan"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160, placeholder: t("col_plan") }) },
   { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
   { key: "date", label: t("col_when"), render: (it, u) => inputCell(it.date, (v) => u({ date: v }), { type: "date", w: 140 }) },
   { key: "current", label: t("col_saved"), render: (it, u) => moneyCell(it.current || 0, (v) => u({ current: v })) },
 ];
 const assetCols = () => [
-  { key: "label", label: t("col_asset"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160 }) },
+  { key: "label", label: t("col_asset"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 160, placeholder: t("col_asset") }) },
   { key: "value", label: t("col_value"), render: (it, u) => moneyCell(it.value, (v) => u({ value: v })) },
 ];
 const debtCols = () => [
-  { key: "label", label: t("col_debt"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150 }) },
+  { key: "label", label: t("col_debt"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150, placeholder: t("col_debt") }) },
   { key: "balance", label: t("col_balance"), render: (it, u) => moneyCell(it.balance, (v) => u({ balance: v })) },
   { key: "annualRate", label: t("col_rate"), render: (it, u) => <input type="number" value={it.annualRate} onChange={(e) => u({ annualRate: +e.target.value || 0 })} style={{ border: `1px solid ${C.line}`, borderRadius: 9, padding: "5px 8px", width: 70, fontSize: 13, textAlign: "right", ...num }} /> },
   { key: "monthlyPayment", label: t("col_monthlyPay"), render: (it, u) => moneyCell(it.monthlyPayment, (v) => u({ monthlyPayment: v })) },
