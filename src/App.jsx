@@ -2175,6 +2175,17 @@ function PlansSection({ plans, onAdd, onUpdate, onDelete, fmt }) {
                   )}
                 </span>
                 <span className="flex shrink-0 items-center gap-2" style={{ color: C.sub, fontSize: 13 }}>
+                  {(() => {
+                    const df = (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", year: "numeric" });
+                    if (hasItems) {
+                      const dates = [...items.map((it) => it.date), plan.date].filter(Boolean).sort();
+                      if (dates.length === 0) return null;
+                      const first = df(dates[0]);
+                      const last = df(dates[dates.length - 1]);
+                      return <span style={{ fontSize: 12, color: C.faint }}>{first === last ? first : `${first} – ${last}`}</span>;
+                    }
+                    return plan.date ? <span style={{ fontSize: 12, color: C.faint }}>{df(plan.date)}</span> : null;
+                  })()}
                   <span style={num}>{fmt.format(hasItems ? committed : budget)}</span>
                   {hasItems && budget > 0 && (
                     <span style={{ fontSize: 11, color: remaining < 0 ? "#D95F5F" : C.green, fontWeight: 600, ...num }}>
