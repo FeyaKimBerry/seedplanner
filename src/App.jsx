@@ -8,7 +8,7 @@ import {
   Wallet, TrendingDown, Target, Landmark, Settings as Cog,
   LayoutDashboard, Plus, Trash2, Download, Upload, ShieldCheck,
   PiggyBank, GitCompare, Check, FileText, LogOut, ChevronDown, RotateCcw,
-  MoreHorizontal,
+  MoreHorizontal, X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -1891,11 +1891,14 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
   );
 }
 
+
+
 /* ================================================================== *
- * What-if panel — master toggle + per-plan toggles
+ * What-if bottom drawer
  * ================================================================== */
 function WhatIf({ whatIf, setWhatIf, fmt, plans = [], onGoToPlans }) {
   const up = (p) => setWhatIf((w) => ({ ...w, ...p }));
+  const [open, setOpen] = useState(false);
 
   const togglePlan = (id) => {
     const current = whatIf.disabledPlanIds || [];
@@ -1907,93 +1910,156 @@ function WhatIf({ whatIf, setWhatIf, fmt, plans = [], onGoToPlans }) {
 
   const disabledIds = new Set(whatIf.disabledPlanIds || []);
   const disabledCount = plans.filter((p) => disabledIds.has(p.id)).length;
+  const hasChanges = whatIf.active && disabledCount > 0;
 
   return (
-    <Card>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <GitCompare size={16} color={C.clay} />
-          <h2 style={{ fontWeight: 600, fontSize: 15 }}>{t("whatifTitle")}</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {whatIf.active && disabledCount > 0 && (
-            <button onClick={() => up({ disabledPlanIds: [] })}
-              className="flex items-center gap-1 rounded-md px-2 py-1"
-              style={{ border: `1px solid ${C.line}`, color: C.sub, fontSize: 12 }}>
-              <RotateCcw size={13} /> Reset
-            </button>
+    <>
+      {/* Floating trigger button — fixed at bottom centre */}
+      <div style={{
+        position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+        zIndex: 50, display: "flex", gap: 8,
+      }}>
+        <motion.button
+          onClick={() => setOpen(true)}
+          whileTap={{ scale: 0.96 }}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "10px 20px", borderRadius: 999,
+            background: whatIf.active ? C.green : C.ink,
+            color: "#fff", fontWeight: 600, fontSize: 14,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
+            border: "none", cursor: "pointer",
+          }}>
+          <GitCompare size={16} />
+          What-if
+          {hasChanges && (
+            <span style={{
+              background: "rgba(255,255,255,0.25)", borderRadius: 999,
+              padding: "1px 7px", fontSize: 12, fontWeight: 700,
+            }}>{disabledCount} off</span>
           )}
-          <Toggle on={whatIf.active} onChange={(v) => up({ active: v })} />
-        </div>
+        </motion.button>
       </div>
 
-      <p style={{ color: C.faint, fontSize: 12, marginTop: 4 }}>
-        {whatIf.active
-          ? "Toggle plans on/off below — the graph updates live."
-          : "Turn on to explore how removing planned expenses affects your projection."}
-      </p>
+      {/* Backdrop */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            onClick={() => setOpen(false)}
+            style={{
+              position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)",
+              zIndex: 60,
+            }}
+          />
+        )}
+      </AnimatePresence>
 
-      <AnimatePresence initial={false}>
-        {whatIf.active && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }} transition={SNAP} style={{ overflow: "hidden" }}>
+      {/* Drawer */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="drawer"
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 380, damping: 36, mass: 0.8 }}
+            style={{
+              position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+              background: C.card, borderRadius: "20px 20px 0 0",
+              boxShadow: "0 -4px 32px rgba(0,0,0,0.14)",
+              maxHeight: "70vh", display: "flex", flexDirection: "column",
+            }}>
 
-            {plans.length === 0 ? (
-              <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 12, background: C.bg, border: `1px solid ${C.line}` }}>
-                <p style={{ fontSize: 13, color: C.faint }}>
-                  No plans yet.{" "}
-                  <button onClick={onGoToPlans}
-                    style={{ color: C.green, fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 13 }}>
-                    Add plans →
+            {/* Drag handle + header */}
+            <div style={{ padding: "12px 20px 0", flexShrink: 0 }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: C.line, margin: "0 auto 14px" }} />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <GitCompare size={16} color={C.clay} />
+                  <span style={{ fontWeight: 700, fontSize: 16 }}>What-if</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {hasChanges && (
+                    <button onClick={() => up({ disabledPlanIds: [] })}
+                      style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.line}`, background: "none", color: C.sub, fontSize: 12, cursor: "pointer" }}>
+                      <RotateCcw size={12} /> Reset
+                    </button>
+                  )}
+                  <Toggle on={whatIf.active} onChange={(v) => up({ active: v })} />
+                  <button onClick={() => setOpen(false)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: C.faint, padding: 4, lineHeight: 1 }}>
+                    <X size={20} />
                   </button>
-                </p>
+                </div>
               </div>
-            ) : (
-              <div className="mt-3 flex flex-col" style={{ gap: 6 }}>
-                {plans.map((p) => {
-                  const on = !disabledIds.has(p.id);
-                  const dateLabel = p.date
-                    ? new Date(p.date).toLocaleDateString(undefined, { month: "short", year: "numeric" })
-                    : null;
-                  return (
-                    <div key={p.id}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 10,
-                        padding: "9px 12px", borderRadius: 11,
-                        border: `1px solid ${on ? C.line : C.claySoft}`,
-                        background: on ? C.bg : C.claySoft,
-                        opacity: on ? 1 : 0.7,
-                        transition: "background 0.2s, opacity 0.2s",
-                      }}>
-                      <Toggle on={on} onChange={() => togglePlan(p.id)} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: on ? C.ink : C.sub }}>
-                          {p.label || "Untitled"}
-                        </div>
-                        {(dateLabel || p.amount) && (
-                          <div style={{ fontSize: 11.5, color: C.faint, marginTop: 1, ...num }}>
-                            {dateLabel && <span>{dateLabel}</span>}
-                            {dateLabel && p.amount ? " · " : ""}
-                            {p.amount ? fmt.format(p.amount) : ""}
-                          </div>
-                        )}
+              <p style={{ fontSize: 12, color: C.faint, marginBottom: 12 }}>
+                {whatIf.active
+                  ? "Toggle plans on/off — the graph updates live above."
+                  : "Turn on, then toggle plans to see how they affect your projection."}
+              </p>
+            </div>
+
+            {/* Scrollable plan list */}
+            <div style={{ overflowY: "auto", padding: "0 20px 32px", flex: 1 }}>
+              <AnimatePresence initial={false}>
+                {whatIf.active && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+                    {plans.length === 0 ? (
+                      <div style={{ padding: "16px 0" }}>
+                        <p style={{ fontSize: 13, color: C.faint }}>
+                          No plans yet.{" "}
+                          <button onClick={() => { setOpen(false); onGoToPlans(); }}
+                            style={{ color: C.green, fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 13 }}>
+                            Add plans →
+                          </button>
+                        </p>
                       </div>
-                      {!on && (
-                        <span style={{ fontSize: 11, fontWeight: 600, color: C.clay, whiteSpace: "nowrap" }}>excluded</span>
-                      )}
-                    </div>
-                  );
-                })}
-                <button onClick={onGoToPlans}
-                  style={{ marginTop: 4, fontSize: 12, color: C.sub, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: "2px 0" }}>
-                  Manage plans →
-                </button>
-              </div>
-            )}
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        {plans.map((p, i) => {
+                          const on = !disabledIds.has(p.id);
+                          const meta = [
+                            p.date ? new Date(p.date).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : null,
+                            p.amount ? fmt.format(p.amount) : null,
+                          ].filter(Boolean).join(" · ");
+                          return (
+                            <div key={p.id} style={{
+                              display: "flex", alignItems: "center", gap: 10,
+                              padding: "8px 0",
+                              borderTop: i === 0 ? "none" : `1px solid ${C.line}`,
+                              opacity: on ? 1 : 0.5,
+                              transition: "opacity 0.2s",
+                            }}>
+                              <Toggle on={on} onChange={() => togglePlan(p.id)} />
+                              <span style={{
+                                flex: 1, minWidth: 0, fontSize: 13, fontWeight: 500,
+                                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                color: on ? C.ink : C.sub,
+                                textDecoration: on ? "none" : "line-through",
+                              }}>
+                                {p.label || "Untitled"}
+                              </span>
+                              {meta && (
+                                <span style={{ fontSize: 12, color: C.faint, whiteSpace: "nowrap", ...num }}>{meta}</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                        <button onClick={() => { setOpen(false); onGoToPlans(); }}
+                          style={{ marginTop: 4, fontSize: 12, color: C.sub, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>
+                          Manage plans →
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </Card>
+    </>
   );
 }
 
