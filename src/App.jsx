@@ -951,6 +951,13 @@ export default function App() {
     });
   }, [state?.settings.currency]);
 
+  const fmtCompact = useMemo(() => {
+    const cur = state?.settings.currency || "AUD";
+    return new Intl.NumberFormat(undefined, {
+      style: "currency", currency: cur, notation: "compact", maximumFractionDigits: 1,
+    });
+  }, [state?.settings.currency]);
+
   const filtered = useMemo(() => {
     if (!state) return null;
     return {
@@ -1363,7 +1370,7 @@ export default function App() {
         {tab === "dashboard" && (
           (state.income.length === 0 && state.expenses.length === 0)
             ? <WelcomeCard onLoadSample={loadSample} onStart={startWithPresets} />
-            : <Dashboard {...{ state, projection, fmt, retireTarget, retireDate, retireMonths,
+            : <Dashboard {...{ state, projection, fmt, fmtCompact, retireTarget, retireDate, retireMonths,
                 metric, setMetric, grain, setGrain, scaleMode, setScaleMode, pickYear, setPickYear,
                 whatIf, setWhatIf, chartKey, filtered, setSettings, setTab,
                 savingsNudgeDismissed, onDismissSavingsNudge: () => setSavingsNudgeDismissed(true) }} />
@@ -1558,7 +1565,7 @@ function GreenBar({ x, y, width, height, fill, payload }) {
 /* ================================================================== *
  * Dashboard
  * ================================================================== */
-function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMonths, metric, setMetric, grain, setGrain, scaleMode, setScaleMode, pickYear, setPickYear, whatIf, setWhatIf, chartKey, filtered, setSettings, setTab, savingsNudgeDismissed, onDismissSavingsNudge }) {
+function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDate, retireMonths, metric, setMetric, grain, setGrain, scaleMode, setScaleMode, pickYear, setPickYear, whatIf, setWhatIf, chartKey, filtered, setSettings, setTab, savingsNudgeDismissed, onDismissSavingsNudge }) {
   // Show savings nudge if starting savings hasn't been updated in 30+ days
   const savingsNudgeDays = (() => {
     const updated = state.settings.startingSavingsUpdatedAt;
@@ -1873,7 +1880,7 @@ function Dashboard({ state, projection, fmt, retireTarget, retireDate, retireMon
           {milestones.map((y) => (
             <div key={y} style={{ borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>
               <div style={{ fontSize: 11, color: C.faint }}>{calYear(y)}</div>
-              <div style={{ fontWeight: 600, fontSize: 13, ...num }}>{fmt.format(pointAt(y)[chartKey])}</div>
+              <div style={{ fontWeight: 600, fontSize: 13, ...num }}>{fmtCompact.format(pointAt(y)[chartKey])}</div>
             </div>
           ))}
         </div>
