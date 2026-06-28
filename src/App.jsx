@@ -1039,11 +1039,18 @@ export default function App() {
 
   /* ---- export / import ---- */
   const exportJSON = () => {
+    const disabledIds = new Set(whatIf.active ? (whatIf.disabledPlanIds || []) : []);
+    const hasWhatIf = whatIf.active && disabledIds.size > 0;
+    const stateWithWhatIf = hasWhatIf
+      ? { ...state, plans: state.plans.filter((p) => !disabledIds.has(p.id)) }
+      : null;
     setSheet({
       kind: "data",
       title: t("exData_title"),
       desc: t("exData_desc"),
-      content: JSON.stringify(state, null, 2),
+      content: hasWhatIf ? JSON.stringify(stateWithWhatIf, null, 2) : JSON.stringify(state, null, 2),
+      contentOriginal: JSON.stringify(state, null, 2),
+      hasWhatIf,
       filename: `seedplanner-backup-${new Date().toISOString().slice(0, 10)}.json`,
       mime: "application/json",
     });
@@ -1086,10 +1093,21 @@ export default function App() {
       `<tr><td>${i.label}</td><td class="r">${m(i.amount)}</td><td>${fr(i.frequency)}</td></tr>`);
     const expenseRows = filtered.expenses.map((e) =>
       `<tr><td>${e.label}</td><td class="r">${m(e.amount)}</td><td>${fr(e.frequency)}</td><td>${e.category}</td></tr>`);
-    const oneOffRows = filtered.plans.filter((p) => p.type === "spend").map((o) =>
-      `<tr><td>${o.label}</td><td class="r">${m(o.amount)}</td><td>${dt(o.date)}</td></tr>`);
-    const goalRows = filtered.plans.filter((p) => p.type === "save").map((g) =>
-      `<tr><td>${g.label}</td><td class="r">${m(g.amount)}</td><td>${dt(g.date)}</td></tr>`);
+    const disabledIds = new Set(whatIf.active ? (whatIf.disabledPlanIds || []) : []);
+    const hasWhatIf = whatIf.active && disabledIds.size > 0;
+    const activePlans = filtered.plans.filter((p) => !disabledIds.has(p.id));
+
+    const buildPlanRows = (plans) => ({
+      oneOff: plans.filter((p) => p.type === "spend").map((o) =>
+        `<tr><td>${o.label}</td><td class="r">${m(o.amount)}</td><td>${dt(o.date)}</td></tr>`),
+      goals: plans.filter((p) => p.type === "save").map((g) =>
+        `<tr><td>${g.label}</td><td class="r">${m(g.amount)}</td><td>${dt(g.date)}</td></tr>`),
+    });
+
+    const wiRows = buildPlanRows(activePlans);
+    const allRows = buildPlanRows(filtered.plans);
+    const oneOffRows = wiRows.oneOff;
+    const goalRows = wiRows.goals;
     const debtRows = filtered.debts.map((d) =>
       `<tr><td>${d.label}</td><td class="r">${m(d.balance)}</td><td class="r">${d.annualRate}%</td><td class="r">${m(d.monthlyPayment)}</td></tr>`);
     const assetRows = filtered.assets.map((a) =>
@@ -1102,7 +1120,7 @@ export default function App() {
       if (svg) chartHTML = `<div class="chart">${svg.outerHTML}</div>`;
     } catch { /* no chart available */ }
 
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Seedplanner report</title>
+    const buildHTML = (oRows, gRows, note = "") => `<!doctype html><html><head><meta charset="utf-8"><title>Seedplanner report</title>
 <style>
   @page { margin: 18mm; }
   * { box-sizing: border-box; }
@@ -1110,6 +1128,7 @@ export default function App() {
   .head { border-bottom: 2px solid #2E8C8C; padding-bottom: 12px; margin-bottom: 18px; }
   .head h1 { margin: 0; font-size: 22px; color: #2E8C8C; }
   .head .meta { color: #5C6E76; font-size: 12px; margin-top: 4px; }
+  .wi-note { background: #FFF8F0; border: 1px solid #E8C97A; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #7A5A1A; margin-bottom: 14px; }
   .cards { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
   .card { border: 1px solid #E4ECEC; border-radius: 12px; padding: 12px 14px; min-width: 150px; }
   .card .l { font-size: 11px; color: #93A4AA; }
@@ -1127,6 +1146,7 @@ export default function App() {
     <h1>${t("rep_title")}</h1>
     <div class="meta">${t("rep_generated")} ${new Date().toLocaleDateString()} · ${state.settings.currency} · ${state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars")}</div>
   </div>
+  ${note}
   <div class="cards">
     <div class="card"><div class="l">${t("stat_surplus")}</div><div class="v">${m(projection.monthlyNet)}</div></div>
     <div class="card"><div class="l">${t("stat_retireNum")}</div><div class="v">${m(retireTarget)}</div></div>
@@ -1138,8 +1158,8 @@ export default function App() {
   <table><thead><tr><th>${t("col_when")}</th><th class="r">${t("savings")}</th><th class="r">${t("netWorth")}</th></tr></thead><tbody>${rows.join("")}</tbody></table>
   ${section(t("title_income"), [{ t: t("col_source") }, { t: t("col_amount"), r: 1 }, { t: t("col_howOften") }], incomeRows)}
   ${section(t("title_expenses"), [{ t: t("col_item") }, { t: t("col_amount"), r: 1 }, { t: t("col_howOften") }, { t: t("col_category") }], expenseRows)}
-  ${section(t("tab_plans") + " — " + t("plan_type_spend"), [{ t: t("col_plan") }, { t: t("col_amount"), r: 1 }, { t: t("col_when") }], oneOffRows)}
-  ${section(t("tab_plans") + " — " + t("plan_type_save"), [{ t: t("col_plan") }, { t: t("col_amount"), r: 1 }, { t: t("col_when") }], goalRows)}
+  ${section(t("tab_plans") + " — " + t("plan_type_spend"), [{ t: t("col_plan") }, { t: t("col_amount"), r: 1 }, { t: t("col_when") }], oRows)}
+  ${section(t("tab_plans") + " — " + t("plan_type_save"), [{ t: t("col_plan") }, { t: t("col_amount"), r: 1 }, { t: t("col_when") }], gRows)}
   ${section(t("title_debts"), [{ t: t("col_debt") }, { t: t("col_balance"), r: 1 }, { t: t("col_rate") }, { t: t("col_monthlyPay"), r: 1 }], debtRows)}
   ${section(t("title_assets"), [{ t: t("col_asset") }, { t: t("col_value"), r: 1 }], assetRows)}
   <h3>${t("rep_emergency")}</h3>
@@ -1147,11 +1167,17 @@ export default function App() {
   <div class="foot">${t("rep_foot")}</div>
 </body></html>`;
 
+    const wiNote = `<div class="wi-note">⚡ What-if scenario applied — ${disabledIds.size} plan${disabledIds.size > 1 ? "s" : ""} excluded from this projection.</div>`;
+    const html = buildHTML(wiRows.oneOff, wiRows.goals, hasWhatIf ? wiNote : "");
+    const htmlOriginal = hasWhatIf ? buildHTML(allRows.oneOff, allRows.goals) : null;
+
     setSheet({
       kind: "report",
       title: t("exRep_title"),
       desc: t("exRep_desc"),
       content: html,
+      contentOriginal: htmlOriginal,
+      hasWhatIf,
       filename: `seedplanner-report-${new Date().toISOString().slice(0, 10)}.html`,
       mime: "text/html",
     });
@@ -2796,13 +2822,22 @@ function ConfirmDialog({ data, onClose }) {
  * ================================================================== */
 function ExportSheet({ sheet, onClose }) {
   const [copied, setCopied] = useState(false);
+  const [applyWhatIf, setApplyWhatIf] = useState(true);
+
+  // Reset toggle whenever a new sheet opens
+  useEffect(() => { setApplyWhatIf(true); }, [sheet]);
 
   const canShare = typeof navigator !== "undefined" && !!navigator.share;
   const isReport = sheet?.kind === "report";
 
+  // Active content: if what-if available and toggle is off, use original
+  const activeContent = sheet
+    ? (sheet.hasWhatIf && !applyWhatIf && sheet.contentOriginal ? sheet.contentOriginal : sheet.content)
+    : "";
+
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(sheet.content);
+      await navigator.clipboard.writeText(activeContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -2812,24 +2847,24 @@ function ExportSheet({ sheet, onClose }) {
 
   const share = async () => {
     try {
-      const file = new File([sheet.content], sheet.filename, { type: sheet.mime });
+      const file = new File([activeContent], sheet.filename, { type: sheet.mime });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: sheet.title });
         return;
       }
       if (navigator.share) {
-        await navigator.share({ title: sheet.title, text: sheet.content });
+        await navigator.share({ title: sheet.title, text: activeContent });
         return;
       }
       throw new Error("unsupported");
     } catch (e) {
-      if (e && e.name === "AbortError") return; // user dismissed
+      if (e && e.name === "AbortError") return;
       alert(t("blockedNote"));
     }
   };
 
   const download = () => {
-    const ok = downloadFile(sheet.content, sheet.filename, sheet.mime);
+    const ok = downloadFile(activeContent, sheet.filename, sheet.mime);
     if (!ok) alert(t("blockedNote"));
   };
 
@@ -2837,7 +2872,7 @@ function ExportSheet({ sheet, onClose }) {
     const w = window.open("", "_blank");
     if (w && w.document) {
       w.document.open();
-      w.document.write(sheet.content);
+      w.document.write(activeContent);
       w.document.close();
       const p = () => { try { w.focus(); w.print(); } catch {} };
       w.onload = p;
@@ -2873,6 +2908,20 @@ function ExportSheet({ sheet, onClose }) {
         <h2 style={{ fontWeight: 700, fontSize: 17 }}>{sheet.title}</h2>
         <p style={{ color: C.sub, fontSize: 13, marginTop: 4, lineHeight: 1.5 }}>{sheet.desc}</p>
 
+        {sheet.hasWhatIf && (
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            marginTop: 14, padding: "10px 14px", borderRadius: 12,
+            border: `1px solid ${C.line}`, background: C.bg,
+          }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>Include what-if changes</div>
+              <div style={{ fontSize: 12, color: C.faint, marginTop: 1 }}>Export with excluded plans removed</div>
+            </div>
+            <Toggle on={applyWhatIf} onChange={setApplyWhatIf} />
+          </div>
+        )}
+
         <div className="mt-4 flex gap-2">
           {btn(copied ? t("copied") : t("copy"), copy, true)}
           {canShare && btn(t("share"), share)}
@@ -2884,11 +2933,11 @@ function ExportSheet({ sheet, onClose }) {
         {isReport ? (
           <>
             <div style={{ fontSize: 11, color: C.faint, margin: "14px 0 6px" }}>{t("previewNote")}</div>
-            <iframe title="report" srcDoc={sheet.content}
+            <iframe title="report" srcDoc={activeContent}
               style={{ width: "100%", height: 280, border: `1px solid ${C.line}`, borderRadius: 12, background: "#fff" }} />
           </>
         ) : (
-          <textarea readOnly value={sheet.content} onFocus={(e) => e.target.select()}
+          <textarea readOnly value={activeContent} onFocus={(e) => e.target.select()}
             style={{ marginTop: 14, width: "100%", height: 150, fontSize: 11, fontFamily: "ui-monospace, Menlo, monospace", border: `1px solid ${C.line}`, borderRadius: 12, padding: 10, color: C.sub, background: C.bg, resize: "none" }} />
         )}
 
