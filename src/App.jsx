@@ -594,18 +594,76 @@ function t(key, vars) {
 }
 
 /* ------------------------------------------------------------------ *
- * Persistence layer.  This is the ONLY storage touchpoint — in the
- * production build it's swapped for the Planourdays Drive
- * appDataFolder sync. Everything else is local-first derived state.
- * ------------------------------------------------------------------ */
-/* ------------------------------------------------------------------ *
- * Persistence layer. Local-first, same adapter seam as Planourdays:
- * swap these two methods for Google Drive appDataFolder sync later.
+ * Persistence layer — local-first with optional Google Drive sync.
+ * Signed-in users get Drive appDataFolder sync (data follows them
+ * across devices). Local-only users stay on localStorage.
  * ------------------------------------------------------------------ */
 const STORE_KEY = "horizon_finance_state_v1";
+const DRIVE_FILE = "seedplanner-data.json";
+
+// Holds the Drive access token once the user signs in with Google.
+let _driveToken = null;
+function setDriveToken(token) { _driveToken = token; }
+
+async function driveFileId(token) {
+  const res = await fetch(
+    "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)&q=name%3D%27" + DRIVE_FILE + "%27",
+    { headers: { Authorization: "Bearer " + token } }
+  );
+  const json = await res.json();
+  return json.files?.[0]?.id || null;
+}
+
+async function driveLoad(token) {
+  try {
+    const id = await driveFileId(token);
+    if (!id) return null;
+    const res = await fetch(
+      "https://www.googleapis.com/drive/v3/files/" + id + "?alt=media",
+      { headers: { Authorization: "Bearer " + token } }
+    );
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function driveSave(token, state) {
+  try {
+    const body = JSON.stringify(state);
+    const id = await driveFileId(token);
+    if (id) {
+      await fetch("https://www.googleapis.com/upload/drive/v3/files/" + id + "?uploadType=media", {
+        method: "PATCH",
+        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        body,
+      });
+    } else {
+      const meta = JSON.stringify({ name: DRIVE_FILE, parents: ["appDataFolder"] });
+      const form = new FormData();
+      form.append("metadata", new Blob([meta], { type: "application/json" }));
+      form.append("file", new Blob([body], { type: "application/json" }));
+      await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token },
+        body: form,
+      });
+    }
+  } catch (e) {
+    console.error("Drive save failed", e);
+  }
+}
+
 const store = {
   async load() {
     try {
+      if (_driveToken) {
+        const remote = await driveLoad(_driveToken);
+        if (remote) {
+          localStorage.setItem(STORE_KEY, JSON.stringify(remote));
+          return remote;
+        }
+      }
       const v = localStorage.getItem(STORE_KEY);
       return v ? JSON.parse(v) : null;
     } catch {
@@ -615,6 +673,7 @@ const store = {
   async save(state) {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      if (_driveToken) await driveSave(_driveToken, state);
     } catch (e) {
       console.error("save failed", e);
     }
@@ -850,47 +909,47 @@ function GoogleG({ size = 18 }) {
   );
 }
 
-function LoginScreen({ onCredential, onContinueLocal }) {
-  const btnRef = useRef(null);
-  const [gisReady, setGisReady] = useState(false);
+function LoginScreen({ onSignIn, onContinueLocal }) {
   const [hasLocalData] = useState(() => {
     try { return !!localStorage.getItem(STORE_KEY); } catch { return false; }
   });
+  const tokenClientRef = useRef(null);
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) return;
+  const getOrInitTokenClient = () => {
+    if (tokenClientRef.current) return tokenClientRef.current;
+    if (!window.google?.accounts?.oauth2 || !clientId) return null;
+    tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: "openid profile email https://www.googleapis.com/auth/drive.appdata",
+      callback: async (tokenRes) => {
+        if (tokenRes.error) { console.error("Token error", tokenRes); return; }
+        try {
+          const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: "Bearer " + tokenRes.access_token },
+          });
+          const u = await r.json();
+          onSignIn({ user: { name: u.name, email: u.email, picture: u.picture }, accessToken: tokenRes.access_token });
+        } catch (e) {
+          console.error("Userinfo fetch failed", e);
+        }
+      },
+    });
+    return tokenClientRef.current;
+  };
 
+  const handleGoogleSignIn = () => {
     const init = () => {
-      if (!window.google?.accounts?.id) return;
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: (res) => onCredential(res.credential),
-        auto_select: false,
-      });
-      setGisReady(true);
+      const tc = getOrInitTokenClient();
+      if (tc) tc.requestAccessToken({ prompt: "select_account" });
     };
-
-    if (window.google?.accounts?.id) {
+    if (window.google?.accounts?.oauth2) {
       init();
     } else {
       const script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
       if (script) script.addEventListener("load", init, { once: true });
     }
-  }, [onCredential]);
-
-  useEffect(() => {
-    if (!gisReady || !btnRef.current) return;
-    window.google.accounts.id.renderButton(btnRef.current, {
-      theme: "outline",
-      size: "large",
-      text: "signin_with",
-      shape: "rectangular",
-      width: Math.min(btnRef.current.offsetWidth || 320, 400),
-    });
-  }, [gisReady]);
-
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  };
 
   return (
     <div style={{ background: C.sky, backgroundColor: C.bg, minHeight: "100vh", display: "grid", placeItems: "center", color: C.ink, fontFamily: FONT, padding: 20 }}>
@@ -901,7 +960,10 @@ function LoginScreen({ onCredential, onContinueLocal }) {
         <h1 style={{ fontSize: 19, fontWeight: 600, margin: "0 0 6px" }}>{t("login_title")}</h1>
         <p style={{ color: C.sub, fontSize: 14, lineHeight: 1.5, margin: "0 0 26px" }}>{t("login_subtitle")}</p>
         {clientId ? (
-          <div ref={btnRef} style={{ width: "100%", minHeight: 44, display: "flex", justifyContent: "center" }} />
+          <button onClick={handleGoogleSignIn} type="button"
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, background: "#fff", color: C.ink, fontFamily: FONT, fontSize: 15, fontWeight: 600, cursor: "pointer", boxShadow: shadowSoft }}>
+            <GoogleG size={18} /> {t("login_google")}
+          </button>
         ) : (
           <div style={{ padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, background: C.claySoft, color: C.clay, fontSize: 13, lineHeight: 1.5 }}>
             Set <code>VITE_GOOGLE_CLIENT_ID</code> in your <code>.env</code> file to enable Google sign-in.
@@ -1058,10 +1120,9 @@ export default function App() {
   if (!authed) {
     return (
       <LoginScreen
-        onCredential={(credential) => {
-          const payload = parseJwt(credential);
-          const user = { name: payload.name, email: payload.email, picture: payload.picture };
+        onSignIn={({ user, accessToken }) => {
           try { localStorage.setItem(AUTH_KEY, JSON.stringify(user)); } catch {}
+          if (accessToken) setDriveToken(accessToken);
           setAuthed(true);
         }}
         onContinueLocal={() => {
