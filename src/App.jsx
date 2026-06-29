@@ -955,7 +955,7 @@ function LoginScreen({ onSignIn, onContinueLocal }) {
     <div style={{ background: C.sky, backgroundColor: C.bg, minHeight: "100vh", display: "grid", placeItems: "center", color: C.ink, fontFamily: FONT, padding: 20 }}>
       <div style={{ background: C.card, borderRadius: 20, boxShadow: shadow, padding: "36px 30px", width: "100%", maxWidth: 380, textAlign: "center" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22 }}>
-          <img src="/logo.png" alt="Seedplanner" style={{ height: 48, width: "auto" }} />
+          <img src="/logo.png" alt="Seedplanner" style={{ height: 72, width: "auto" }} />
         </div>
         <h1 style={{ fontSize: 19, fontWeight: 600, margin: "0 0 6px" }}>{t("login_title")}</h1>
         <p style={{ color: C.sub, fontSize: 14, lineHeight: 1.5, margin: "0 0 26px" }}>{t("login_subtitle")}</p>
@@ -1475,7 +1475,7 @@ export default function App() {
       <header style={{ borderBottom: `1px solid ${C.line}`, background: "rgba(255,255,255,0.78)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 20 }}>
         <div className="mx-auto flex flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-5" style={{ maxWidth: 1100 }}>
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Seedplanner" style={{ height: 30, width: "auto", display: "block" }} />
+            <img src="/logo.png" alt="Seedplanner" style={{ height: 44, width: "auto", display: "block" }} />
           </div>
           <div className="flex items-center gap-2">
             <select value={state.settings.lang || "en"} onChange={(e) => setSettings({ lang: e.target.value })}
