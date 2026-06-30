@@ -813,7 +813,7 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
   const monthlyIncome = income
     .filter((i) => i.frequency !== "oneoff")
     .reduce((s, i) => s + monthlyOf(i.amount, i.frequency), 0);
-  const monthlyExpense = expenses.reduce((s, e) => s + monthlyOf(e.amount, e.frequency), 0);
+  const monthlyExpense = expenses.filter((e) => e.frequency !== "oneoff").reduce((s, e) => s + monthlyOf(e.amount, e.frequency), 0);
   const monthlyDebtPay = debts.reduce((s, d) => s + (d.monthlyPayment || 0), 0);
 
   const baseNet = monthlyIncome - monthlyExpense - monthlyDebtPay;
@@ -828,6 +828,11 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
   income.filter((i) => i.frequency === "oneoff").forEach((i) => {
     const m = monthsFromNow(i.date);
     if (m >= 0 && m <= months) oneOffByMonth[m] = (oneOffByMonth[m] || 0) - i.amount;
+  });
+  // one-off expense events
+  expenses.filter((e) => e.frequency === "oneoff").forEach((e) => {
+    const m = monthsFromNow(e.date);
+    if (m >= 0 && m <= months) oneOffByMonth[m] = (oneOffByMonth[m] || 0) + e.amount;
   });
 
   const assetTotal = assets.reduce((s, a) => s + (a.value || 0), 0);
@@ -1357,6 +1362,7 @@ export default function App() {
       .map(i => `<tr><td>${i.label}</td><td class="r">${m(i.amount)}</td><td>${fr(i.frequency)}</td><td class="r">${m(toMonthly(i.amount, i.frequency))}/mo</td></tr>`);
 
     const expenseRows = filtered.expenses
+      .filter(e => e.frequency !== "oneoff")
       .map(e => `<tr><td>${e.label}</td><td>${e.category || "—"}</td><td class="r">${m(e.amount)}</td><td>${fr(e.frequency)}</td><td class="r">${m(toMonthly(e.amount, e.frequency))}/mo</td></tr>`);
 
     const debtRows = filtered.debts
@@ -2766,7 +2772,8 @@ const expenseCols = (items = []) => {
   return [
     { key: "label", label: t("col_item"), render: (it, u) => inputCell(it.label, (v) => u({ label: v }), { w: 150, placeholder: t("col_item") }) },
     { key: "amount", label: t("col_amount"), render: (it, u) => moneyCell(it.amount, (v) => u({ amount: v })) },
-    { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), recurringFreqOpts()) },
+    { key: "frequency", label: t("col_howOften"), render: (it, u) => selectCell(it.frequency, (v) => u({ frequency: v }), freqOpts()) },
+    { key: "date", label: t("col_dateOneoff"), render: (it, u) => it.frequency === "oneoff" ? inputCell(it.date || isoIn(3), (v) => u({ date: v }), { type: "date", w: 140 }) : <span style={{ color: C.faint }}>—</span> },
     { key: "category", label: t("col_category"), render: (it, u) => <CategoryCell value={it.category} extra={usedCats} onChange={(v) => u({ category: v })} /> },
   ];
 };
