@@ -1933,13 +1933,13 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Stat label={t("stat_savingsNow")}
               value={fmt.format(state.settings.startingSavings)}
-              tone={C.green} />
+              tone={C.green} onClick={() => setTab("settings")} />
             <Stat label={t("stat_income")}
               value={fmt.format(projection.monthlyIncome)}
-              tone={C.green} />
+              tone={C.green} onClick={() => setTab("income")} />
             <Stat label={t("stat_expense")}
               value={fmt.format(projection.monthlyExpense)}
-              tone={C.clay} />
+              tone={C.clay} onClick={() => setTab("expenses")} />
             <Stat label={t("stat_surplus")}
               value={fmt.format(projection.monthlyNet)}
               tone={projection.monthlyNet >= 0 ? C.green : C.clay}
@@ -1950,11 +1950,14 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
           <h3 style={{ fontSize: 11, fontWeight: 600, color: C.faint, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 7 }}>{t("ov_retire")}</h3>
           <StatGroup items={[
             { label: t("stat_retireNum"), value: fmt.format(retireTarget),
-              sub: state.settings.retirementTarget ? t("setManually") : t("xAnnual", { n: state.settings.retireMultiple }) },
+              sub: state.settings.retirementTarget ? t("setManually") : t("xAnnual", { n: state.settings.retireMultiple }),
+              onClick: () => setTab("settings") },
             { label: t("stat_retireOn"), value: retireDate ? new Date(retireDate).getFullYear() : "—", tone: C.green,
-              sub: retireMonths != null ? t("inYrs", { n: (retireMonths / 12).toFixed(1) }) : t("beyond") },
+              sub: retireMonths != null ? t("inYrs", { n: (retireMonths / 12).toFixed(1) }) : t("beyond"),
+              onClick: () => setTab("settings") },
             { label: t("stat_balanceIn", { n: state.settings.projectionYears }), value: fmt.format(projection.data[projection.data.length - 1][chartKey]),
-              sub: state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars") },
+              sub: state.settings.inflationAdjust ? t("todayDollars") : t("futureDollars"),
+              onClick: () => setTab("settings") },
           ]} />
         </div>
 
@@ -1966,12 +1969,12 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
             <div>
               <h3 style={{ fontSize: 11, fontWeight: 600, color: C.faint, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 7 }}>{t("ov_balance")}</h3>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                <Stat label={t("stat_assets")} value={fmt.format(projection.assetTotal)} tone={C.green} />
-                <Stat label={t("stat_debts")} value={fmt.format(totalDebts)} tone={totalDebts > 0 ? C.clay : C.green} />
+                <Stat label={t("stat_assets")} value={fmt.format(projection.assetTotal)} tone={C.green} onClick={() => setTab("balance")} />
+                <Stat label={t("stat_debts")} value={fmt.format(totalDebts)} tone={totalDebts > 0 ? C.clay : C.green} onClick={() => setTab("balance")} />
                 <Stat label={t("stat_emergency")}
                   value={emPct != null ? `${emPct}%` : "—"}
                   sub={emPct != null ? `${fmt.format(state.emergency.current)} / ${fmt.format(state.emergency.target)}` : null}
-                  tone={emPct != null && emPct >= 100 ? C.green : C.clay} />
+                  tone={emPct != null && emPct >= 100 ? C.green : C.clay} onClick={() => setTab("balance")} />
               </div>
             </div>
           );
@@ -3308,13 +3311,19 @@ function Field({ label, children }) {
     </label>
   );
 }
-function Stat({ label, value, sub, tone }) {
-  // shrink the value font for long numbers so they never overflow / get clipped
+function Stat({ label, value, sub, tone, onClick }) {
+  const [hovered, setHovered] = useState(false);
   const len = String(value).length;
   const valueFont = len > 13 ? 15 : len > 10 ? 16.5 : 18;
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "11px 13px", boxShadow: shadowSoft }}>
-      <div style={{ fontSize: 11.5, color: C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</div>
+    <div onClick={onClick}
+      onMouseEnter={() => onClick && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ background: hovered ? C.greenSoft : C.card, border: `1px solid ${hovered ? C.green : C.line}`, borderRadius: 14, padding: "11px 13px", boxShadow: shadowSoft, cursor: onClick ? "pointer" : "default", transition: "background 0.15s, border-color 0.15s" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+        <div style={{ fontSize: 11.5, color: C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</div>
+        {onClick && <svg width="11" height="11" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0, opacity: hovered ? 0.7 : 0, transition: "opacity 0.15s" }}><path d="M2 5h6M5.5 2.5 8 5l-2.5 2.5" stroke={C.green} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      </div>
       <div style={{ fontWeight: 700, fontSize: valueFont, color: tone || C.ink, marginTop: 2, letterSpacing: "-0.02em",
         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", ...num }}>{value}</div>
       {sub && <div style={{ fontSize: 10.5, color: C.faint, marginTop: 2 }}>{sub}</div>}
@@ -3323,16 +3332,26 @@ function Stat({ label, value, sub, tone }) {
 }
 // Several related stats grouped into one card as rows (label/sub left, value right).
 function StatGroup({ items }) {
+  const [hovered, setHovered] = useState(null);
   return (
     <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "4px 13px", boxShadow: shadowSoft }}>
       {items.map((it, i) => {
         const len = String(it.value).length;
         const valueFont = len > 13 ? 17 : len > 10 ? 18.5 : 20;
+        const isHovered = hovered === i && !!it.onClick;
         return (
           <div key={i} className="flex items-center justify-between gap-3"
-            style={{ padding: "10px 0", borderTop: i ? `1px solid ${C.line}` : "none" }}>
+            onClick={it.onClick}
+            onMouseEnter={() => it.onClick && setHovered(i)}
+            onMouseLeave={() => setHovered(null)}
+            style={{ padding: isHovered ? "10px 13px" : "10px 0", borderTop: i ? `1px solid ${C.line}` : "none", cursor: it.onClick ? "pointer" : "default",
+              background: isHovered ? C.greenSoft : "transparent", margin: isHovered ? "0 -13px" : "0",
+              borderRadius: isHovered ? 8 : 0, transition: "background 0.15s" }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12.5, color: C.sub, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ fontSize: 12.5, color: C.sub, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label}</div>
+                {it.onClick && <svg width="11" height="11" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0, opacity: isHovered ? 0.7 : 0, transition: "opacity 0.15s" }}><path d="M2 5h6M5.5 2.5 8 5l-2.5 2.5" stroke={C.green} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+              </div>
               {it.sub && <div style={{ fontSize: 11, color: C.faint, marginTop: 1 }}>{it.sub}</div>}
             </div>
             <div style={{ flexShrink: 0, fontWeight: 700, fontSize: valueFont, color: it.tone || C.ink, letterSpacing: "-0.02em", whiteSpace: "nowrap", ...num }}>{it.value}</div>
