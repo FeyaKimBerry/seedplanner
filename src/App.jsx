@@ -1797,17 +1797,20 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
 
   // All plans show as dips in the tooltip; one-off income shows as a positive delta.
   const oneOffEvents = useMemo(() => {
+    const disabledIds = new Set(whatIf.active ? (whatIf.disabledPlanIds || []) : []);
     const ev = [];
-    filtered.plans.forEach((p) => {
-      const m = monthsFromNow(p.date);
-      if (m >= 1) ev.push({ id: p.id, m, label: p.label, amount: -(p.amount || 0) });
-    });
+    filtered.plans
+      .filter((p) => !disabledIds.has(p.id))
+      .forEach((p) => {
+        const m = monthsFromNow(p.date);
+        if (m >= 1) ev.push({ id: p.id, m, label: p.label, amount: -(p.amount || 0) });
+      });
     filtered.income.filter((i) => i.frequency === "oneoff").forEach((i) => {
       const m = monthsFromNow(i.date);
       if (m >= 1) ev.push({ id: i.id, m, label: i.label, amount: +(i.amount || 0) });
     });
     return ev;
-  }, [filtered.plans, filtered.income]);
+  }, [filtered.plans, filtered.income, whatIf.active, whatIf.disabledPlanIds]);
   const eventsByYear = useMemo(() => {
     const map = new Map();
     oneOffEvents.forEach((e) => {
