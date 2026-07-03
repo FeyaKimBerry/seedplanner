@@ -803,6 +803,19 @@ function monthlyOf(amount, frequency) {
   return amount; // monthly
 }
 
+// A plan's cash outflows over time. Sub-items with a real amount fall due on their own
+// dates; whatever budget isn't itemised falls on the plan's own date. The total always
+// equals the plan amount (or the sum of items, if they exceed the budget) — a blank/zero
+// placeholder item can never make a plan's cost vanish from the projection.
+function planOutflows(p) {
+  const realItems = (p.items || []).filter((it) => (it.amount || 0) > 0);
+  const committed = realItems.reduce((s, it) => s + it.amount, 0);
+  const remainder = Math.max(0, (p.amount || 0) - committed);
+  const out = realItems.map((it) => ({ date: it.date || p.date, amount: it.amount }));
+  if (remainder > 0) out.push({ date: p.date, amount: remainder });
+  return out;
+}
+
 function buildProjection({ settings, income, expenses, oneOffs, debts, assets, whatIf }) {
   const months = settings.projectionYears * 12;
 
@@ -1103,11 +1116,10 @@ export default function App() {
 
   const projection = useMemo(() => {
     if (!state || !filtered) return null;
-    // Plans with sub-items: use sub-items as independent one-offs; plan amount is just the budget cap
+    // Expand each plan into its dated outflows (sub-items on their dates, remaining budget
+    // on the plan date). id stays the plan id so what-if toggles still disable the whole plan.
     const planOneOffs = filtered.plans.flatMap((p) =>
-      p.items && p.items.length > 0
-        ? p.items.map((it) => ({ ...it, _planId: p.id }))
-        : [p]
+      planOutflows(p).map((o) => ({ id: p.id, date: o.date, amount: o.amount }))
     );
     return buildProjection({
       settings: state.settings,
@@ -1802,8 +1814,10 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
     filtered.plans
       .filter((p) => !disabledIds.has(p.id))
       .forEach((p) => {
-        const m = monthsFromNow(p.date);
-        if (m >= 1) ev.push({ id: p.id, m, label: p.label, amount: -(p.amount || 0) });
+        planOutflows(p).forEach((o) => {
+          const m = monthsFromNow(o.date);
+          if (m >= 1) ev.push({ id: p.id, m, label: p.label, amount: -o.amount });
+        });
       });
     filtered.income.filter((i) => i.frequency === "oneoff").forEach((i) => {
       const m = monthsFromNow(i.date);
