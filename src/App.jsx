@@ -866,25 +866,28 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
   const infl = settings.inflationRate / 100;
   const data = [];
 
+  // data[m] = balance at the CLOSE of the m-th calendar month from now (m = 0 is the
+  // current month). Each iteration applies one month of growth + net savings, then that
+  // month's plan outflows — so every bar is an end-of-month balance, and a plan due in a
+  // given month is already subtracted from that month's bar.
   for (let m = 0; m <= months; m++) {
-    if (m > 0) {
-      for (const k of ["conservative", "expected", "optimistic"]) {
-        bal[k] = bal[k] * (1 + rates[k] / 12) + baseNet - (oneOffByMonth[m] || 0);
-      }
-      debtState = debtState.map((d) => {
-        let rem = d.rem;
-        rem = rem + (rem * (d.annualRate / 100)) / 12 - (d.monthlyPayment || 0);
-        rem = Math.max(0, rem);
-        return { ...d, rem };
-      });
+    for (const k of ["conservative", "expected", "optimistic"]) {
+      bal[k] = bal[k] * (1 + rates[k] / 12) + baseNet - (oneOffByMonth[m] || 0);
     }
+    debtState = debtState.map((d) => {
+      let rem = d.rem;
+      rem = rem + (rem * (d.annualRate / 100)) / 12 - (d.monthlyPayment || 0);
+      rem = Math.max(0, rem);
+      return { ...d, rem };
+    });
 
-    const deflator = settings.inflationAdjust ? Math.pow(1 + infl / 12, m) : 1;
+    // m + 1 whole months have elapsed by the close of month m
+    const deflator = settings.inflationAdjust ? Math.pow(1 + infl / 12, m + 1) : 1;
     const debtRem = debtState.reduce((s, d) => s + d.rem, 0);
 
     data.push({
       month: m,
-      year: +(m / 12).toFixed(2),
+      year: +((m + 1) / 12).toFixed(2),
       conservative: Math.round(bal.conservative / deflator),
       expected: Math.round(bal.expected / deflator),
       optimistic: Math.round(bal.optimistic / deflator),
@@ -892,8 +895,18 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
     });
   }
 
+  const debtTotal = debts.reduce((s, d) => s + (d.balance || 0), 0);
+
   return {
     data,
+    // "today" anchor, before any future saving — used for the goals-line origin and the
+    // "Now" figures, since data[0] is now the close of the current month, not today.
+    startBalance: {
+      conservative: settings.startingSavings,
+      expected: settings.startingSavings,
+      optimistic: settings.startingSavings,
+      netWorth: settings.startingSavings + assetTotal - debtTotal,
+    },
     monthlyIncome,
     monthlyExpense: monthlyExpense + monthlyDebtPay,
     monthlyNet: baseNet,
@@ -1227,13 +1240,17 @@ export default function App() {
     const m = (v) => fmt.format(v || 0);
     const dt = (iso) => (iso ? new Date(iso).toLocaleDateString() : "—");
 
-    // year-by-year projection rows
+    // year-by-year projection rows (each sampled at that calendar year's December close)
     const rows = [];
+    const baseYear = new Date().getFullYear();
+    const monthsToDec = 11 - new Date().getMonth();
     for (let y = 0; y <= state.settings.projectionYears; y++) {
-      const p = projection.data[Math.min(y * 12, projection.data.length - 1)];
+      const p = y === 0
+        ? projection.startBalance
+        : projection.data[Math.min(monthsToDec + 12 * y, projection.data.length - 1)];
       const passed = p.expected >= retireTarget;
       rows.push(
-        `<tr${passed ? ' class="hit"' : ""}><td>${y === 0 ? t("rep_now") : new Date().getFullYear() + y}</td>` +
+        `<tr${passed ? ' class="hit"' : ""}><td>${y === 0 ? t("rep_now") : baseYear + y}</td>` +
         `<td class="r">${m(p.expected)}</td><td class="r">${m(p.netWorth)}</td></tr>`
       );
     }
@@ -1758,13 +1775,18 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
     const days = Math.floor((Date.now() - new Date(updated).getTime()) / 86400000);
     return days >= 30 ? days : null;
   })();
-  const milestones = [1, 2, 3, 5, 10].filter((y) => y <= state.settings.projectionYears);
-  const pointAt = (y) => projection.data[Math.min(y * 12, projection.data.length - 1)];
-  // Projection year y ends y calendar years from today — label everything by that real year.
+  // Everything on the chart is labelled by real calendar year. baseYear is the current
+  // year; nowMonth/monthsToDec let us land each yearly bar on that year's December close.
   const baseYear = new Date().getFullYear();
-  const calYear = (y) => baseYear + y;
+  const nowMonth = new Date().getMonth();       // 0 = Jan … 11 = Dec
+  const monthsToDec = 11 - nowMonth;            // months from the current month to December
+  const calYear = (y) => baseYear + y;          // y = whole years from now (milestone strip)
 
-  const startBal = projection.data[0][chartKey];
+  const milestones = [1, 2, 3, 5, 10].filter((y) => y <= state.settings.projectionYears);
+  // sample each milestone at that calendar year's December close, matching the yearly bars
+  const pointAt = (y) => projection.data[Math.min(monthsToDec + 12 * y, projection.data.length - 1)];
+
+  const startBal = projection.startBalance[chartKey];
 
   // All plans as dots at their actual projected savings balance on that date.
   // Using the real projection value (which already dips at each plan) means the line
@@ -1775,26 +1797,24 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
       .filter((p) => !disabledIds.has(p.id))
       .filter((p) => (p.amount || 0) > 0 && p.date)
       .map((p) => ({ id: p.id, label: p.label, target: p.amount, months: monthsFromNow(p.date) }))
-      .filter((p) => p.months > 0)
+      .filter((p) => p.months >= 0)
       .sort((a, b) => a.months - b.months);
     return sorted.map((p) => ({ ...p, cum: p.target }));
   }, [filtered.plans, whatIf.active, whatIf.disabledPlanIds]);
 
-  const projYears = state.settings.projectionYears;
-
   // Goals clustered by calendar year so the chart never stacks many dots on one bar.
-  // Each year keeps its goals and sits at that year's top cumulative total. Ceil() so a
-  // goal always buckets to the year it's reached by, keeping its dot on the line.
+  // Each year keeps its goals and sits at that year's top cumulative total. year is the
+  // real calendar year the goal falls in, matching the yearly bars' x values.
   const yearBuckets = useMemo(() => {
     const map = new Map();
     cumGoals.forEach((g) => {
-      const y = Math.min(Math.max(1, Math.ceil(g.months / 12)), projYears);
-      const b = map.get(y) || { year: y, goals: [], cum: 0 };
+      const calY = baseYear + Math.floor((nowMonth + g.months) / 12);
+      const b = map.get(calY) || { year: calY, goals: [], cum: 0 };
       b.goals.push(g); b.cum = Math.max(b.cum, g.cum);
-      map.set(y, b);
+      map.set(calY, b);
     });
     return [...map.values()].sort((a, b) => a.year - b.year);
-  }, [cumGoals, projYears]);
+  }, [cumGoals, baseYear, nowMonth]);
 
   // Same idea bucketed by exact month, for the monthly view.
   const monthBuckets = useMemo(() => {
@@ -1816,23 +1836,23 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
       .forEach((p) => {
         planOutflows(p).forEach((o) => {
           const m = monthsFromNow(o.date);
-          if (m >= 1) ev.push({ id: p.id, m, label: p.label, amount: -o.amount });
+          if (m >= 0) ev.push({ id: p.id, m, label: p.label, amount: -o.amount });
         });
       });
     filtered.income.filter((i) => i.frequency === "oneoff").forEach((i) => {
       const m = monthsFromNow(i.date);
-      if (m >= 1) ev.push({ id: i.id, m, label: i.label, amount: +(i.amount || 0) });
+      if (m >= 0) ev.push({ id: i.id, m, label: i.label, amount: +(i.amount || 0) });
     });
     return ev;
   }, [filtered.plans, filtered.income, whatIf.active, whatIf.disabledPlanIds]);
   const eventsByYear = useMemo(() => {
     const map = new Map();
     oneOffEvents.forEach((e) => {
-      const y = Math.min(Math.max(1, Math.ceil(e.m / 12)), projYears);
-      const arr = map.get(y) || []; arr.push(e); map.set(y, arr);
+      const calY = baseYear + Math.floor((nowMonth + e.m) / 12);
+      const arr = map.get(calY) || []; arr.push(e); map.set(calY, arr);
     });
     return map;
-  }, [oneOffEvents, projYears]);
+  }, [oneOffEvents, baseYear, nowMonth]);
   const eventsByMonth = useMemo(() => {
     const map = new Map();
     oneOffEvents.forEach((e) => { const arr = map.get(e.m) || []; arr.push(e); map.set(e.m, arr); });
@@ -1843,8 +1863,8 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
   // Bucketing (not raw goals) avoids duplicate points when goals share a month/year,
   // so the line always reaches the cluster's top total and the dot sits on it.
   const yearlyCtrl = useMemo(() =>
-    cumGoals.length ? [{ m: 0, v: startBal }, ...yearBuckets.map((b) => ({ m: b.year * 12, v: b.cum }))] : [],
-    [cumGoals.length, yearBuckets, startBal]);
+    cumGoals.length ? [{ m: 0, v: startBal }, ...yearBuckets.map((b) => ({ m: monthsToDec + 12 * (b.year - baseYear), v: b.cum }))] : [],
+    [cumGoals.length, yearBuckets, startBal, monthsToDec, baseYear]);
   const monthlyCtrl = useMemo(() =>
     cumGoals.length ? [{ m: 0, v: startBal }, ...monthBuckets.map((b) => ({ m: b.months, v: b.cum }))] : [],
     [cumGoals.length, monthBuckets, startBal]);
@@ -1866,18 +1886,22 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
     return last.v;
   };
 
-  // one bar per year (end-of-year balance), easier to scan than a curve
+  // one bar per calendar year, sampled at that year's December close (the current year
+  // included), so each bar reads as "money I'll have by the end of that year"
   const yearly = useMemo(() => {
     const out = [];
-    for (let y = 1; y <= state.settings.projectionYears; y++) {
-      const p = projection.data[Math.min(y * 12, projection.data.length - 1)];
-      const b = yearBuckets.find((bk) => bk.year === y);
-      const evY = eventsByYear.get(y) || [];
+    const lastM = projection.data.length - 1;
+    for (let j = 0; monthsToDec + 12 * j <= lastM; j++) {
+      const sampleM = monthsToDec + 12 * j;
+      const calY = baseYear + j;
+      const p = projection.data[sampleM];
+      const b = yearBuckets.find((bk) => bk.year === calY);
+      const evY = eventsByYear.get(calY) || [];
       const planCostY = evY.reduce((s, e) => e.amount < 0 ? s + Math.abs(e.amount) : s, 0);
-      out.push({ year: y, cal: String(calYear(y)), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(yearlyCtrl, y * 12), goalsHere: b?.goals, oneOffsHere: evY, planCost: planCostY || 0 });
+      out.push({ year: calY, cal: String(calY), value: p[chartKey], whatif: p.whatif, goalLine: sampleLine(yearlyCtrl, sampleM), goalsHere: b?.goals, oneOffsHere: evY, planCost: planCostY || 0 });
     }
     return out;
-  }, [projection, chartKey, projYears, yearlyCtrl, yearBuckets, eventsByYear, baseYear]);
+  }, [projection, chartKey, yearlyCtrl, yearBuckets, eventsByYear, baseYear, monthsToDec]);
 
   // monthly drill-down for a chosen year (12 bars). grain/scaleMode/pickYear are lifted
   // to App so the chosen view persists when the user navigates between tabs.
@@ -1886,7 +1910,7 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
 
   const monthly = useMemo(() => {
     const out = [];
-    const start = (year - 1) * 12 + 1;
+    const start = (year - 1) * 12;
     for (let i = 0; i < 12; i++) {
       const m = start + i;
       const p = projection.data[Math.min(m, projection.data.length - 1)];
@@ -1913,7 +1937,7 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
     const mk = (b, x) => ({ id: String(x), x, y: b.cum, count: b.goals.length,
       label: b.goals.length === 1 ? b.goals[0].label : t("nGoals", { n: b.goals.length }) });
     if (isMonthly) {
-      const startM = (year - 1) * 12 + 1;
+      const startM = (year - 1) * 12;
       return monthBuckets
         .filter((b) => b.months >= startM && b.months <= startM + 11)
         .map((b) => mk(b, monthly[b.months - startM]?.label));
@@ -2029,7 +2053,7 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
             <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 4 }} barCategoryGap="22%">
               <CartesianGrid stroke={C.line} vertical={false} />
               <XAxis dataKey={xKey} stroke={C.faint} fontSize={11} tickLine={false} axisLine={false}
-                interval={tickEvery - 1} tickFormatter={(v) => (isMonthly ? v : String(calYear(v)))} />
+                interval={tickEvery - 1} tickFormatter={(v) => (isMonthly ? v : String(v))} />
               <YAxis tickFormatter={(v) => abbr(v)} stroke={C.faint} fontSize={11} tickLine={false} axisLine={false} width={44}
                 scale={logScale ? "log" : "auto"} domain={logScale ? [1000, "auto"] : [0, "auto"]} allowDataOverflow={logScale} />
               <Tooltip
