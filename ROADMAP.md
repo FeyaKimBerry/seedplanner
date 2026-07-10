@@ -58,21 +58,26 @@ the merge logic itself is pure and fully unit-tested.
 
 ---
 
-## Phase 3 — Auth lifecycle
-Turn the one-shot token flow into a real session lifecycle.
+## Phase 3 — Auth lifecycle ✅
+Turned the one-shot token flow into a real session lifecycle. GIS wrapper in
+`src/lib/auth.js`; pure derived-state machine in `src/lib/authState.js` (11 tests).
 
-- [ ] Silent boot refresh (`prompt: ''`) that returns null on a lapsed session instead of throwing
-- [ ] Token caching with early (~60s) expiry
-- [ ] Callback→promise bridge; layered token acquisition (cached → silent → recoverable "not authed" error)
-- [ ] 401 handling: drop the dead token but keep the "opted-in to sync" intent
-- [ ] Clean sign-out that **revokes** the token with Google (not just local delete)
-- [ ] Derive user-facing state from `configured × opted-in × authenticated-now`
-      (front door / local / syncing / needs-reconnect) via one pure function
-- [ ] Migrate pre-intent users (infer intent from prior signals) so nobody is bounced to the welcome screen
-- [ ] Silent-restore splash + dismissible reconnect banner (degrade to local-safe, never lock out)
+- [x] Silent boot refresh (`prompt: ''`) that returns null on a lapsed session instead of throwing — `silentToken()` (fail-soft, 3.5s timeout, `error_callback` wired)
+- [x] Token caching with early (~60s) expiry — `EXPIRY_SKEW_MS`, `cachedToken()`
+- [x] Callback→promise bridge; layered token acquisition (cached → silent → recoverable "not authed" error) — `requestToken` / `getToken()`
+- [x] 401 handling: drop the dead token but keep the "opted-in to sync" intent — `pushCloud` returns `reason: "auth"`; app clears token, keeps intent, flips to needs-reconnect
+- [x] Clean sign-out that **revokes** the token with Google (not just local delete) — `auth.revoke()`
+- [x] Derive user-facing state from `configured × opted-in × authenticated-now` via one pure function — `authView()`
+- [x] Migrate pre-intent users (infer intent from prior signals) so nobody is bounced to the welcome screen — `resolveIntent()`
+- [x] Silent-restore splash + dismissible reconnect banner (degrade to local-safe, never lock out)
 
 **Done when:** a lapsed session shows "reconnect" (not "log in again"), sign-out revokes
-server-side, and the derived state function is unit-tested.
+server-side, and the derived state function is unit-tested. ✅ Verified in the browser:
+legacy `{local:true}` migrates to local; sign-out → front door (intent "undecided");
+continue-local → intent "local"; a `sync` intent with no live session fails soft to the
+needs-reconnect banner over a fully-usable local-safe app (dismiss works).
+Note: the interactive Google sign-in popup + real token push need live OAuth to exercise
+end-to-end (the preview browser blocks popups); the pure state logic is unit-tested.
 
 ---
 

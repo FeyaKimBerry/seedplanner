@@ -51,8 +51,16 @@ function readLocalState() {
 }
 
 /* ---- Google Drive appDataFolder sync ---- */
-let _driveToken = null;
-export function setDriveToken(token) { _driveToken = token; }
+// Token provider is injected by the app (auth.getToken): cached → silent
+// refresh → throws NOT_AUTHENTICATED. store never touches GIS directly, which
+// keeps this module decoupled and testable. null = local-only (no sync).
+let _tokenProvider = null;
+export function setTokenProvider(fn) { _tokenProvider = fn || null; }
+
+async function currentToken() {
+  if (!_tokenProvider) return null;
+  try { return await _tokenProvider(); } catch { return null; }
+}
 
 async function driveFileId(token) {
   const res = await fetch(
@@ -77,8 +85,8 @@ async function driveLoad(token) {
   }
 }
 
-// Returns whether the upload actually succeeded, so callers can drive
-// retry / health flags instead of silently assuming success.
+// Returns { ok, status } so callers can drive retry / health flags and
+// distinguish a dead token (401) from other failures.
 async function driveSave(token, state) {
   try {
     const body = JSON.stringify(state);
@@ -101,10 +109,10 @@ async function driveSave(token, state) {
         body: form,
       });
     }
-    return !!(res && res.ok);
+    return { ok: !!(res && res.ok), status: res ? res.status : 0 };
   } catch (e) {
     console.error("Drive save failed", e);
-    return false;
+    return { ok: false, status: 0 };
   }
 }
 
@@ -114,8 +122,9 @@ export const store = {
   // applies the empty-remote guard, so this can no longer wipe local data.
   async load() {
     const local = readLocalState();
-    if (_driveToken) {
-      const remote = await driveLoad(_driveToken);
+    const token = await currentToken();
+    if (token) {
+      const remote = await driveLoad(token);
       const merged = reconcile(local, remote);
       if (merged && merged !== local) {
         device.set(STORE_KEY, JSON.stringify(merged));
@@ -125,7 +134,7 @@ export const store = {
     return local;
   },
 
-  isSyncing() { return !!_driveToken; },
+  isSyncing() { return !!_tokenProvider; },
 
   // Local write: instant, unconditional, returns whether it landed.
   saveLocal(state) {
@@ -139,12 +148,16 @@ export const store = {
     return ok;
   },
 
-  // Best-effort cloud push. Reports { ok, health } so a failed push can keep
-  // the "unsaved" flag set (retry next cycle) and distinguish offline vs error.
+  // Best-effort cloud push. Reports { ok, health, reason } so a failed push can
+  // keep the "unsaved" flag set (retry next cycle), tell offline from a real
+  // error, and flag a dead token (reason "auth") so the app can prompt reconnect.
   async pushCloud(state) {
-    if (!_driveToken) return { ok: true, health: "ok" };
-    const ok = await driveSave(_driveToken, state);
+    if (!_tokenProvider) return { ok: true, health: "ok" };
+    const token = await currentToken();
+    if (!token) return { ok: false, health: "error", reason: "auth" }; // token acquisition failed
+    const { ok, status } = await driveSave(token, state);
     if (ok) return { ok: true, health: "ok" };
+    if (status === 401) return { ok: false, health: "error", reason: "auth" };
     const offline = typeof navigator !== "undefined" && navigator.onLine === false;
     return { ok: false, health: offline ? "offline" : "error" };
   },

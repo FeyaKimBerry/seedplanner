@@ -11,9 +11,11 @@ import {
   MoreHorizontal, X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { store, setDriveToken, STORE_KEY, storageIsPersistent, lastSavedAt, prefs } from "./lib/store.js";
+import { store, setTokenProvider, STORE_KEY, storageIsPersistent, lastSavedAt, prefs } from "./lib/store.js";
 import { saveStatus } from "./lib/saveStatus.js";
 import { isValidState } from "./lib/validate.js";
+import * as auth from "./lib/auth.js";
+import { authView, resolveIntent } from "./lib/authState.js";
 
 // Shared snappy, iOS-like easing/timing for all UI motion.
 const EASE = [0.32, 0.72, 0, 1];
@@ -180,6 +182,10 @@ const STR = {
     login_note: "Placeholder sign-in — no account is created and nothing leaves your device yet. Real Google sign-in is wired up in the full build.",
     signOut: "Sign out",
     signOutConfirm: "Sign out now? You'll need to sign in again to get back in.",
+    reconnect_splash: "Reconnecting your plan…",
+    reconnect_title: "Your changes are saved on this device",
+    reconnect_body: "Reconnect to Google to sync them across your devices.",
+    reconnect_cta: "Reconnect",
     cancel: "Cancel",
     more: "More",
     nav_home: "Home", nav_privacy: "Privacy Policy", nav_terms: "Terms of Service",
@@ -851,7 +857,8 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
  * Set VITE_GOOGLE_CLIENT_ID in your .env file to enable real sign-in.
  * Without it the button shows but clicking does nothing useful.
  * ------------------------------------------------------------------ */
-const AUTH_KEY = "horizon_authed_v1";
+const AUTH_KEY = "horizon_authed_v1";     // legacy: user profile / { local:true } (migration source)
+const INTENT_KEY = "horizon_intent_v1";   // explicit choice: "sync" | "local" | "undecided"
 
 function parseJwt(token) {
   try {
@@ -876,41 +883,22 @@ function LoginScreen({ onSignIn, onContinueLocal }) {
   const [hasLocalData] = useState(() => {
     try { return !!localStorage.getItem(STORE_KEY); } catch { return false; }
   });
-  const tokenClientRef = useRef(null);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const [busy, setBusy] = useState(false);
+  const clientId = auth.isConfigured();
 
-  const getOrInitTokenClient = () => {
-    if (tokenClientRef.current) return tokenClientRef.current;
-    if (!window.google?.accounts?.oauth2 || !clientId) return null;
-    tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: "openid profile email https://www.googleapis.com/auth/drive.appdata",
-      callback: async (tokenRes) => {
-        if (tokenRes.error) { console.error("Token error", tokenRes); return; }
-        try {
-          const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-            headers: { Authorization: "Bearer " + tokenRes.access_token },
-          });
-          const u = await r.json();
-          onSignIn({ user: { name: u.name, email: u.email, picture: u.picture }, accessToken: tokenRes.access_token });
-        } catch (e) {
-          console.error("Userinfo fetch failed", e);
-        }
-      },
-    });
-    return tokenClientRef.current;
-  };
-
-  const handleGoogleSignIn = () => {
-    const init = () => {
-      const tc = getOrInitTokenClient();
-      if (tc) tc.requestAccessToken({ prompt: "select_account" });
-    };
-    if (window.google?.accounts?.oauth2) {
-      init();
-    } else {
-      const script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
-      if (script) script.addEventListener("load", init, { once: true });
+  // One funnel: interactive consent → profile fetch. The token is cached inside
+  // auth.js, so the app just needs to know sign-in succeeded (+ the profile).
+  const handleGoogleSignIn = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const token = await auth.interactiveToken();
+      const user = await auth.fetchUserInfo(token);
+      onSignIn({ user: user || {} });
+    } catch (e) {
+      console.error("Sign-in failed", e);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -923,8 +911,8 @@ function LoginScreen({ onSignIn, onContinueLocal }) {
         <h1 style={{ fontSize: 19, fontWeight: 600, margin: "0 0 6px" }}>{t("login_title")}</h1>
         <p style={{ color: C.sub, fontSize: 14, lineHeight: 1.5, margin: "0 0 26px" }}>{t("login_subtitle")}</p>
         {clientId ? (
-          <button onClick={handleGoogleSignIn} type="button"
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, background: "#fff", color: C.ink, fontFamily: FONT, fontSize: 15, fontWeight: 600, cursor: "pointer", boxShadow: shadowSoft }}>
+          <button onClick={handleGoogleSignIn} type="button" disabled={busy}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, background: "#fff", color: C.ink, fontFamily: FONT, fontSize: 15, fontWeight: 600, cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1, boxShadow: shadowSoft }}>
             <GoogleG size={18} /> {t("login_google")}
           </button>
         ) : (
@@ -996,9 +984,14 @@ export default function App() {
   const [pickYear, setPickYear] = useState(1); // chosen year in the monthly view
   const [whatIf, setWhatIf] = useState({ active: false, disabledPlanIds: [] });
   const [sheet, setSheet] = useState(null);
-  const [authed, setAuthed] = useState(() => {
-    try { return !!localStorage.getItem(AUTH_KEY); } catch { return false; }
-  });
+  // Auth as derived state: (configured) × (intent) × (authenticated-now).
+  // The user-facing view is computed by authView() from these three.
+  const configured = auth.isConfigured();
+  const [intent, setIntent] = useState("undecided");     // "sync" | "local" | "undecided"
+  const [authenticated, setAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [booting, setBooting] = useState(true);           // silent-restore splash
+  const [reconnectDismissed, setReconnectDismissed] = useState(false);
   const saveTimer = useRef(null);
   // Independent boolean flags → one pure saveStatus() mapper drives the indicator.
   // deviceWriteFailed starts true when we fell back to in-memory (can't persist here).
@@ -1008,21 +1001,52 @@ export default function App() {
   const [confirm, setConfirm] = useState(null); // { title, message, confirmLabel, danger, onConfirm }
   const [savingsNudgeDismissed, setSavingsNudgeDismissed] = useState(false);
 
+  // Hydrate loaded state into React, merging over defaults (forward-compatible)
+  // and migrating the old oneOffs + goals shape into plans.
+  const hydrate = (s) => {
+    if (!s) { setState(clone(emptyState)); return; }
+    if (!s.plans && (s.oneOffs || s.goals)) {
+      const migrated = [
+        ...(s.oneOffs || []).map((o) => ({ id: o.id, label: o.label, amount: o.amount, date: o.date })),
+        ...(s.goals || []).map((g) => ({ id: g.id, label: g.label, amount: g.target || 0, date: g.date, current: g.current || 0 })),
+      ];
+      const { oneOffs: _o, goals: _g, ...rest } = s;
+      setState({ ...rest, plans: migrated });
+    } else {
+      setState({ ...clone(emptyState), ...s });
+    }
+  };
+
+  // Boot: resolve intent (explicit → legacy signals), silently restore a sync
+  // session if the user opted in, then load + reconcile behind a brief splash.
+  // A user who explicitly chose local-only is never auto-restored.
   useEffect(() => {
-    store.load().then((s) => {
-      if (!s) { setState(clone(emptyState)); return; }
-      // migrate old oneOffs + goals → plans
-      if (!s.plans && (s.oneOffs || s.goals)) {
-        const migrated = [
-          ...(s.oneOffs || []).map((o) => ({ id: o.id, label: o.label, amount: o.amount, date: o.date })),
-          ...(s.goals || []).map((g) => ({ id: g.id, label: g.label, amount: g.target || 0, date: g.date, current: g.current || 0 })),
-        ];
-        const { oneOffs: _o, goals: _g, ...rest } = s;
-        setState({ ...rest, plans: migrated });
-      } else {
-        setState({ ...clone(emptyState), ...s });
+    let cancelled = false;
+    (async () => {
+      let legacyAuth = null;
+      try { legacyAuth = JSON.parse(localStorage.getItem(AUTH_KEY)); } catch {}
+      const storedIntent = prefs.get(INTENT_KEY);
+      const hasLocalData = !!prefs.get(STORE_KEY);
+      const resolved = resolveIntent({ storedIntent, legacyAuth, hasLocalData });
+      if (cancelled) return;
+      setIntent(resolved);
+      if (legacyAuth && legacyAuth.email) setUser(legacyAuth);
+
+      if (resolved === "sync" && configured) {
+        const token = await auth.silentToken();       // fail-soft: null on a lapsed session
+        if (cancelled) return;
+        setAuthenticated(!!token);
+        // Only wire the sync funnel if the silent restore actually succeeded, so a
+        // lapsed session drops straight to fast local-safe mode (needs-reconnect).
+        if (token) setTokenProvider(auth.getToken);
       }
-    });
+
+      const s = await store.load();                   // reconciles remote iff a token is available
+      if (cancelled) return;
+      hydrate(s);
+      setBooting(false);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const loadSample = () => setState(bumpMeta(clone(seed)));
@@ -1077,6 +1101,13 @@ export default function App() {
     saveTimer.current = setTimeout(async () => {
       setSaveFlags((f) => ({ ...f, writing: true }));
       const res = await store.pushCloud(state);
+      // Token died mid-session: drop the token but KEEP the sync opt-in, so the
+      // app shows "reconnect" (needs-reconnect view) instead of a login wall.
+      if (res.reason === "auth") {
+        auth.clearToken();
+        setAuthenticated(false);
+        setReconnectDismissed(false);
+      }
       // A failed push keeps `dirty` set so the next edit cycle retries; health
       // distinguishes a dropped connection (offline) from a real API error.
       setSaveFlags((f) => ({ ...f, writing: false, dirty: !res.ok, health: res.health }));
@@ -1126,19 +1157,40 @@ export default function App() {
     });
   }, [state, filtered, whatIf]);
 
-  /* ---- auth gate: show login until signed in ---- */
+  /* ---- auth gate: derived view from configured × intent × authenticated ---- */
   LANG = state?.settings?.lang || "en";
-  if (!authed) {
+  const view = authView({ configured, intent, authenticated });
+
+  // Silent-restore splash: boot resolves intent + refreshes the session first.
+  if (booting) {
+    return (
+      <div style={{ background: C.sky, backgroundColor: C.bg, minHeight: "100vh", display: "grid", placeItems: "center", color: C.sub, fontFamily: FONT }}>
+        <div style={{ textAlign: "center" }}>
+          <img src="/logo.png" alt="Seedplanner" style={{ height: 56, width: "auto", opacity: 0.9 }} />
+          <p style={{ marginTop: 14, fontSize: 14 }}>{intent === "sync" ? t("reconnect_splash") : "Loading…"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "front-door") {
     return (
       <LoginScreen
-        onSignIn={({ user, accessToken }) => {
-          try { localStorage.setItem(AUTH_KEY, JSON.stringify(user)); } catch {}
-          if (accessToken) setDriveToken(accessToken);
-          setAuthed(true);
+        onSignIn={async ({ user: u }) => {
+          try { localStorage.setItem(AUTH_KEY, JSON.stringify(u || {})); } catch {}
+          prefs.set(INTENT_KEY, "sync");
+          setIntent("sync");
+          setUser(u || null);
+          setTokenProvider(auth.getToken);
+          setAuthenticated(true);
+          setReconnectDismissed(false);
+          hydrate(await store.load());   // pull + reconcile now that we're signed in
         }}
         onContinueLocal={() => {
           try { localStorage.setItem(AUTH_KEY, JSON.stringify({ local: true })); } catch {}
-          setAuthed(true);
+          prefs.set(INTENT_KEY, "local");
+          setTokenProvider(null);
+          setIntent("local");
         }}
       />
     );
@@ -1181,14 +1233,32 @@ export default function App() {
     message: t("signOutConfirm"),
     confirmLabel: t("signOut"),
     danger: true,
-    onConfirm: () => {
-      try {
-        if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
-        localStorage.removeItem(AUTH_KEY);
-      } catch {}
-      setAuthed(false);
+    onConfirm: async () => {
+      await auth.revoke();                 // server-side revoke, not just a local delete
+      setTokenProvider(null);
+      try { localStorage.removeItem(AUTH_KEY); } catch {}
+      prefs.set(INTENT_KEY, "undecided");  // explicit → next boot lands on the front door
+      setAuthenticated(false);
+      setUser(null);
+      setIntent("undecided");
     },
   });
+
+  // Explicit reconnect (from the banner / needs-reconnect state): re-consent,
+  // resume syncing, then pull + reconcile so remote edits made elsewhere merge in.
+  const reconnect = async () => {
+    try {
+      const token = await auth.interactiveToken();
+      const u = await auth.fetchUserInfo(token);
+      if (u) { setUser(u); try { localStorage.setItem(AUTH_KEY, JSON.stringify(u)); } catch {} }
+      setTokenProvider(auth.getToken);
+      setAuthenticated(true);
+      setReconnectDismissed(false);
+      hydrate(await store.load());
+    } catch (e) {
+      console.error("Reconnect failed", e);
+    }
+  };
 
   /* ---- export / import ---- */
   const exportJSON = () => {
@@ -1494,6 +1564,25 @@ export default function App() {
 
   return (
     <div style={{ background: C.sky, backgroundColor: C.bg, minHeight: "100vh", color: C.ink, fontFamily: FONT }}>
+      {/* Reconnect banner — a lapsed sync session degrades gracefully to local-safe
+          mode; a dismissible prompt offers one-tap re-consent. Never a lockout. */}
+      {view === "needs-reconnect" && !reconnectDismissed && (
+        <div style={{ background: C.claySoft, borderBottom: `1px solid ${C.clay}55`, color: C.ink }}>
+          <div className="mx-auto flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 sm:px-5" style={{ maxWidth: 1100 }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>{t("reconnect_title")}</span>
+            <span style={{ fontSize: 13, color: C.sub, flex: 1, minWidth: 180 }}>{t("reconnect_body")}</span>
+            <button onClick={reconnect} type="button"
+              className="rounded-md px-3 py-1.5 text-sm"
+              style={{ border: "none", background: C.clay, color: "#fff", fontFamily: FONT, fontWeight: 600, cursor: "pointer" }}>
+              {t("reconnect_cta")}
+            </button>
+            <button onClick={() => setReconnectDismissed(true)} type="button" aria-label={t("close")}
+              className="rounded-md p-1.5" style={{ border: "none", background: "transparent", color: C.sub, cursor: "pointer" }}>
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
       {/* top bar */}
       <header style={{ borderBottom: `1px solid ${C.line}`, background: "rgba(255,255,255,0.78)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 20 }}>
         <div className="mx-auto flex flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-5" style={{ maxWidth: 1100 }}>
