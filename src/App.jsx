@@ -194,6 +194,7 @@ const STR = {
     reconnect_title: "Your changes are saved on this device",
     reconnect_body: "Reconnect to Google to sync them across your devices.",
     reconnect_cta: "Reconnect",
+    reconnect_local: "Use this device only",
     cancel: "Cancel",
     more: "More",
     nav_home: "Home", nav_privacy: "Privacy Policy", nav_terms: "Terms of Service",
@@ -1073,8 +1074,17 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [booting, setBooting] = useState(true);           // silent-restore splash
   const [reconnectDismissed, setReconnectDismissed] = useState(false);
+  // Only true after a real cloud push fails for auth reasons — i.e. genuine
+  // evidence sync is stuck. A merely-failed silent boot refresh does NOT set
+  // this, so the banner never greets you on load; it appears only if an actual
+  // save to the cloud can't authenticate.
+  const [syncStuck, setSyncStuck] = useState(false);
   const [activated, setActivated] = useState(isActivated); // purchase gate, one-time per device
   const saveTimer = useRef(null);
+  // Tracks the last-seen edit revision so the write-through effect can tell a real
+  // user edit (revision bumped) from a hydration/load (same or first revision).
+  // Only real edits trigger a cloud push — boot never pushes, so it never nags.
+  const lastRevRef = useRef(null);
   // Independent boolean flags → one pure saveStatus() mapper drives the indicator.
   // deviceWriteFailed starts true when we fell back to in-memory (can't persist here).
   const [saveFlags, setSaveFlags] = useState({
@@ -1114,17 +1124,16 @@ export default function App() {
       setIntent(resolved);
       if (legacyAuth && legacyAuth.email) setUser(legacyAuth);
 
-      if (resolved === "sync" && configured) {
-        const token = await auth.silentToken();       // fail-soft: null on a lapsed session
-        if (cancelled) return;
-        setAuthenticated(!!token);
-        // Only wire the sync funnel if the silent restore actually succeeded, so a
-        // lapsed session drops straight to fast local-safe mode (needs-reconnect).
-        if (token) setTokenProvider(auth.getToken);
-      }
+      // Opt-in to sync: wire the funnel up front so store.load() makes the single
+      // silent-refresh attempt AND any later background push can silently recover
+      // on its own — no banner needed if the quiet refresh works.
+      if (resolved === "sync" && configured) setTokenProvider(auth.getToken);
 
       const s = await store.load();                   // reconciles remote iff a token is available
       if (cancelled) return;
+      // Connected if the silent refresh inside load() landed a live token. A failure
+      // here is quiet (local-safe mode) — the banner only appears on a real push failure.
+      if (resolved === "sync" && configured) setAuthenticated(!!auth.cachedToken());
       hydrate(s);
       setBooting(false);
     })();
@@ -1174,21 +1183,34 @@ export default function App() {
     if (!state) return;
     const ok = store.saveLocal(state);
     const syncing = store.isSyncing();
-    // For a local-only user the device write is the whole story → clean once it lands.
-    // For a syncing user, stay "dirty" until the cloud push confirms.
-    setSaveFlags((f) => ({ ...f, deviceWriteFailed: !ok, dirty: syncing }));
-    if (!syncing) return;
+    // Was this a real user edit (revision bumped) or just a hydration/load? The
+    // first run (null) and any run without a revision change is not an edit, so it
+    // writes locally but never pushes to the cloud — boot can't trigger the banner.
+    const rev = (state.meta && state.meta.revision) || 0;
+    const isEdit = lastRevRef.current !== null && rev !== lastRevRef.current;
+    lastRevRef.current = rev;
+    // Local-only user: device write is the whole story → clean once it lands.
+    // Syncing user mid-edit: stay "dirty" until the cloud push confirms.
+    setSaveFlags((f) => ({ ...f, deviceWriteFailed: !ok, dirty: syncing && isEdit }));
+    if (!syncing || !isEdit) return;
 
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaveFlags((f) => ({ ...f, writing: true }));
       const res = await store.pushCloud(state);
-      // Token died mid-session: drop the token but KEEP the sync opt-in, so the
-      // app shows "reconnect" (needs-reconnect view) instead of a login wall.
-      if (res.reason === "auth") {
+      if (res.ok) {
+        // Success (incl. a silent token recovery): we're connected — clear any
+        // stuck state and re-arm the banner for a future genuine failure.
+        setAuthenticated(true);
+        setSyncStuck(false);
+        setReconnectDismissed(false);
+      } else if (res.reason === "auth") {
+        // Token died mid-session AND silent refresh couldn't recover it. Keep the
+        // sync opt-in, mark sync stuck (surfaces the banner), but do NOT reset the
+        // dismissed flag — a dismissed banner stays gone until sync recovers.
         auth.clearToken();
         setAuthenticated(false);
-        setReconnectDismissed(false);
+        setSyncStuck(true);
       }
       // A failed push keeps `dirty` set so the next edit cycle retries; health
       // distinguishes a dropped connection (offline) from a real API error.
@@ -1270,6 +1292,7 @@ export default function App() {
           setUser(u || null);
           setTokenProvider(auth.getToken);
           setAuthenticated(true);
+          setSyncStuck(false);
           setReconnectDismissed(false);
           hydrate(await store.load());   // pull + reconcile now that we're signed in
         }}
@@ -1340,7 +1363,9 @@ export default function App() {
       if (u) { setUser(u); try { localStorage.setItem(AUTH_KEY, JSON.stringify(u)); } catch {} }
       setTokenProvider(auth.getToken);
       setAuthenticated(true);
+      setSyncStuck(false);
       setReconnectDismissed(false);
+      setSaveFlags((f) => ({ ...f, health: "ok" }));
       hydrate(await store.load());
     } catch (e) {
       console.error("Reconnect failed", e);
@@ -1651,20 +1676,35 @@ export default function App() {
 
   return (
     <div style={{ background: C.sky, backgroundColor: C.bg, minHeight: "100vh", color: C.ink, fontFamily: FONT }}>
-      {/* Reconnect banner — a lapsed sync session degrades gracefully to local-safe
-          mode; a dismissible prompt offers one-tap re-consent. Never a lockout. */}
-      {view === "needs-reconnect" && !reconnectDismissed && (
-        <div style={{ background: C.claySoft, borderBottom: `1px solid ${C.clay}55`, color: C.ink }}>
+      {/* Reconnect banner — shown only when a real cloud push can't authenticate
+          (syncStuck), never merely because a silent boot refresh failed. Calm and
+          dismissible: local data is already safe, this is about cross-device sync. */}
+      {syncStuck && !reconnectDismissed && (
+        <div style={{ background: C.greenSoft, borderBottom: `1px solid ${C.line}`, color: C.ink }}>
           <div className="mx-auto flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 sm:px-5" style={{ maxWidth: 1100 }}>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{t("reconnect_title")}</span>
-            <span style={{ fontSize: 13, color: C.sub, flex: 1, minWidth: 180 }}>{t("reconnect_body")}</span>
+            <span style={{ fontSize: 13, color: C.sub, flex: 1, minWidth: 180 }}>
+              <span style={{ fontWeight: 600, color: C.ink }}>{t("reconnect_title")}</span>{" "}{t("reconnect_body")}
+            </span>
             <button onClick={reconnect} type="button"
               className="rounded-md px-3 py-1.5 text-sm"
-              style={{ border: "none", background: C.clay, color: "#fff", fontFamily: FONT, fontWeight: 600, cursor: "pointer" }}>
+              style={{ border: `1px solid ${C.green}`, background: "transparent", color: C.green, fontFamily: FONT, fontWeight: 600, cursor: "pointer" }}>
               {t("reconnect_cta")}
             </button>
+            {/* Escape hatch: stop syncing entirely. Leaves the cloud file untouched,
+                so switching back later is lossless. */}
+            <button onClick={() => {
+                prefs.set(INTENT_KEY, "local");
+                setTokenProvider(null);
+                setIntent("local");
+                setSyncStuck(false);
+                // Clear the lingering sync-error status now that we're local-only.
+                setSaveFlags((f) => ({ ...f, health: "ok", dirty: false }));
+              }}
+              type="button" className="text-sm" style={{ border: "none", background: "transparent", color: C.sub, textDecoration: "underline", cursor: "pointer", fontFamily: FONT }}>
+              {t("reconnect_local")}
+            </button>
             <button onClick={() => setReconnectDismissed(true)} type="button" aria-label={t("close")}
-              className="rounded-md p-1.5" style={{ border: "none", background: "transparent", color: C.sub, cursor: "pointer" }}>
+              className="rounded-md p-1.5" style={{ border: "none", background: "transparent", color: C.faint, cursor: "pointer" }}>
               <X size={16} />
             </button>
           </div>

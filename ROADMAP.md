@@ -101,6 +101,27 @@ unlocks; the flag persists across reload (no re-prompt). 9 gate tests pass (54 t
 
 ---
 
+## Post-launch refinement — reconnect UX (stop the nagging)
+Follow-up after real-world use: on the deployed site the reconnect banner appeared
+constantly because (a) the initial boot/hydration triggered a cloud push that failed,
+and (b) every failed push re-armed the dismissed banner. Fixed:
+
+- [x] Boot/hydration never pushes to the cloud — only a real edit (revision bump) does.
+      A signed-in user whose silent refresh fails no longer gets a banner on load.
+- [x] Banner surfaces only on a genuine sync failure (`syncStuck`, set when an actual
+      push can't authenticate), not merely because a silent refresh failed.
+- [x] Dismiss sticks: a dismissed banner stays gone through repeated failures; it only
+      re-arms after a successful reconnect/push.
+- [x] Auto-recover: a background push that silently gets a fresh token clears the banner
+      and the sync-error status on its own.
+- [x] "Use this device only" escape hatch in the banner — one tap switches to local mode
+      (leaves the cloud file untouched, so switching back stays lossless) and clears the
+      lingering sync-error status.
+
+Verified in the browser against the deployed-site scenario (silent refresh blocked):
+no banner on boot; banner only after an edit-triggered push failure; dismiss persists;
+switching to local clears everything.
+
 ## Cross-cutting principles (apply in every phase)
 - One-method-pair `load`/`save` adapter stays the only seam between app and persistence.
 - Pure logic (reconcile, state machine, status-label mapping) lives in its own module, testable with zero UI.
