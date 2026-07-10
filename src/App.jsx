@@ -874,7 +874,7 @@ const INTENT_KEY = "horizon_intent_v1";   // explicit choice: "sync" | "local" |
  * host dashboard); a hardcoded default is used only if that's unset.
  * ------------------------------------------------------------------ */
 const ACTIVATED_KEY = "horizon_activated_v1";
-const DEFAULT_ACCESS_CODE = "SEEDPLANNER";
+const DEFAULT_ACCESS_CODE = "2JDCD2Q6";
 const VALID_CODES = parseValidCodes(import.meta.env.VITE_ACCESS_CODES, DEFAULT_ACCESS_CODE);
 
 function isActivated() {
