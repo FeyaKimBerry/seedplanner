@@ -1,9 +1,12 @@
 # Seedplanner — Persistence & Sync Roadmap
 
 Porting the local-first storage / cloud-sync / auth / purchase-gate patterns from the
-reference project into Seedplanner. Today the app has the *skeleton* (a `store` adapter
-seam, Google Drive `appDataFolder` REST calls, a basic GIS token flow) but is missing
-most of the *robustness layer*. This doc tracks that work.
+reference project into Seedplanner. This doc tracks that work.
+
+**All four phases complete.** The robustness layer now lives in pure, unit-tested modules
+under `src/lib/` (storage, validate, saveStatus, reconcile, authState, auth, gate), with
+54 Vitest cases. Remaining manual check: the interactive Google sign-in popup + a real
+Drive push need live OAuth in a normal browser (the preview blocks popups).
 
 Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
@@ -81,16 +84,20 @@ end-to-end (the preview browser blocks popups); the pure state logic is unit-tes
 
 ---
 
-## Phase 4 — Purchase gate
-Fully independent — can slot in anytime. Anti-casual-piracy only, **not real auth**.
+## Phase 4 — Purchase gate ✅
+Fully independent. Anti-casual-piracy only, **not real auth** (the password ships in the
+bundle; the activation flag is a local record a technical user could set by hand — if you
+need real entitlement, swap for a server-side license check). Pure logic in `src/lib/gate.js`.
 
-- [ ] Env-var-driven shared password(s), comma-separated for rotation windows; hardcoded default only if unset
-- [ ] Input normalization applied identically to stored values and user input
-- [ ] One-time local activation flag (works fully offline thereafter), read/write wrapped in try/catch
-- [ ] Forgiving input UX (autofocus, force-uppercase, guiding "check the PDF" copy, "once per device" reassurance)
+- [x] Env-var-driven shared password(s), comma-separated for rotation windows; hardcoded default only if unset — `VITE_ACCESS_CODES`, `parseValidCodes()`, default `SEEDPLANNER`
+- [x] Input normalization applied identically to stored values and user input — `normalizeCode()` (both sides)
+- [x] One-time local activation flag (works fully offline thereafter), read/write wrapped in try/catch — `ACTIVATED_KEY`, `isActivated()` / `markActivated()`
+- [x] Forgiving input UX (autofocus, force-uppercase, guiding "check the PDF" copy, "once per device" reassurance) — `ActivationGate`
 
 **Done when:** a correctly-normalized password activates once and the gate never reappears
-on that device, including offline.
+on that device, including offline. ✅ Verified in the browser: a wrong code shows the
+guiding error and stays gated; a messy correct code ("seed planner") normalizes and
+unlocks; the flag persists across reload (no re-prompt). 9 gate tests pass (54 total).
 
 ---
 

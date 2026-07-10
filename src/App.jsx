@@ -16,6 +16,7 @@ import { saveStatus } from "./lib/saveStatus.js";
 import { isValidState } from "./lib/validate.js";
 import * as auth from "./lib/auth.js";
 import { authView, resolveIntent } from "./lib/authState.js";
+import { matchesCode, parseValidCodes } from "./lib/gate.js";
 
 // Shared snappy, iOS-like easing/timing for all UI motion.
 const EASE = [0.32, 0.72, 0, 1];
@@ -175,6 +176,13 @@ const STR = {
     previewNote: "Preview — screenshot this to save it on your phone",
     blockedNote: "In the Claude preview only Copy works reliably. Share, Print and Download need the app running in a normal browser — they'll work once it's deployed.",
     importBad: "That file isn't valid Seedplanner data.",
+
+    gate_title: "Enter your access code",
+    gate_subtitle: "Seedplanner is a paid app. Enter the access code from your purchase to unlock it on this device.",
+    gate_placeholder: "Access code",
+    gate_cta: "Unlock",
+    gate_error: "That code didn't match. Check the PDF from your download and try again.",
+    gate_once: "You only need to do this once on this device.",
 
     login_title: "Sign in to Seedplanner",
     login_subtitle: "Plan your savings and see when you can retire.",
@@ -860,6 +868,22 @@ function buildProjection({ settings, income, expenses, oneOffs, debts, assets, w
 const AUTH_KEY = "horizon_authed_v1";     // legacy: user profile / { local:true } (migration source)
 const INTENT_KEY = "horizon_intent_v1";   // explicit choice: "sync" | "local" | "undecided"
 
+/* ------------------------------------------------------------------ *
+ * Purchase gate — a one-time shared-password unlock per device.
+ * Codes come from VITE_ACCESS_CODES (comma-separated, rotatable in the
+ * host dashboard); a hardcoded default is used only if that's unset.
+ * ------------------------------------------------------------------ */
+const ACTIVATED_KEY = "horizon_activated_v1";
+const DEFAULT_ACCESS_CODE = "SEEDPLANNER";
+const VALID_CODES = parseValidCodes(import.meta.env.VITE_ACCESS_CODES, DEFAULT_ACCESS_CODE);
+
+function isActivated() {
+  try { return !!localStorage.getItem(ACTIVATED_KEY); } catch { return false; }
+}
+function markActivated() {
+  try { localStorage.setItem(ACTIVATED_KEY, "1"); } catch { /* storage blocked: unlocked for the session only */ }
+}
+
 function parseJwt(token) {
   try {
     return JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
@@ -876,6 +900,63 @@ function GoogleG({ size = 18 }) {
       <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
     </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * ActivationGate — the front door for a paid download. Forgiving input
+ * (autofocus, force-uppercase, no autocomplete/spellcheck) and guiding
+ * error copy that points to where the code lives. Shown once per device.
+ * ------------------------------------------------------------------ */
+function ActivationGate({ onUnlock }) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState(false);
+
+  const submit = (e) => {
+    if (e) e.preventDefault();
+    if (matchesCode(code, VALID_CODES)) {
+      markActivated();
+      onUnlock();
+    } else {
+      setError(true);
+    }
+  };
+
+  return (
+    <div style={{ background: C.sky, backgroundColor: C.bg, minHeight: "100vh", display: "grid", placeItems: "center", color: C.ink, fontFamily: FONT, padding: 20 }}>
+      <form onSubmit={submit} style={{ background: C.card, borderRadius: 20, boxShadow: shadow, padding: "36px 30px", width: "100%", maxWidth: 380, textAlign: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22 }}>
+          <img src="/logo.png" alt="Seedplanner" style={{ height: 72, width: "auto" }} />
+        </div>
+        <h1 style={{ fontSize: 19, fontWeight: 600, margin: "0 0 6px" }}>{t("gate_title")}</h1>
+        <p style={{ color: C.sub, fontSize: 14, lineHeight: 1.5, margin: "0 0 22px" }}>{t("gate_subtitle")}</p>
+        <input
+          autoFocus
+          value={code}
+          onChange={(e) => { setCode(e.target.value); if (error) setError(false); }}
+          placeholder={t("gate_placeholder")}
+          autoComplete="off"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-invalid={error}
+          style={{
+            width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 12,
+            border: `1px solid ${error ? C.clay : C.line}`, background: "#fff", color: C.ink,
+            fontFamily: FONT, fontSize: 16, textAlign: "center", letterSpacing: 1,
+            textTransform: "uppercase",
+          }}
+        />
+        {error && (
+          <p style={{ color: C.clay, fontSize: 13, lineHeight: 1.5, margin: "10px 0 0" }}>{t("gate_error")}</p>
+        )}
+        <button type="submit"
+          style={{ marginTop: 16, width: "100%", padding: "11px 14px", borderRadius: 12, border: "none", background: C.green, color: "#fff", fontFamily: FONT, fontSize: 15, fontWeight: 600, cursor: "pointer", boxShadow: shadowSoft }}>
+          {t("gate_cta")}
+        </button>
+        <p style={{ color: C.faint, fontSize: 12, lineHeight: 1.5, margin: "16px 0 0" }}>{t("gate_once")}</p>
+      </form>
+    </div>
   );
 }
 
@@ -992,6 +1073,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [booting, setBooting] = useState(true);           // silent-restore splash
   const [reconnectDismissed, setReconnectDismissed] = useState(false);
+  const [activated, setActivated] = useState(isActivated); // purchase gate, one-time per device
   const saveTimer = useRef(null);
   // Independent boolean flags → one pure saveStatus() mapper drives the indicator.
   // deviceWriteFailed starts true when we fell back to in-memory (can't persist here).
@@ -1157,8 +1239,13 @@ export default function App() {
     });
   }, [state, filtered, whatIf]);
 
-  /* ---- auth gate: derived view from configured × intent × authenticated ---- */
+  /* ---- purchase gate: unlock once per device before anything else ---- */
   LANG = state?.settings?.lang || "en";
+  if (!activated) {
+    return <ActivationGate onUnlock={() => setActivated(true)} />;
+  }
+
+  /* ---- auth gate: derived view from configured × intent × authenticated ---- */
   const view = authView({ configured, intent, authenticated });
 
   // Silent-restore splash: boot resolves intent + refreshes the session first.
