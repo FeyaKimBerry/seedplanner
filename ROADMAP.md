@@ -19,19 +19,22 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ---
 
-## Phase 1 — Harden local storage
-Foundation everything else leans on. Independently shippable.
+## Phase 1 — Harden local storage ✅
+Foundation everything else leans on. Independently shippable. Pure logic in `src/lib/`,
+covered by 23 Vitest cases; wiring verified in the browser preview.
 
-- [ ] Capability probe at startup + in-memory adapter fallback (private mode / quota / disabled)
-- [ ] `save()` returns a success boolean; failed writes surfaced, never swallowed
-- [ ] Shape validator at the load boundary (non-array object; list fields are arrays;
-      numeric fields are numbers) — reject wrong-shape blobs that still parse as JSON
-- [ ] Save-status indicator (independent boolean flags) + one pure `flags → {label, tone}` function
-- [ ] Persist active tab/route across reload
-- [ ] Store & surface a "last saved at" timestamp
+- [x] Capability probe at startup + in-memory adapter fallback (private mode / quota / disabled) — `src/lib/storage.js`
+- [x] `save()` returns a success boolean; failed writes surfaced, never swallowed — `src/lib/store.js`
+- [x] Shape validator at the load boundary (non-array object; list fields are arrays;
+      numeric fields are numbers) — reject wrong-shape blobs that still parse as JSON — `src/lib/validate.js`
+- [x] Save-status indicator (independent boolean flags) + one pure `flags → {label, tone}` function — `src/lib/saveStatus.js` + `SaveStatus` in `App.jsx`
+- [x] Persist active tab/route across reload — `prefs` + `TAB_KEY`
+- [x] Store & surface a "last saved at" timestamp — `lastSavedAt()`, shown in the indicator tooltip
 
 **Done when:** validator rejects a wrong-shape blob, private-mode falls back to in-memory
-without crashing, the status dot reflects real save state — all covered by tests.
+without crashing, the status dot reflects real save state — all covered by tests. ✅
+Verified: a JSON-valid wrong-shape blob degrades to a fresh start (no white screen),
+tab restores after reload, indicator shows "Up to date" with a real save timestamp.
 
 ---
 

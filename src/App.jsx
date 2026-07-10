@@ -11,6 +11,8 @@ import {
   MoreHorizontal, X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { store, setDriveToken, STORE_KEY, storageIsPersistent, lastSavedAt, prefs } from "./lib/store.js";
+import { saveStatus } from "./lib/saveStatus.js";
 
 // Shared snappy, iOS-like easing/timing for all UI motion.
 const EASE = [0.32, 0.72, 0, 1];
@@ -594,93 +596,9 @@ function t(key, vars) {
 }
 
 /* ------------------------------------------------------------------ *
- * Persistence layer — local-first with optional Google Drive sync.
- * Signed-in users get Drive appDataFolder sync (data follows them
- * across devices). Local-only users stay on localStorage.
+ * Persistence layer moved to ./lib/store.js — the single load/save seam
+ * (device-first, shape-validated, with Google Drive appDataFolder sync).
  * ------------------------------------------------------------------ */
-const STORE_KEY = "horizon_finance_state_v1";
-const DRIVE_FILE = "seedplanner-data.json";
-
-// Holds the Drive access token once the user signs in with Google.
-let _driveToken = null;
-function setDriveToken(token) { _driveToken = token; }
-
-async function driveFileId(token) {
-  const res = await fetch(
-    "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)&q=name%3D%27" + DRIVE_FILE + "%27",
-    { headers: { Authorization: "Bearer " + token } }
-  );
-  const json = await res.json();
-  return json.files?.[0]?.id || null;
-}
-
-async function driveLoad(token) {
-  try {
-    const id = await driveFileId(token);
-    if (!id) return null;
-    const res = await fetch(
-      "https://www.googleapis.com/drive/v3/files/" + id + "?alt=media",
-      { headers: { Authorization: "Bearer " + token } }
-    );
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
-async function driveSave(token, state) {
-  try {
-    const body = JSON.stringify(state);
-    const id = await driveFileId(token);
-    if (id) {
-      await fetch("https://www.googleapis.com/upload/drive/v3/files/" + id + "?uploadType=media", {
-        method: "PATCH",
-        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
-        body,
-      });
-    } else {
-      const meta = JSON.stringify({ name: DRIVE_FILE, parents: ["appDataFolder"] });
-      const form = new FormData();
-      form.append("metadata", new Blob([meta], { type: "application/json" }));
-      form.append("file", new Blob([body], { type: "application/json" }));
-      await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-        method: "POST",
-        headers: { Authorization: "Bearer " + token },
-        body: form,
-      });
-    }
-  } catch (e) {
-    console.error("Drive save failed", e);
-  }
-}
-
-const store = {
-  async load() {
-    try {
-      if (_driveToken) {
-        const remote = await driveLoad(_driveToken);
-        if (remote) {
-          localStorage.setItem(STORE_KEY, JSON.stringify(remote));
-          return remote;
-        }
-      }
-      const v = localStorage.getItem(STORE_KEY);
-      return v ? JSON.parse(v) : null;
-    } catch {
-      return null;
-    }
-  },
-  async save(state) {
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify(state));
-      if (_driveToken) await driveSave(_driveToken, state);
-    } catch (e) {
-      console.error("save failed", e);
-    }
-  },
-};
-
-/* ------------------------------------------------------------------ */
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 function downloadFile(content, filename, mime) {
@@ -1027,11 +945,36 @@ function LoginScreen({ onSignIn, onContinueLocal }) {
 }
 
 /* ------------------------------------------------------------------ *
+ * Save-status indicator — always-visible dot + label, like a game's save
+ * icon. All logic lives in the pure saveStatus() mapper; this component
+ * just paints the result. Tooltip shows the last successful save time.
+ * ------------------------------------------------------------------ */
+const SAVE_TONE_COLOR = { ok: C.green, pending: C.clay, muted: C.faint, error: "#D9534F" };
+function SaveStatus({ flags }) {
+  const { label, tone } = saveStatus(flags);
+  const color = SAVE_TONE_COLOR[tone] || C.faint;
+  const savedAt = lastSavedAt();
+  const title = savedAt ? `Last saved ${new Date(savedAt).toLocaleString()}` : "Not yet saved on this device";
+  return (
+    <span title={title} aria-live="polite"
+      style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: C.sub, whiteSpace: "nowrap" }}>
+      <span aria-hidden style={{
+        width: 8, height: 8, borderRadius: "50%", background: color,
+        boxShadow: tone === "pending" ? `0 0 0 3px ${C.claySoft}` : "none",
+        transition: "background .2s ease",
+      }} />
+      <span>{label}</span>
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ *
  * App
  * ------------------------------------------------------------------ */
 export default function App() {
   const [state, setState] = useState(null);
-  const [tab, setTab] = useState("dashboard");
+  const TAB_KEY = "horizon_tab_v1";
+  const [tab, setTab] = useState(() => prefs.get(TAB_KEY) || "dashboard");
   const [metric, setMetric] = useState("savings"); // savings | networth
   // chart view options — kept here (not in Dashboard) so they survive tab switches
   const [grain, setGrain] = useState("monthly"); // yearly | monthly
@@ -1043,6 +986,11 @@ export default function App() {
     try { return !!localStorage.getItem(AUTH_KEY); } catch { return false; }
   });
   const saveTimer = useRef(null);
+  // Independent boolean flags → one pure saveStatus() mapper drives the indicator.
+  // deviceWriteFailed starts true when we fell back to in-memory (can't persist here).
+  const [saveFlags, setSaveFlags] = useState({
+    deviceWriteFailed: !storageIsPersistent, writing: false, health: "ok", dirty: false,
+  });
   const [confirm, setConfirm] = useState(null); // { title, message, confirmLabel, danger, onConfirm }
   const [savingsNudgeDismissed, setSavingsNudgeDismissed] = useState(false);
 
@@ -1096,10 +1044,20 @@ export default function App() {
     return () => document.removeEventListener("focusin", onFocusIn);
   }, []);
 
+  // Persist the active tab so a reload returns the user where they were.
+  useEffect(() => { prefs.set(TAB_KEY, tab); }, [tab]);
+
+  // Write-through: every state change marks the plan dirty, then a debounced
+  // save reports back whether the device write actually landed.
   useEffect(() => {
     if (!state) return;
+    setSaveFlags((f) => ({ ...f, dirty: true }));
     clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => store.save(state), 400);
+    saveTimer.current = setTimeout(async () => {
+      setSaveFlags((f) => ({ ...f, writing: true }));
+      const ok = await store.save(state);
+      setSaveFlags((f) => ({ ...f, writing: false, dirty: false, deviceWriteFailed: !ok }));
+    }, 400);
   }, [state]);
 
   const fmt = useMemo(() => {
@@ -1509,8 +1467,9 @@ export default function App() {
       {/* top bar */}
       <header style={{ borderBottom: `1px solid ${C.line}`, background: "rgba(255,255,255,0.78)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 20 }}>
         <div className="mx-auto flex flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-5" style={{ maxWidth: 1100 }}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Seedplanner" style={{ height: 44, width: "auto", display: "block" }} />
+            <SaveStatus flags={saveFlags} />
           </div>
           <div className="flex items-center gap-2">
             <select value={state.settings.lang || "en"} onChange={(e) => setSettings({ lang: e.target.value })}
