@@ -1,18 +1,21 @@
 /* ------------------------------------------------------------------ *
  * Persistence layer — the single seam between the app and storage.
  *
- * All app code talks to `store.load()` / `store.save(state)` and nothing
- * else. This indirection is the whole design: a different backend can be
- * swapped in by replacing this module, and no feature code changes.
+ * All app code talks to this module and nothing else. This indirection is
+ * the whole design: a different backend can be swapped in by replacing
+ * this file, and no feature code changes.
  *
- * Local-first: the device write always happens immediately and returns a
- * success boolean. Google Drive appDataFolder sync is a best-effort
- * follow-up for signed-in users (reconciliation lands in Phase 2 — see
- * ROADMAP.md; today the remote copy still overwrites local on load).
+ * Local-first:
+ *   - saveLocal() writes the device immediately and returns success.
+ *   - pushCloud() is a best-effort, debounced follow-up to Google Drive.
+ *   - load() pulls both copies and reconciles them (last-write-wins with an
+ *     empty-remote guard) so a stale or blank cloud file can never wipe a
+ *     device that has real work on it.
  * ------------------------------------------------------------------ */
 
 import { isValidState } from "./validate.js";
 import { createDeviceStorage } from "./storage.js";
+import { reconcile } from "./reconcile.js";
 
 export const STORE_KEY = "horizon_finance_state_v1";
 const DRIVE_FILE = "seedplanner-data.json";
@@ -32,6 +35,19 @@ export const prefs = {
 
 export function lastSavedAt() {
   return device.get(TS_KEY);
+}
+
+// Parse + shape-validate the local blob. A corrupt or wrong-shape blob
+// degrades to null ("nothing") rather than crashing a view.
+function readLocalState() {
+  try {
+    const raw = device.get(STORE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return isValidState(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 /* ---- Google Drive appDataFolder sync ---- */
@@ -61,12 +77,15 @@ async function driveLoad(token) {
   }
 }
 
+// Returns whether the upload actually succeeded, so callers can drive
+// retry / health flags instead of silently assuming success.
 async function driveSave(token, state) {
   try {
     const body = JSON.stringify(state);
     const id = await driveFileId(token);
+    let res;
     if (id) {
-      await fetch("https://www.googleapis.com/upload/drive/v3/files/" + id + "?uploadType=media", {
+      res = await fetch("https://www.googleapis.com/upload/drive/v3/files/" + id + "?uploadType=media", {
         method: "PATCH",
         headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
         body,
@@ -76,46 +95,40 @@ async function driveSave(token, state) {
       const form = new FormData();
       form.append("metadata", new Blob([meta], { type: "application/json" }));
       form.append("file", new Blob([body], { type: "application/json" }));
-      await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+      res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
         method: "POST",
         headers: { Authorization: "Bearer " + token },
         body: form,
       });
     }
+    return !!(res && res.ok);
   } catch (e) {
     console.error("Drive save failed", e);
+    return false;
   }
 }
 
 export const store = {
+  // Pull local + remote and reconcile. The winner is persisted locally so the
+  // next boot starts from the merged copy. reconcile() validates the remote and
+  // applies the empty-remote guard, so this can no longer wipe local data.
   async load() {
-    // Remote-first when signed in. NOTE (Phase 2): this still blindly trusts
-    // the remote copy — reconciliation + remote validation are tracked in ROADMAP.md.
-    try {
-      if (_driveToken) {
-        const remote = await driveLoad(_driveToken);
-        if (remote) {
-          device.set(STORE_KEY, JSON.stringify(remote));
-          return remote;
-        }
+    const local = readLocalState();
+    if (_driveToken) {
+      const remote = await driveLoad(_driveToken);
+      const merged = reconcile(local, remote);
+      if (merged && merged !== local) {
+        device.set(STORE_KEY, JSON.stringify(merged));
       }
-    } catch { /* fall through to local */ }
-
-    // Local path: parse + shape-validate. A corrupt or wrong-shape blob
-    // degrades to a fresh start ("nothing") rather than a white screen.
-    try {
-      const raw = device.get(STORE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return isValidState(parsed) ? parsed : null;
-    } catch {
-      return null;
+      return merged;
     }
+    return local;
   },
 
-  // Returns whether the device write actually landed. Cloud push is a
-  // best-effort follow-up and never blocks or fails the local save.
-  async save(state) {
+  isSyncing() { return !!_driveToken; },
+
+  // Local write: instant, unconditional, returns whether it landed.
+  saveLocal(state) {
     let ok = false;
     try {
       ok = device.set(STORE_KEY, JSON.stringify(state));
@@ -123,7 +136,16 @@ export const store = {
       ok = false;
     }
     if (ok) device.set(TS_KEY, new Date().toISOString());
-    if (_driveToken) driveSave(_driveToken, state).catch(() => {});
     return ok;
+  },
+
+  // Best-effort cloud push. Reports { ok, health } so a failed push can keep
+  // the "unsaved" flag set (retry next cycle) and distinguish offline vs error.
+  async pushCloud(state) {
+    if (!_driveToken) return { ok: true, health: "ok" };
+    const ok = await driveSave(_driveToken, state);
+    if (ok) return { ok: true, health: "ok" };
+    const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+    return { ok: false, health: offline ? "offline" : "error" };
   },
 };

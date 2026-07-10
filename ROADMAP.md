@@ -38,20 +38,23 @@ tab restores after reload, indicator shows "Up to date" with a real save timesta
 
 ---
 
-## Phase 2 — Fix sync data-loss + reconciliation
-⚠️ **Contains an active bug, not just missing features.** Today on load the remote Drive
-copy *blindly overwrites* local (`App.jsx` ~L661–665). A stale or empty cloud file can
-silently wipe a device that has real work on it.
+## Phase 2 — Fix sync data-loss + reconciliation ✅
+⚠️ **Was an active bug, now fixed.** Previously on load the remote Drive copy *blindly
+overwrote* local. `store.load()` now reconciles instead, so a stale or empty cloud file
+can no longer wipe a device that has real work on it.
 
-- [ ] Pure `reconcile(local, remote)`: newer `updatedAt` wins → tie-break on `revision`
-- [ ] **Empty-remote guard**: real local data always beats a blank/empty remote, regardless of timestamps
-- [ ] Stamp every edit with `updatedAt` + incrementing `revision` (at edit time, not save time)
-- [ ] Validate the remote pull through the same Phase 1 validator; bad pull ⇒ keep last-good local
-- [ ] Split debounce: local write instant/unconditional, cloud push debounced (~2.5s)
-- [ ] Retry semantics via flags; health = `offline` vs `error` from the online/offline signal
+- [x] Pure `reconcile(local, remote)`: newer `updatedAt` wins → tie-break on `revision` — `src/lib/reconcile.js`
+- [x] **Empty-remote guard**: real local data always beats a blank/empty remote, regardless of timestamps — `hasRealData()`
+- [x] Stamp every edit with `updatedAt` + incrementing `revision` (at edit time, not save time) — `bumpMeta` in `App.jsx`
+- [x] Validate the remote pull through the same Phase 1 validator; bad pull ⇒ keep last-good local — `reconcile` calls `isValidState`; backup import validated too
+- [x] Split debounce: local write instant/unconditional, cloud push debounced (~2.5s) — `saveLocal` + `pushCloud`
+- [x] Retry semantics via flags; health = `offline` vs `error` from the online/offline signal — `pushCloud` returns `{ ok, health }`, failed push keeps `dirty`
 
 **Done when:** reconcile is unit-tested (newer-wins, tie-break, empty-guard), and a blank
-remote can no longer clobber a populated device.
+remote can no longer clobber a populated device. ✅ 11 reconcile tests pass; edit-stamping
+verified in the browser (revision monotonic 0→1→2, `updatedAt` set on each edit).
+Note: the live Drive reconcile path needs a real Google token to exercise end-to-end;
+the merge logic itself is pure and fully unit-tested.
 
 ---
 

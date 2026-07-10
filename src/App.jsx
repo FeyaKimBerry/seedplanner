@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { store, setDriveToken, STORE_KEY, storageIsPersistent, lastSavedAt, prefs } from "./lib/store.js";
 import { saveStatus } from "./lib/saveStatus.js";
+import { isValidState } from "./lib/validate.js";
 
 // Shared snappy, iOS-like easing/timing for all UI motion.
 const EASE = [0.32, 0.72, 0, 1];
@@ -693,8 +694,21 @@ const emptyState = {
   settings: { ...seed.settings, startingSavings: 0 },
   income: [], expenses: [], plans: [], debts: [], assets: [],
   emergency: { target: 0, current: 0 },
+  // Reconciliation stamp — bumped at every edit (see bumpMeta). t=0/rev=0 baseline.
+  meta: { updatedAt: null, revision: 0 },
 };
 const clone = (o) => JSON.parse(JSON.stringify(o));
+
+// Stamp a state as freshly edited: bump revision + record the edit time.
+// Called at EDIT time so the stamp reflects when the user changed something,
+// which is what reconcile() compares across devices.
+const bumpMeta = (s) => ({
+  ...s,
+  meta: {
+    updatedAt: new Date().toISOString(),
+    revision: ((s && s.meta && s.meta.revision) || 0) + 1,
+  },
+});
 
 function isoIn(months) {
   const d = new Date();
@@ -1011,11 +1025,11 @@ export default function App() {
     });
   }, []);
 
-  const loadSample = () => setState(clone(seed));
+  const loadSample = () => setState(bumpMeta(clone(seed)));
   // Seed a few common income/expense rows at $0 so a fresh user has a starting point.
   const startWithPresets = (savingsAmount = 0) => {
     const today = new Date().toISOString().slice(0, 10);
-    setState((s) => ({
+    setState((s) => bumpMeta({
       ...s,
       settings: { ...s.settings, startingSavings: savingsAmount, startingSavingsUpdatedAt: today },
       income: STARTER_INCOME.map((p) => ({ id: uid(), label: t(p.key), amount: 0, frequency: p.frequency })),
@@ -1028,7 +1042,7 @@ export default function App() {
     message: t("clearConfirm"),
     confirmLabel: t("clearData"),
     danger: true,
-    onConfirm: () => setState(clone(emptyState)),
+    onConfirm: () => setState(bumpMeta(clone(emptyState))),
   });
 
   // Highlight the whole value when a number field is focused, so the user can
@@ -1047,17 +1061,26 @@ export default function App() {
   // Persist the active tab so a reload returns the user where they were.
   useEffect(() => { prefs.set(TAB_KEY, tab); }, [tab]);
 
-  // Write-through: every state change marks the plan dirty, then a debounced
-  // save reports back whether the device write actually landed.
+  // Write-through, local-first: the device write happens immediately and
+  // unconditionally on every change. The cloud push is a debounced (~2.5s),
+  // best-effort follow-up so a burst of edits collapses into one upload.
   useEffect(() => {
     if (!state) return;
-    setSaveFlags((f) => ({ ...f, dirty: true }));
+    const ok = store.saveLocal(state);
+    const syncing = store.isSyncing();
+    // For a local-only user the device write is the whole story → clean once it lands.
+    // For a syncing user, stay "dirty" until the cloud push confirms.
+    setSaveFlags((f) => ({ ...f, deviceWriteFailed: !ok, dirty: syncing }));
+    if (!syncing) return;
+
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaveFlags((f) => ({ ...f, writing: true }));
-      const ok = await store.save(state);
-      setSaveFlags((f) => ({ ...f, writing: false, dirty: false, deviceWriteFailed: !ok }));
-    }, 400);
+      const res = await store.pushCloud(state);
+      // A failed push keeps `dirty` set so the next edit cycle retries; health
+      // distinguishes a dropped connection (offline) from a real API error.
+      setSaveFlags((f) => ({ ...f, writing: false, dirty: !res.ok, health: res.health }));
+    }, 2500);
   }, [state]);
 
   const fmt = useMemo(() => {
@@ -1142,14 +1165,16 @@ export default function App() {
   const retireDate = retireMonths != null ? isoIn(retireMonths) : null;
 
   /* ---- mutation helpers ---- */
-  const set = (patch) => setState((s) => ({ ...s, ...patch }));
+  // Every mutation funnels through bumpMeta so each edit re-stamps the state
+  // for cross-device reconciliation.
+  const set = (patch) => setState((s) => bumpMeta({ ...s, ...patch }));
   const setSettings = (patch) =>
-    setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
-  const addItem = (key, item) => setState((s) => ({ ...s, [key]: [item, ...s[key]] }));
+    setState((s) => bumpMeta({ ...s, settings: { ...s.settings, ...patch } }));
+  const addItem = (key, item) => setState((s) => bumpMeta({ ...s, [key]: [item, ...s[key]] }));
   const updItem = (key, id, patch) =>
-    setState((s) => ({ ...s, [key]: s[key].map((i) => (i.id === id ? { ...i, ...patch } : i)) }));
+    setState((s) => bumpMeta({ ...s, [key]: s[key].map((i) => (i.id === id ? { ...i, ...patch } : i)) }));
   const delItem = (key, id) =>
-    setState((s) => ({ ...s, [key]: s[key].filter((i) => i.id !== id) }));
+    setState((s) => bumpMeta({ ...s, [key]: s[key].filter((i) => i.id !== id) }));
 
   const signOut = () => setConfirm({
     title: t("signOut"),
@@ -1188,7 +1213,12 @@ export default function App() {
     if (!file) return;
     const r = new FileReader();
     r.onload = () => {
-      try { setState(JSON.parse(r.result)); } catch { alert(t("importBad")); }
+      try {
+        const parsed = JSON.parse(r.result);
+        if (!isValidState(parsed)) { alert(t("importBad")); return; }
+        // Merge over defaults (forward-compatible) and stamp as a fresh edit.
+        setState(bumpMeta({ ...clone(emptyState), ...parsed }));
+      } catch { alert(t("importBad")); }
     };
     r.readAsText(file);
     e.target.value = "";
