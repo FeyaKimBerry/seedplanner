@@ -9,13 +9,13 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ---
 
-## Open decisions (gate everything below)
+## Decisions (settled)
 
-- [ ] **Module split vs. inline.** Everything lives in one ~3500-line `App.jsx`. Pull the
-      pure logic (`store`, `reconcile`, validator, status-label mapper) into small testable
-      modules? Recommended — matches the "separate pure logic from framework" principle.
-- [ ] **Add a test runner (Vitest).** No tests exist today. The pure functions below are
-      exactly what's worth unit-testing; decide before Phase 1 so tests land with the code.
+- [x] **Module split** — pull the pure logic (`store`, `reconcile`, validator, status-label
+      mapper) out of the ~3500-line `App.jsx` into small testable modules under `src/lib/`.
+      Matches the "separate pure logic from framework" principle.
+- [x] **Test runner: Vitest** — pure functions get unit tests that land with the code.
+      Add `vitest` as a dev dependency and a `test` script.
 
 ---
 
