@@ -130,7 +130,11 @@ export async function silentToken() {
 }
 
 // Layered acquisition for any authorized request: cached → silent → error.
-export async function getToken() {
+// forceRefresh drops the cached token first, so a token that our expiry clock
+// still trusts but the server has already rejected (a 401) is re-minted rather
+// than handed back unchanged. Still silent — never prompts the user.
+export async function getToken({ forceRefresh = false } = {}) {
+  if (forceRefresh) clearToken();
   const live = cachedToken();
   if (live) return live;
   const refreshed = await silentToken();

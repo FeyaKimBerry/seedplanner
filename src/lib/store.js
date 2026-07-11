@@ -57,9 +57,11 @@ function readLocalState() {
 let _tokenProvider = null;
 export function setTokenProvider(fn) { _tokenProvider = fn || null; }
 
-async function currentToken() {
+// forceRefresh is passed through to the injected provider (auth.getToken) so a
+// server-rejected token can be re-minted silently before we give up on a push.
+async function currentToken({ forceRefresh = false } = {}) {
   if (!_tokenProvider) return null;
-  try { return await _tokenProvider(); } catch { return null; }
+  try { return await _tokenProvider({ forceRefresh }); } catch { return null; }
 }
 
 async function driveFileId(token) {
@@ -155,9 +157,22 @@ export const store = {
     if (!_tokenProvider) return { ok: true, health: "ok" };
     const token = await currentToken();
     if (!token) return { ok: false, health: "error", reason: "auth" }; // token acquisition failed
-    const { ok, status } = await driveSave(token, state);
+    let { ok, status } = await driveSave(token, state);
     if (ok) return { ok: true, health: "ok" };
-    if (status === 401) return { ok: false, health: "error", reason: "auth" };
+    // A 401 means the token our expiry clock still trusted was rejected by Drive
+    // (session lapsed, revoked, or clock skew). Force one silent re-mint and retry
+    // before surfacing anything to the user — this is the common case that used to
+    // flash the reconnect banner on an otherwise-healthy signed-in session.
+    if (status === 401) {
+      const fresh = await currentToken({ forceRefresh: true });
+      if (fresh) {
+        ({ ok, status } = await driveSave(fresh, state));
+        if (ok) return { ok: true, health: "ok" };
+      }
+      // Retry still unauthorized (or no fresh token) → this is a genuine
+      // disconnect; let the app prompt reconnect.
+      if (!fresh || status === 401) return { ok: false, health: "error", reason: "auth" };
+    }
     const offline = typeof navigator !== "undefined" && navigator.onLine === false;
     return { ok: false, health: offline ? "offline" : "error" };
   },
