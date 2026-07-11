@@ -2070,6 +2070,15 @@ function WelcomeCard({ onLoadSample, onStart }) {
 function ChartTooltip({ active, payload, label, fmt, isMonthly, year }) {
   if (!active || !payload || !payload.length) return null;
   const row = payload[0].payload || {};
+  // The "Now" bar is your starting balance, not a projected month — label it plainly.
+  if (row.isNow) {
+    return (
+      <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 10, padding: "8px 10px", fontSize: 12, ...num }}>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>{t("rep_now")}</div>
+        <div style={{ color: C.sub }}>{t("setStarting")}: {fmt.format(row.value)}</div>
+      </div>
+    );
+  }
   const title = row.cal || (isMonthly ? t("monthYear", { m: label, n: year }) : t("yearN", { n: label }));
   return (
     <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 10, padding: "8px 10px", fontSize: 12, ...num }}>
@@ -2264,8 +2273,30 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
   }, [projection, chartKey, year, monthlyCtrl, monthBuckets, eventsByMonth]);
 
   const isMonthly = grain === "monthly";
-  const chartData = isMonthly ? monthly : yearly;
   const xKey = isMonthly ? "label" : "year";
+  // Prepend an explicit "Now" bar = your exact starting balance (no growth, no
+  // surplus added), so the first projected bar reads as one month of progress
+  // rather than the app silently inflating the number you typed. Monthly view
+  // only, and only in the window that contains today (year 1): that's where the
+  // current-month confusion lives, and where each bar is a single month so a
+  // starting bar is meaningful. Yearly bars already span whole years, and a Now
+  // bar there just crowds the year-labelled axis. The pure monthly/yearly arrays
+  // stay unshifted so goal-dot lookups by index remain correct; only the rendered
+  // chartData gets the extra leading row.
+  const showNowBar = isMonthly && year === 1;
+  const chartData = useMemo(() => {
+    const base = isMonthly ? monthly : yearly;
+    if (!showNowBar) return base;
+    const nowRow = {
+      [xKey]: t("rep_now"),
+      cal: t("rep_now"),
+      value: startBal,
+      isNow: true,
+      goalLine: cumGoals.length ? startBal : null,
+      planCost: 0,
+    };
+    return [nowRow, ...base];
+  }, [isMonthly, monthly, yearly, showNowBar, xKey, startBal, cumGoals.length]);
   // label sparsity so the axis never crowds on a phone
   const tickEvery = isMonthly ? 1 : Math.ceil(state.settings.projectionYears / 6);
 
@@ -2401,7 +2432,7 @@ function Dashboard({ state, projection, fmt, fmtCompact, retireTarget, retireDat
 
               <Bar dataKey="value" stackId="a" shape={<GreenBar />} maxBarSize={38}>
                 {chartData.map((d, i) => (
-                  <Cell key={i} fill={d.value < 0 ? "#D95F5F" : d.value >= retireTarget ? C.green : C.belowBar} />
+                  <Cell key={i} fill={d.isNow ? C.faint : d.value < 0 ? "#D95F5F" : d.value >= retireTarget ? C.green : C.belowBar} />
                 ))}
               </Bar>
               <Bar dataKey="planCost" stackId="a" radius={[6, 6, 0, 0]} maxBarSize={38} fill="#D95F5F" fillOpacity={0.35} />
