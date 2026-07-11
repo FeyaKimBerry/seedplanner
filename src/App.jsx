@@ -195,6 +195,18 @@ const STR = {
     reconnect_body: "Reconnect to Google to sync them across your devices.",
     reconnect_cta: "Reconnect",
     reconnect_local: "Use this device only",
+    sync_onTitle: "Synced across your devices",
+    sync_onBody: "Your changes are backed up to Google Drive.",
+    sync_account: "Signed in as {email}",
+    sync_savingBody: "Saving your latest changes…",
+    sync_offlineBody: "You're offline — changes will sync when you reconnect.",
+    sync_stuckTitle: "Not syncing right now",
+    sync_stuckBody: "Your latest changes are saved on this device but haven't reached the cloud yet.",
+    sync_localTitle: "Saved on this device",
+    sync_localBody: "Sync is off — your data stays on this device only.",
+    sync_lastSaved: "Last saved {time}",
+    sync_notYet: "Not yet saved on this device",
+    sync_enableCta: "Turn on sync",
     cancel: "Cancel",
     more: "More",
     nav_home: "Home", nav_privacy: "Privacy Policy", nav_terms: "Terms of Service",
@@ -328,6 +340,18 @@ const STR = {
     login_note: "การเข้าสู่ระบบนี้เป็นเพียงตัวอย่าง — ยังไม่มีการสร้างบัญชีและไม่มีข้อมูลออกจากอุปกรณ์ของคุณ การเข้าสู่ระบบ Google จริงจะมีในเวอร์ชันเต็ม",
     signOut: "ออกจากระบบ",
     signOutConfirm: "ออกจากระบบตอนนี้หรือไม่? คุณจะต้องเข้าสู่ระบบอีกครั้งเพื่อกลับเข้ามา",
+    sync_onTitle: "ซิงก์ข้ามอุปกรณ์แล้ว",
+    sync_onBody: "การเปลี่ยนแปลงของคุณถูกสำรองไว้ใน Google Drive",
+    sync_account: "เข้าสู่ระบบเป็น {email}",
+    sync_savingBody: "กำลังบันทึกการเปลี่ยนแปลงล่าสุด…",
+    sync_offlineBody: "คุณออฟไลน์อยู่ — จะซิงก์ให้เมื่อกลับมาออนไลน์",
+    sync_stuckTitle: "ยังไม่ได้ซิงก์ตอนนี้",
+    sync_stuckBody: "การเปลี่ยนแปลงล่าสุดถูกบันทึกไว้ในเครื่องนี้ แต่ยังไม่ได้ขึ้นคลาวด์",
+    sync_localTitle: "บันทึกไว้ในเครื่องนี้",
+    sync_localBody: "ปิดการซิงก์อยู่ — ข้อมูลจะอยู่ในเครื่องนี้เท่านั้น",
+    sync_lastSaved: "บันทึกล่าสุด {time}",
+    sync_notYet: "ยังไม่ได้บันทึกในเครื่องนี้",
+    sync_enableCta: "เปิดการซิงก์",
     cancel: "ยกเลิก",
     more: "เพิ่มเติม",
     nav_home: "หน้าแรก", nav_privacy: "นโยบายความเป็นส่วนตัว", nav_terms: "ข้อกำหนดการใช้งาน",
@@ -461,6 +485,18 @@ const STR = {
     login_note: "Platzhalter-Anmeldung – es wird kein Konto erstellt und nichts verlässt dein Gerät. Die echte Google-Anmeldung ist in der vollständigen Version eingebaut.",
     signOut: "Abmelden",
     signOutConfirm: "Jetzt abmelden? Du musst dich erneut anmelden, um zurückzukehren.",
+    sync_onTitle: "Auf allen Geräten synchronisiert",
+    sync_onBody: "Deine Änderungen werden in Google Drive gesichert.",
+    sync_account: "Angemeldet als {email}",
+    sync_savingBody: "Deine letzten Änderungen werden gespeichert…",
+    sync_offlineBody: "Du bist offline — die Synchronisierung erfolgt, sobald du wieder online bist.",
+    sync_stuckTitle: "Derzeit keine Synchronisierung",
+    sync_stuckBody: "Deine letzten Änderungen sind auf diesem Gerät gespeichert, aber noch nicht in der Cloud.",
+    sync_localTitle: "Auf diesem Gerät gespeichert",
+    sync_localBody: "Synchronisierung ist aus — deine Daten bleiben nur auf diesem Gerät.",
+    sync_lastSaved: "Zuletzt gespeichert {time}",
+    sync_notYet: "Noch nicht auf diesem Gerät gespeichert",
+    sync_enableCta: "Synchronisierung aktivieren",
     cancel: "Abbrechen",
     more: "Mehr",
     nav_home: "Startseite", nav_privacy: "Datenschutz", nav_terms: "Nutzungsbedingungen",
@@ -594,6 +630,18 @@ const STR = {
     login_note: "Connexion fictive — aucun compte n'est créé et rien ne quitte votre appareil pour l'instant. La vraie connexion Google est intégrée dans la version complète.",
     signOut: "Se déconnecter",
     signOutConfirm: "Se déconnecter maintenant ? Vous devrez vous reconnecter pour revenir.",
+    sync_onTitle: "Synchronisé sur tous vos appareils",
+    sync_onBody: "Vos modifications sont sauvegardées sur Google Drive.",
+    sync_account: "Connecté en tant que {email}",
+    sync_savingBody: "Enregistrement de vos dernières modifications…",
+    sync_offlineBody: "Vous êtes hors ligne — la synchronisation se fera à votre retour en ligne.",
+    sync_stuckTitle: "Pas de synchronisation pour le moment",
+    sync_stuckBody: "Vos dernières modifications sont enregistrées sur cet appareil mais ne sont pas encore sur le cloud.",
+    sync_localTitle: "Enregistré sur cet appareil",
+    sync_localBody: "La synchronisation est désactivée — vos données restent uniquement sur cet appareil.",
+    sync_lastSaved: "Dernier enregistrement {time}",
+    sync_notYet: "Pas encore enregistré sur cet appareil",
+    sync_enableCta: "Activer la synchronisation",
     cancel: "Annuler",
     more: "Plus",
     nav_home: "Accueil", nav_privacy: "Politique de confidentialité", nav_terms: "Conditions d'utilisation",
@@ -1034,21 +1082,102 @@ function LoginScreen({ onSignIn, onContinueLocal }) {
  * just paints the result. Tooltip shows the last successful save time.
  * ------------------------------------------------------------------ */
 const SAVE_TONE_COLOR = { ok: C.green, pending: C.clay, muted: C.faint, error: "#D9534F" };
-function SaveStatus({ flags }) {
+// The always-visible save dot, now click/tap-to-open so a user can check on
+// demand whether they're synced (and act on it) — a calm "pull" surface that
+// complements the reconnect banner's "push". States mirror the app's own
+// signals: syncing-and-fine, syncing-but-stuck, or local-only.
+function SyncStatus({ flags, intent, syncStuck, configured, user, onConnect }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const ref = useRef(null);
   const { label, tone } = saveStatus(flags);
   const color = SAVE_TONE_COLOR[tone] || C.faint;
   const savedAt = lastSavedAt();
-  const title = savedAt ? `Last saved ${new Date(savedAt).toLocaleString()}` : "Not yet saved on this device";
+  const savedTitle = savedAt ? t("sync_lastSaved", { time: new Date(savedAt).toLocaleString() }) : t("sync_notYet");
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const syncing = configured && intent === "sync";
+  // Same flags that drive the dot, mapped to a plain-language explanation and an
+  // optional one-tap action — no new state, just a friendlier surface.
+  let Icon, iconColor, head, body, action = null;
+  if (syncing && syncStuck) {
+    Icon = RotateCcw; iconColor = SAVE_TONE_COLOR.error;
+    head = t("sync_stuckTitle"); body = t("sync_stuckBody");
+    action = { label: t("reconnect_cta"), fn: onConnect };
+  } else if (syncing) {
+    Icon = Check; iconColor = C.green;
+    head = t("sync_onTitle");
+    body = flags.health === "offline" ? t("sync_offlineBody")
+      : (flags.writing || flags.dirty) ? t("sync_savingBody")
+      : t("sync_onBody");
+  } else {
+    Icon = ShieldCheck; iconColor = C.faint;
+    head = t("sync_localTitle"); body = t("sync_localBody");
+    if (configured) action = { label: t("sync_enableCta"), fn: onConnect };
+  }
+
+  const runAction = async (fn) => {
+    if (busy) return;
+    setBusy(true);
+    try { await fn(); setOpen(false); }
+    finally { setBusy(false); }
+  };
+  const showAccount = syncing && !!user?.email;
+
   return (
-    <span title={title} aria-live="polite"
-      style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: C.sub, whiteSpace: "nowrap" }}>
-      <span aria-hidden style={{
-        width: 8, height: 8, borderRadius: "50%", background: color,
-        boxShadow: tone === "pending" ? `0 0 0 3px ${C.claySoft}` : "none",
-        transition: "background .2s ease",
-      }} />
-      <span>{label}</span>
-    </span>
+    <div ref={ref} style={{ position: "relative" }}>
+      <button type="button" onClick={() => setOpen((o) => !o)} title={savedTitle}
+        aria-haspopup="dialog" aria-expanded={open}
+        style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: C.sub, whiteSpace: "nowrap", border: "none", background: "transparent", cursor: "pointer", padding: "3px 4px", fontFamily: FONT }}>
+        <span aria-hidden style={{
+          width: 8, height: 8, borderRadius: "50%", background: color,
+          boxShadow: tone === "pending" ? `0 0 0 3px ${C.claySoft}` : "none",
+          transition: "background .2s ease",
+        }} />
+        <span>{label}</span>
+        <ChevronDown size={13} style={{ color: C.faint }} />
+      </button>
+      <AnimatePresence>
+      {open && (
+        <motion.div role="dialog" aria-label={head}
+          initial={{ opacity: 0, scale: 0.96, y: -6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: -6 }}
+          transition={SNAP_FAST}
+          style={{ transformOrigin: "top left", position: "absolute", left: 0, top: "calc(100% + 8px)", width: 268, background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, boxShadow: shadow, padding: 16, zIndex: 30 }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 9, background: C.bg, display: "grid", placeItems: "center", color: iconColor }}>
+              <Icon size={17} />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.ink, marginBottom: 3 }}>{head}</div>
+              <div style={{ fontSize: 12.5, lineHeight: 1.5, color: C.sub }}>{body}</div>
+            </div>
+          </div>
+          {showAccount && (
+            <div style={{ fontSize: 11.5, color: C.faint, marginTop: 10, wordBreak: "break-all" }}>{t("sync_account", { email: user.email })}</div>
+          )}
+          {savedAt && (
+            <div style={{ fontSize: 11.5, color: C.faint, marginTop: showAccount ? 3 : 10 }}>{savedTitle}</div>
+          )}
+          {action && (
+            <button type="button" onClick={() => runAction(action.fn)} disabled={busy}
+              style={{ marginTop: 14, width: "100%", padding: "9px 12px", borderRadius: 10, border: `1px solid ${C.green}`, background: C.green, color: "#fff", fontFamily: FONT, fontSize: 13.5, fontWeight: 600, cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}>
+              {action.label}
+            </button>
+          )}
+        </motion.div>
+      )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -1354,14 +1483,18 @@ export default function App() {
     },
   });
 
-  // Explicit reconnect (from the banner / needs-reconnect state): re-consent,
-  // resume syncing, then pull + reconcile so remote edits made elsewhere merge in.
+  // Connect (or reconnect) to Google sync: re-consent, opt into sync, resume the
+  // funnel, then pull + reconcile so remote edits made elsewhere merge in. Serves
+  // both the reconnect banner and the status popover's "Turn on sync" for a
+  // local-only user, so it always establishes the "sync" intent.
   const reconnect = async () => {
     try {
       const token = await auth.interactiveToken();
       const u = await auth.fetchUserInfo(token);
       if (u) { setUser(u); try { localStorage.setItem(AUTH_KEY, JSON.stringify(u)); } catch {} }
       setTokenProvider(auth.getToken);
+      prefs.set(INTENT_KEY, "sync");
+      setIntent("sync");
       setAuthenticated(true);
       setSyncStuck(false);
       setReconnectDismissed(false);
@@ -1715,7 +1848,8 @@ export default function App() {
         <div className="mx-auto flex flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-5" style={{ maxWidth: 1100 }}>
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Seedplanner" style={{ height: 44, width: "auto", display: "block" }} />
-            <SaveStatus flags={saveFlags} />
+            <SyncStatus flags={saveFlags} intent={intent} syncStuck={syncStuck}
+              configured={configured} user={user} onConnect={reconnect} />
           </div>
           <div className="flex items-center gap-2">
             <select value={state.settings.lang || "en"} onChange={(e) => setSettings({ lang: e.target.value })}
